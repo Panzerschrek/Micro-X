@@ -1,0 +1,13 @@
+#output
+*.exe
+
+#Visual Studio stuff
+*.suo
+*.user
+*.ilk
+*.ncb
+*.pdb
+
+#ouput directories
+Debug/*
+Release/*
