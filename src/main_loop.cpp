@@ -162,9 +162,10 @@ mx_MainLoop::mx_MainLoop(
 	fps_calc_.current_calc_frame_count= 0;
 
 	{
-		mx_LevelGenerator generator;
-		generator.Generate();
-		mx_LevelMesh mesh= generator.GenerateLevelMesh();
+		mx_LevelGenerator* generator= new mx_LevelGenerator();
+		generator->Generate();
+		mx_LevelMesh mesh= generator->GenerateLevelMesh();
+		delete generator;
 
 		vertex_buffer_.VertexData( mesh.vertices, sizeof(mx_LevelVertex) * mesh.vertex_count, sizeof(mx_LevelVertex) );
 		vertex_buffer_.VertexAttrib( 0, 3, GL_FLOAT, false, 0 );
@@ -250,6 +251,8 @@ void mx_MainLoop::Loop()
 			shader_.UniformMat4( "mat", result_mat );
 
 			vertex_buffer_.Bind();
+			//glEnable( GL_CULL_FACE );
+			//glCullFace( GL_FRONT );
 			glDrawElements( GL_TRIANGLES, vertex_buffer_.IndexDataSize() / sizeof(unsigned short), GL_UNSIGNED_SHORT, NULL );
 		}
 
