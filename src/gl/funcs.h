@@ -8,5 +8,4 @@
 #include "funcs_list.h"
 #undef PROCESS_OGL_FUNCTION
 
-void mxGetGLFunctions(
-	void* (*GetProcAddressFunc)(const char* func_name));
+void mxGetGLFunctions();

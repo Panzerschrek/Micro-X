@@ -16,11 +16,6 @@ static const char g_window_class[]= "Micro-X";
 // TODO - change name if you change game name
 static const char g_window_name[]= "Micro-X";
 
-static void* GetGLFuncAddress( const char* addr )
-{
-	return wglGetProcAddress( addr );
-}
-
 #ifdef MX_DEBUG
 static void APIENTRY GLDebugMessageCallback(
 	GLenum source, GLenum type,
@@ -151,7 +146,7 @@ mx_MainLoop::mx_MainLoop(
 	hrc_= wglCreateContextAttribsARB( hdc_, 0, attribs );
 	wglMakeCurrent( hdc_, hrc_ );
 
-	mxGetGLFunctions( GetGLFuncAddress );
+	mxGetGLFunctions();
 
 	// EXT function can not exist in some cases.
 	if( wglSwapIntervalEXT ) wglSwapIntervalEXT( vsync ? 1 : 0 );
