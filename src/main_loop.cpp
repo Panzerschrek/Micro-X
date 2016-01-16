@@ -141,19 +141,20 @@ mx_MainLoop::mx_MainLoop(
 	fps_calc_.current_calc_frame_count= 0;
 
 	{
+		mx_LevelGenerator generator;
+		generator.Generate();
+		mx_LevelMesh mesh= generator.GenerateLevelMesh();
+
+		vertex_buffer_.VertexData( mesh.vertices, sizeof(mx_LevelVertex) * mesh.vertex_count, sizeof(mx_LevelVertex) );
+		vertex_buffer_.VertexAttrib( 0, 3, GL_FLOAT, false, 0 );
+		vertex_buffer_.IndexData( mesh.triangles, mesh.triangle_count * sizeof(unsigned short) * 3 );
+		delete[] mesh.vertices;
+		delete[] mesh.triangles;
+
 		shader_.SetAttribLocation( "p", 0 );
 		shader_.Create( mx_Shaders::world_shader_v, mx_Shaders::world_shader_f );
 		static const char* const uniforms[]= { "mat" };
 		shader_.FindUniforms( uniforms, sizeof(uniforms) / sizeof(char*) );
-
-		static const float vertices[]= 
-		{
-			0, 0, 0,
-			0, 1, 0,
-			1, 0, 1,
-		};
-		vertex_buffer_.VertexData( vertices, sizeof(vertices), 3 * sizeof(float) );
-		vertex_buffer_.VertexAttrib( 0, 3, GL_FLOAT, false, 0 );
 	}
 }
 
@@ -170,9 +171,6 @@ mx_MainLoop::~mx_MainLoop()
 
 void mx_MainLoop::Loop()
 {
-	mx_LevelGenerator generator;
-	generator.Generate();
-
 	while(!quit_)
 	{
 		MSG msg;
@@ -191,11 +189,12 @@ void mx_MainLoop::Loop()
 
 		shader_.Bind();
 		float mat[16];
-		mxMat4Identity( mat );
+		float scale_vec[3]= { 8.0f / float(viewport_width_), 8.0f / float(viewport_height_), 1.0f };
+		mxMat4Scale( mat, scale_vec );
 		shader_.UniformMat4( "mat", mat );
 
 		vertex_buffer_.Bind();
-		glDrawArrays( GL_TRIANGLES, 0, vertex_buffer_.VertexCount() );
+		glDrawElements( GL_TRIANGLES, vertex_buffer_.IndexDataSize() / sizeof(unsigned short), GL_UNSIGNED_SHORT, NULL );
 
 		SwapBuffers( hdc_ );
 		CalculateFPS();
