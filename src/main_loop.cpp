@@ -16,10 +16,28 @@ static const char g_window_class[]= "Micro-X";
 // TODO - change name if you change game name
 static const char g_window_name[]= "Micro-X";
 
-static  void* GetGLFuncAddress( const char* addr )
+static void* GetGLFuncAddress( const char* addr )
 {
 	return wglGetProcAddress( addr );
 }
+
+#ifdef MX_DEBUG
+static void APIENTRY GLDebugMessageCallback(
+	GLenum source, GLenum type,
+	GLuint id,
+	GLenum severity,
+	GLsizei length, const GLchar *message,
+	void *userParam )
+{
+	(void)source;
+	(void)type;
+	(void)id;
+	(void)severity;
+	(void)length;
+	(void)userParam;
+	std::printf( "%s\n", message );
+}
+#endif
 
 mx_MainLoop* mx_MainLoop::instance_= NULL;
 
@@ -124,17 +142,24 @@ mx_MainLoop::mx_MainLoop(
 		WGL_CONTEXT_MAJOR_VERSION_ARB, OGL_VERSION_MAJOR,
 		WGL_CONTEXT_MINOR_VERSION_ARB, OGL_VERSION_MINOR,
 		WGL_CONTEXT_PROFILE_MASK_ARB,  WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
-		0
+#ifdef MX_DEBUG
+		WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_DEBUG_BIT_ARB,
+#endif
+		0,
 	};
 
 	hrc_= wglCreateContextAttribsARB( hdc_, 0, attribs );
 	wglMakeCurrent( hdc_, hrc_ );
 
-	PFNWGLSWAPINTERVALEXTPROC wglSwapInterval= (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress( "wglSwapIntervalEXT" );
-	if( wglSwapInterval != NULL )
-		wglSwapInterval( vsync ? 1 : 0 );
-
 	mxGetGLFunctions( GetGLFuncAddress );
+
+	// EXT function can not exist in some cases.
+	if( wglSwapIntervalEXT ) wglSwapIntervalEXT( vsync ? 1 : 0 );
+
+#ifdef MX_DEBUG
+	if( glDebugMessageCallback )
+		glDebugMessageCallback( &GLDebugMessageCallback, NULL );
+#endif
 
 	fps_calc_.prev_calc_time= std::clock();
 	fps_calc_.frame_count_to_show= 0;
