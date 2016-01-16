@@ -186,6 +186,10 @@
 				RelativePath=".\src\main_loop.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\src\mx_math.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -194,6 +198,10 @@
 			>
 			<File
 				RelativePath=".\src\main_loop.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mx_math.h"
 				>
 			</File>
 		</Filter>
