@@ -1,6 +1,9 @@
 #pragma once
 #include <windows.h>
 
+#include "glsl_program.h"
+#include "vertex_buffer.h"
+
 #define MX_MIN_VIEWPORT_WIDTH  800
 #define MX_MIN_VIEWPORT_HEIGHT 600
 
@@ -64,6 +67,10 @@ private:
 		unsigned int frame_count_to_show;
 		unsigned int current_calc_frame_count;
 	}fps_calc_;
+
+	// Temp
+	mx_GLSLProgram shader_;
+	mx_VertexBuffer vertex_buffer_;
 };
 
 inline mx_MainLoop* mx_MainLoop::Instance()

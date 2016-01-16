@@ -1,9 +1,10 @@
 #include <cstdio>
 #include <ctime>
 
-#include "gl/glcorearb.h"
-#include "gl/wglext.h"
-#include <GL/gl.h>
+#include "gl/funcs.h"
+#include "level_generator.h"
+#include "mx_math.h"
+#include "shaders.h"
 
 #include "main_loop.h"
 
@@ -133,11 +134,27 @@ mx_MainLoop::mx_MainLoop(
 	if( wglSwapInterval != NULL )
 		wglSwapInterval( vsync ? 1 : 0 );
 
-	//GetGLFunctions( mxGetGLFuncAddress );
+	mxGetGLFunctions( GetGLFuncAddress );
 
 	fps_calc_.prev_calc_time= std::clock();
 	fps_calc_.frame_count_to_show= 0;
 	fps_calc_.current_calc_frame_count= 0;
+
+	{
+		shader_.SetAttribLocation( "p", 0 );
+		shader_.Create( mx_Shaders::world_shader_v, mx_Shaders::world_shader_f );
+		static const char* const uniforms[]= { "mat" };
+		shader_.FindUniforms( uniforms, sizeof(uniforms) / sizeof(char*) );
+
+		static const float vertices[]= 
+		{
+			0, 0, 0,
+			0, 1, 0,
+			1, 0, 1,
+		};
+		vertex_buffer_.VertexData( vertices, sizeof(vertices), 3 * sizeof(float) );
+		vertex_buffer_.VertexAttrib( 0, 3, GL_FLOAT, false, 0 );
+	}
 }
 
 mx_MainLoop::~mx_MainLoop()
@@ -153,6 +170,9 @@ mx_MainLoop::~mx_MainLoop()
 
 void mx_MainLoop::Loop()
 {
+	mx_LevelGenerator generator;
+	generator.Generate();
+
 	while(!quit_)
 	{
 		MSG msg;
@@ -168,6 +188,14 @@ void mx_MainLoop::Loop()
 
 		glClearColor( 1.0f, 0.0f, 1.0f, 0.0f );
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+		shader_.Bind();
+		float mat[16];
+		mxMat4Identity( mat );
+		shader_.UniformMat4( "mat", mat );
+
+		vertex_buffer_.Bind();
+		glDrawArrays( GL_TRIANGLES, 0, vertex_buffer_.VertexCount() );
 
 		SwapBuffers( hdc_ );
 		CalculateFPS();

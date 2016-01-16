@@ -179,6 +179,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\src\glsl_program.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\level_generator.cpp"
 				>
 			</File>
@@ -194,12 +198,32 @@
 				RelativePath=".\src\mx_math.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\src\shaders.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\vertex_buffer.cpp"
+				>
+			</File>
+			<Filter
+				Name="gl"
+				>
+				<File
+					RelativePath=".\src\gl\funcs.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\src\glsl_program.h"
+				>
+			</File>
 			<File
 				RelativePath=".\src\level_generator.h"
 				>
@@ -216,6 +240,22 @@
 				RelativePath=".\src\mx_math.h"
 				>
 			</File>
+			<File
+				RelativePath=".\src\shaders.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\vertex_buffer.h"
+				>
+			</File>
+			<Filter
+				Name="gl"
+				>
+				<File
+					RelativePath=".\src\gl\funcs.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Resource Files"
