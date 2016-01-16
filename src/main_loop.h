@@ -7,6 +7,8 @@
 #define MX_MIN_VIEWPORT_WIDTH  800
 #define MX_MIN_VIEWPORT_HEIGHT 600
 
+class mx_Player;
+
 class mx_MainLoop
 {
 public:
@@ -71,6 +73,8 @@ private:
 	// Temp
 	mx_GLSLProgram shader_;
 	mx_VertexBuffer vertex_buffer_;
+
+	mx_Player* player_;
 };
 
 inline mx_MainLoop* mx_MainLoop::Instance()

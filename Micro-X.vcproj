@@ -199,6 +199,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\player.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\shaders.cpp"
 				>
 			</File>
@@ -238,6 +242,10 @@
 			</File>
 			<File
 				RelativePath=".\src\mx_math.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\player.h"
 				>
 			</File>
 			<File

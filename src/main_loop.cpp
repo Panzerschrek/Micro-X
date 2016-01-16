@@ -4,6 +4,7 @@
 #include "gl/funcs.h"
 #include "level_generator.h"
 #include "mx_math.h"
+#include "player.h"
 #include "shaders.h"
 
 #include "main_loop.h"
@@ -176,6 +177,8 @@ mx_MainLoop::mx_MainLoop(
 		static const char* const uniforms[]= { "mat" };
 		shader_.FindUniforms( uniforms, sizeof(uniforms) / sizeof(char*) );
 	}
+
+	player_= new mx_Player();
 }
 
 mx_MainLoop::~mx_MainLoop()
@@ -204,17 +207,51 @@ void mx_MainLoop::Loop()
 			sprintf( str, "fps: %d", fps_calc_.frame_count_to_show );
 		}
 
-		glClearColor( 1.0f, 0.0f, 1.0f, 0.0f );
+		glClearColor( 0.1f, 0.1f, 0.1f, 0.0f );
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-		shader_.Bind();
-		float mat[16];
-		float scale_vec[3]= { 8.0f / float(viewport_width_), 8.0f / float(viewport_height_), 1.0f };
-		mxMat4Scale( mat, scale_vec );
-		shader_.UniformMat4( "mat", mat );
+		player_->Tick( 1.0f / 60.0f );
 
-		vertex_buffer_.Bind();
-		glDrawElements( GL_TRIANGLES, vertex_buffer_.IndexDataSize() / sizeof(unsigned short), GL_UNSIGNED_SHORT, NULL );
+		{
+			float translate_vec[3];
+			float pers_mat[16];
+			float rot_z_mat[16];
+			float rot_x_mat[16];
+			float rot_y_mat[16];
+			float basis_change_mat[16];
+			float translate_mat[16];
+			float result_mat[16];
+
+			mxVec3Mul( player_->Pos(), -1.0f, translate_vec );
+			mxMat4Translate( translate_mat, translate_vec );
+
+			mxMat4Perspective( pers_mat,
+				float(viewport_width_)/ float(viewport_height_),
+				player_->Fov(), 0.5f, 256.0f );
+
+			mxMat4RotateZ( rot_z_mat, -player_->Angle()[2] );
+			mxMat4RotateX( rot_x_mat, -player_->Angle()[0] );
+			mxMat4RotateY( rot_y_mat, -player_->Angle()[1] );
+			{
+				mxMat4RotateX( basis_change_mat, -MX_PI2 );
+				float tmp_mat[16];
+				mxMat4Identity( tmp_mat );
+				tmp_mat[10]= -1.0f;
+				mxMat4Mul( basis_change_mat, tmp_mat );
+			}
+
+			mxMat4Mul( translate_mat, rot_z_mat, result_mat );
+			mxMat4Mul( result_mat, rot_x_mat );
+			mxMat4Mul( result_mat, rot_y_mat );
+			mxMat4Mul( result_mat, basis_change_mat );
+			mxMat4Mul( result_mat, pers_mat );
+
+			shader_.Bind();
+			shader_.UniformMat4( "mat", result_mat );
+
+			vertex_buffer_.Bind();
+			glDrawElements( GL_TRIANGLES, vertex_buffer_.IndexDataSize() / sizeof(unsigned short), GL_UNSIGNED_SHORT, NULL );
+		}
 
 		SwapBuffers( hdc_ );
 		CalculateFPS();
@@ -224,8 +261,10 @@ void mx_MainLoop::Loop()
 LRESULT CALLBACK mx_MainLoop::WindowProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
 	// This method calls just after creation of window, in class constructor.
-	// At this momnt instance_ is nullptr.
+	// At this moment instance_ is nullptr.
 	if( !instance_ ) goto def_proc;
+
+	mx_Player* player= instance_->player_;
 
 	switch(uMsg)
 	{
@@ -264,28 +303,40 @@ LRESULT CALLBACK mx_MainLoop::WindowProc( HWND hwnd, UINT uMsg, WPARAM wParam, L
 		switch(wParam)
 		{
 		case KEY('W'):
+			player->ForwardReleased();
 			break;
 		case KEY('S'):
+			player->BackwardReleased();
 			break;
 		case KEY('A'):
+			player->LeftReleased();
 			break;
 		case KEY('D'):
+			player->RightReleased();
 			break;
-		case VK_SHIFT:
+		case KEY(' '):
+			player->UpReleased();
 			break;
-		case VK_CONTROL:
+		case KEY('C'):
+			player->DownReleased();
 			break;
 		case VK_LEFT:
+			player->RotateLeftReleased();
 			break;
 		case VK_RIGHT:
+			player->RotateRightReleased();
 			break;
 		case VK_UP:
+			player->RotateUpReleased();
 			break;
 		case VK_DOWN:
+			player->RotateDownReleased();
 			break;
 		case KEY('Q'):
+			player->RotateAnticlockwiseReleased();
 			break;
 		case KEY('E'):
+			player->RotateClockwiseReleased();
 			break;
 		case VK_ESCAPE:
 			instance_->quit_= true;
@@ -299,28 +350,40 @@ LRESULT CALLBACK mx_MainLoop::WindowProc( HWND hwnd, UINT uMsg, WPARAM wParam, L
 		switch(wParam)
 		{
 		case KEY('W'):
+			player->ForwardPressed();
 			break;
 		case KEY('S'):
+			player->BackwardPressed();
 			break;
 		case KEY('A'):
+			player->LeftPressed();
 			break;
 		case KEY('D'):
+			player->RightPressed();
 			break;
-		case VK_SHIFT:
+		case KEY(' '):
+			player->UpPressed();
 			break;
-		case VK_CONTROL:
+		case KEY('C'):
+			player->DownPressed();
 			break;
 		case VK_LEFT:
+			player->RotateLeftPressed();
 			break;
 		case VK_RIGHT:
+			player->RotateRightPressed();
 			break;
 		case VK_UP:
+			player->RotateUpPressed();
 			break;
 		case VK_DOWN:
+			player->RotateDownPressed();
 			break;
 		case KEY('Q'):
+			player->RotateAnticlockwisePressed();
 			break;
 		case KEY('E'):
+			player->RotateClockwisePressed();
 			break;
 
 		default:
