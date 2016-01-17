@@ -1,4 +1,5 @@
 #pragma once
+
 #include <windows.h>
 
 #include "glsl_program.h"
@@ -62,6 +63,10 @@ private:
 
 	POINT prev_cursor_pos_;
 	bool mouse_captured_;
+
+	DWORD start_time_ms_;
+	DWORD prev_time_ms_;
+	float dt_s_;
 
 	struct
 	{

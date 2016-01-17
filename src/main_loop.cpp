@@ -157,6 +157,8 @@ mx_MainLoop::mx_MainLoop(
 		glDebugMessageCallback( &GLDebugMessageCallback, NULL );
 #endif
 
+	start_time_ms_= prev_time_ms_= GetTickCount();
+
 	fps_calc_.prev_calc_time= std::clock();
 	fps_calc_.frame_count_to_show= 0;
 	fps_calc_.current_calc_frame_count= 0;
@@ -208,10 +210,20 @@ void mx_MainLoop::Loop()
 			sprintf( str, "fps: %d", fps_calc_.frame_count_to_show );
 		}
 
+		static const float c_dt_eps= 1.0f / 512.0f;
+		DWORD current_time_ms= GetTickCount() - start_time_ms_;
+		float dt_s= float( current_time_ms - prev_time_ms_ ) * 0.001f;
+		if( dt_s >= c_dt_eps )
+		{
+			prev_time_ms_= current_time_ms;
+			dt_s_= dt_s;
+		}
+
+		if( dt_s >= c_dt_eps )
+			player_->Tick( 1.0f / 60.0f );
+
 		glClearColor( 0.1f, 0.1f, 0.1f, 0.0f );
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
-		player_->Tick( 1.0f / 60.0f );
 
 		{
 			float translate_vec[3];
@@ -257,7 +269,7 @@ void mx_MainLoop::Loop()
 		}
 
 		SwapBuffers( hdc_ );
-		CalculateFPS();
+		//CalculateFPS();
 	} // while !quit
 }
 
