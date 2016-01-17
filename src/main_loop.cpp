@@ -192,6 +192,8 @@ mx_MainLoop::mx_MainLoop(
 	}
 
 	player_= new mx_Player();
+
+	//CaptureMouse( true );
 }
 
 mx_MainLoop::~mx_MainLoop()
@@ -216,8 +218,18 @@ void mx_MainLoop::Loop()
 			DispatchMessage(&msg);
 		}
 		{
-			char str[32];
-			sprintf( str, "fps: %d", fps_calc_.frame_count_to_show );
+			//char str[32];
+			//sprintf( str, "fps: %d", fps_calc_.frame_count_to_show );
+		}
+
+		if( mouse_captured_ )
+		{
+			POINT new_cursor_pos;
+			GetCursorPos(&new_cursor_pos);
+			player_->Rotate(
+				float( prev_cursor_pos_.x - new_cursor_pos.x ),
+				float( prev_cursor_pos_.y - new_cursor_pos.y ) );
+			SetCursorPos( prev_cursor_pos_.x, prev_cursor_pos_.y );
 		}
 
 		static const float c_dt_eps= 1.0f / 512.0f;
@@ -230,7 +242,7 @@ void mx_MainLoop::Loop()
 		}
 
 		if( dt_s >= c_dt_eps )
-			player_->Tick( 1.0f / 60.0f );
+			player_->Tick( dt_s );
 
 		glClearColor( 0.1f, 0.1f, 0.1f, 0.0f );
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -238,9 +250,7 @@ void mx_MainLoop::Loop()
 		{
 			float translate_vec[3];
 			float pers_mat[16];
-			float rot_z_mat[16];
-			float rot_x_mat[16];
-			float rot_y_mat[16];
+			float rot_mat[16];
 			float basis_change_mat[16];
 			float translate_mat[16];
 			float result_mat[16];
@@ -252,9 +262,8 @@ void mx_MainLoop::Loop()
 				float(viewport_width_)/ float(viewport_height_),
 				player_->Fov(), 0.5f, 256.0f );
 
-			mxMat4RotateZ( rot_z_mat, -player_->Angle()[2] );
-			mxMat4RotateX( rot_x_mat, -player_->Angle()[0] );
-			mxMat4RotateY( rot_y_mat, -player_->Angle()[1] );
+			player_->CreateRotationMatrix4( rot_mat );
+
 			{
 				mxMat4RotateX( basis_change_mat, -MX_PI2 );
 				float tmp_mat[16];
@@ -262,10 +271,8 @@ void mx_MainLoop::Loop()
 				tmp_mat[10]= -1.0f;
 				mxMat4Mul( basis_change_mat, tmp_mat );
 			}
-
-			mxMat4Mul( translate_mat, rot_z_mat, result_mat );
-			mxMat4Mul( result_mat, rot_x_mat );
-			mxMat4Mul( result_mat, rot_y_mat );
+			
+			mxMat4Mul( translate_mat, rot_mat, result_mat );
 			mxMat4Mul( result_mat, basis_change_mat );
 			mxMat4Mul( result_mat, pers_mat );
 

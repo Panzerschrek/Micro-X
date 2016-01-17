@@ -7,7 +7,8 @@ public:
 	~mx_Player();
 
 	const float* Pos() const;
-	const float* Angle() const;
+	//const float* Angle() const;
+	void CreateRotationMatrix4( float* out_mat ) const;
 	const float Fov() const;
 
 	void Tick( float dt );
@@ -51,12 +52,15 @@ private:
 	// 0 - pitch / tangaž
 	// 1 - yaw / ryskanije
 	// 2 - roll / kren
-	float angle_[3];
+	//float angle_[3];
+	float axis_[3][3];
 
 	float cam_radius_;
 	float aspect_;
 	float fov_;
 	float target_fov_;
+
+	float controller_rotation_[3];
 
 	bool forward_pressed_, backward_pressed_, left_pressed_, right_pressed_;
 	bool up_pressed_, down_pressed_;
@@ -68,12 +72,12 @@ inline const float* mx_Player::Pos() const
 {
 	return pos_;
 }
-
+/*
 inline const float* mx_Player::Angle() const
 {
 	return angle_;
 }
-
+*/
 inline const float mx_Player::Fov() const
 {
 	return fov_;
