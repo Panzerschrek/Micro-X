@@ -143,6 +143,7 @@
 				AdditionalDependencies="opengl32.lib"
 				OutputFile="Micro-X.exe"
 				GenerateDebugInformation="false"
+				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				TargetMachine="1"

@@ -3,7 +3,15 @@
 
 #include "main_loop.h"
 
+#ifdef MX_DEBUG
 int main()
+#else
+int WINAPI WinMain(
+	HINSTANCE /*hInstance*/,
+	HINSTANCE /*hPrevInstance*/,
+	LPSTR /*lpCmdLine*/,
+	int /*nCmdShow*/)
+#endif
 {
 	mx_MainLoop::CreateInstance(
 		1024, 768,
