@@ -5,6 +5,18 @@
 
 #include "level_generator.h"
 
+static const unsigned char c_cube_vertices[]=
+{
+	1, 0, 0,   1, 1, 0,   1, 1, 1,   1, 0, 1, // X negative
+	0, 0, 1,   0, 1, 1,   0, 1, 0,   0, 0, 0, // X positiove
+
+	0, 1, 0,   0, 1, 1,   1, 1, 1,   1, 1, 0, // Y negative
+	1, 0, 0,   1, 0, 1,   0, 0, 1,   0, 0, 0, // Y positiove
+
+	0, 0, 0,   0, 1, 0,   1, 1, 0,   1, 0, 0, // Z negative
+	1, 0, 1,   1, 1, 1,   0, 1, 1,   0, 0, 1, // Z positiove
+};
+
 static bool IsPointOutsideMap( int* coord )
 {
 	return
@@ -36,7 +48,30 @@ void mx_LevelGenerator::Generate()
 	MX_ASSERT( room_count_ == 0 );
 	MX_ASSERT( connection_count_ == 0 );
 
-	Room* room= rooms_;
+
+	PlaceRooms();
+	PlaceConnections();
+	GenerateMeshes();
+	CalculateNormals();
+}
+
+const mx_LevelData& mx_LevelGenerator::GetLevelData()
+{
+	return out_level_data_;
+}
+
+mx_LevelGenerator::Element*& mx_LevelGenerator::ElementMap( int x, int y, int z )
+{
+	MX_ASSERT( x >= 0 && x < MX_MAX_LEVEL_SIZE_CELLS );
+	MX_ASSERT( y >= 0 && y < MX_MAX_LEVEL_SIZE_CELLS );
+	MX_ASSERT( z >= 0 && z < MX_MAX_LEVEL_SIZE_CELLS );
+
+	return element_map_[ x + y * MX_MAX_LEVEL_SIZE_CELLS + z * MX_MAX_LEVEL_SIZE_CELLS * MX_MAX_LEVEL_SIZE_CELLS ];
+}
+
+void mx_LevelGenerator::PlaceRooms()
+{
+		Room* room= rooms_;
 	for( unsigned int i= 0; i < MX_MAX_ROOMS * 2; i++ )
 	{
 		// Create room
@@ -75,69 +110,6 @@ void mx_LevelGenerator::Generate()
 		if( room_count_ == MX_MAX_ROOMS ) break;
 	failed:;
 	}
-
-	PlaceConnections();
-}
-
-mx_LevelMesh mx_LevelGenerator::GenerateLevelMesh() const
-{
-	mx_LevelMesh mesh;
-	mesh.vertex_count= room_count_ * 4 * 6 + connection_count_ * 4;
-	mesh.triangle_count= room_count_ * 2 * 6 + connection_count_ * 2;
-	mesh.vertices= new mx_LevelVertex[ mesh.vertex_count ];
-	mesh.triangles= new unsigned short[ mesh.triangle_count * 3 ];
-
-	mx_LevelVertex* v= mesh.vertices;
-	unsigned short* t= mesh.triangles;
-
-	const Room* room= rooms_;
-	for( unsigned int i= 0; i < room_count_; i++, room++, v+=4 * 6, t+= 6 * 6 )
-		GenCube( room, v, t, i * 6 * 4 );
-
-	unsigned int base_vertex= v - mesh.vertices;
-	const Connection* connection= connections_;
-	for( unsigned int i= 0; i < connection_count_; i++, connection++, v+=4, t+= 6 )
-	{
-		float dx= 0.2f, dy= 0.2f, dz= 0.2f;
-
-		v[0].xyz[0]= float(connection->coord_begin[0]) - dx + 0.5f;
-		v[0].xyz[1]= float(connection->coord_begin[1]) - dy + 0.5f;
-		v[0].xyz[2]= float(connection->coord_begin[2]) - dz + 0.5f;;
-
-		v[1].xyz[0]= float(connection->coord_begin[0]) + dx + 0.5f;
-		v[1].xyz[1]= float(connection->coord_begin[1]) + dy + 0.5f;
-		v[1].xyz[2]= float(connection->coord_begin[2]) + dz + 0.5f;
-
-		v[2].xyz[0]= float(connection->coord_end[0]) + dx + 0.5f;
-		v[2].xyz[1]= float(connection->coord_end[1]) + dy + 0.5f;
-		v[2].xyz[2]= float(connection->coord_end[2]) + dz + 0.5f;
-
-		v[3].xyz[0]= float(connection->coord_end[0]) - dx + 0.5f;
-		v[3].xyz[1]= float(connection->coord_end[1]) - dy + 0.5f;
-		v[3].xyz[2]= float(connection->coord_end[2]) - dz + 0.5f;
-
-		t[0]= (unsigned short)(base_vertex + 4*i);
-		t[1]= (unsigned short)(base_vertex + 4*i + 1);
-		t[2]= (unsigned short)(base_vertex + 4*i + 2);
-
-		t[3]= (unsigned short)(base_vertex + 4*i);
-		t[4]= (unsigned short)(base_vertex + 4*i + 2);
-		t[5]= (unsigned short)(base_vertex + 4*i + 3);
-	}
-
-	MX_ASSERT( t == mesh.triangle_count * 3 + mesh.triangles );
-	MX_ASSERT( v == mesh.vertices + mesh.vertex_count );
-
-	return mesh;
-}
-
-mx_LevelGenerator::Element*& mx_LevelGenerator::ElementMap( int x, int y, int z )
-{
-	MX_ASSERT( x >= 0 && x < MX_MAX_LEVEL_SIZE_CELLS );
-	MX_ASSERT( y >= 0 && y < MX_MAX_LEVEL_SIZE_CELLS );
-	MX_ASSERT( z >= 0 && z < MX_MAX_LEVEL_SIZE_CELLS );
-
-	return element_map_[ x + y * MX_MAX_LEVEL_SIZE_CELLS + z * MX_MAX_LEVEL_SIZE_CELLS * MX_MAX_LEVEL_SIZE_CELLS ];
 }
 
 void mx_LevelGenerator::PlaceConnections()
@@ -317,19 +289,28 @@ bool mx_LevelGenerator::CheckConnection( const Room* room0, const Room* room1 )
 	return false;
 }
 
-void mx_LevelGenerator::GenCube( const Room* room, mx_LevelVertex* vertices, unsigned short* indeces, unsigned int base_vertex )
+void mx_LevelGenerator::GenerateMeshes()
 {
-	static const unsigned char c_cube_vertices[]=
-	{
-		0, 0, 0,   0, 1, 0,   1, 1, 0,   1, 0, 0, // Z negative
-		1, 0, 1,   1, 1, 1,   0, 1, 1,   0, 0, 1, // Z positiove
+	out_level_data_.vertex_count= 0;
+	out_level_data_.triangle_count= 0;
 
-		1, 0, 0,   1, 1, 0,   1, 1, 1,   1, 0, 1, // X negative
-		0, 0, 1,   0, 1, 1,   0, 1, 0,   0, 0, 0, // X positiove
+	out_level_data_.vertices_capacity= room_count_ * 4 * 6 + connection_count_ * 4 * 6;
+	out_level_data_.triangles_capacity= room_count_ * 2 * 6 + connection_count_ * 2 * 6;
 
-		0, 1, 0,   0, 1, 1,   1, 1, 1,   1, 1, 0, // Y negative
-		1, 0, 0,   1, 0, 1,   0, 0, 1,   0, 0, 0, // Y positiove
-	};
+	out_level_data_.vertices= new mx_LevelVertex[ out_level_data_.vertices_capacity ];
+	out_level_data_.triangles= new mx_LevelData::Triangle[ out_level_data_.triangles_capacity ];
+
+	for( unsigned int i= 0; i < room_count_; i++ )
+		AddRoomCube( rooms_ + i );
+
+	for( unsigned int i= 0; i < connection_count_; i++ )
+		AddConnectionCube( connections_ + i );
+}
+
+void mx_LevelGenerator::AddRoomCube( const Room* room )
+{
+	MX_ASSERT( out_level_data_.vertex_count + 6 * 4 <= out_level_data_.vertices_capacity );
+	MX_ASSERT( out_level_data_.triangle_count + 6 * 2 <= out_level_data_.triangles_capacity );
 
 	float min_max[2][3]; // 0 - min, 1 - max
 	for( unsigned int i= 0; i < 3; i++ )
@@ -338,8 +319,7 @@ void mx_LevelGenerator::GenCube( const Room* room, mx_LevelVertex* vertices, uns
 		min_max[1][i]= float(room->coord_max[i]);
 	}
 
-	mx_LevelVertex* v= vertices;
-
+	mx_LevelVertex* v= out_level_data_.vertices + out_level_data_.vertex_count;
 	for( unsigned int i= 0; i < 4 * 6; i++ , v++ )
 	{
 		const unsigned char *c= c_cube_vertices + 3 * i;
@@ -349,14 +329,100 @@ void mx_LevelGenerator::GenCube( const Room* room, mx_LevelVertex* vertices, uns
 		v->xyz[2]= min_max[ c[2] ][2];
 	}
 
-	for( unsigned int i= base_vertex; i < base_vertex + 6 * 4; i+=4, indeces+= 6 )
+	mx_LevelData::Triangle* triangle= out_level_data_.triangles + out_level_data_.triangle_count;
+	for(
+		unsigned int i= out_level_data_.vertex_count;
+		i < out_level_data_.vertex_count + 6 * 4; i+=4, triangle+=2 )
 	{
-		indeces[0]= (unsigned short)(i   );
-		indeces[1]= (unsigned short)(i + 1);
-		indeces[2]= (unsigned short)(i + 2);
+		triangle[0].vertex_index[0]= (i    );
+		triangle[0].vertex_index[1]= (i + 1);
+		triangle[0].vertex_index[2]= (i + 2);
 
-		indeces[3]= (unsigned short)(i    );
-		indeces[4]= (unsigned short)(i + 2);
-		indeces[5]= (unsigned short)(i + 3);
+		triangle[1].vertex_index[0]= (i    );
+		triangle[1].vertex_index[1]= (i + 2);
+		triangle[1].vertex_index[2]= (i + 3);
+	}
+
+	out_level_data_.vertex_count+= 6 * 4;
+	out_level_data_.triangle_count+= 6 * 2;
+}
+
+void mx_LevelGenerator::AddConnectionCube( const Connection* connection )
+{
+	const unsigned int c_side_count= 4;
+
+	MX_ASSERT( out_level_data_.vertex_count + c_side_count * 4 <= out_level_data_.vertices_capacity );
+	MX_ASSERT( out_level_data_.triangle_count + c_side_count * 2 < out_level_data_.triangles_capacity );
+
+	float min_max[2][3]; // 0 - min, 1 - max
+	for( unsigned int i= 0; i < 3; i++ )
+	{
+		float b= float(connection->coord_begin[i]);
+		float e= float(connection->coord_end[i]);
+		if( b > e )
+			min_max[0][i]= e, min_max[1][i]= b;
+		else
+			min_max[0][i]= b,  min_max[1][i]= e;
+		min_max[1][i]++;
+	}
+
+	unsigned int skip_side;
+	if( connection->coord_begin[0] != connection->coord_end[0] )
+		skip_side= 0;
+	else if( connection->coord_begin[1] != connection->coord_end[1] )
+		skip_side= 1;
+	else
+	{
+		skip_side= 2;
+		MX_ASSERT( connection->coord_begin[2] != connection->coord_end[2] );
+	}
+
+	mx_LevelVertex* v= out_level_data_.vertices + out_level_data_.vertex_count;
+	for( unsigned int i= 0; i < 4 * 6; i++ )
+	{
+		if( i / 8u == skip_side ) continue;
+		const unsigned char *c= c_cube_vertices + 3 * i;
+	
+		v->xyz[0]= min_max[ c[0] ][0];
+		v->xyz[1]= min_max[ c[1] ][1];
+		v->xyz[2]= min_max[ c[2] ][2];
+		v++;
+	}
+
+	mx_LevelData::Triangle* triangle= out_level_data_.triangles + out_level_data_.triangle_count;
+	for(
+		unsigned int i= out_level_data_.vertex_count;
+		i < out_level_data_.vertex_count + c_side_count * 4; i+=4, triangle+=2 )
+	{
+		triangle[0].vertex_index[0]= (i    );
+		triangle[0].vertex_index[1]= (i + 1);
+		triangle[0].vertex_index[2]= (i + 2);
+
+		triangle[1].vertex_index[0]= (i    );
+		triangle[1].vertex_index[1]= (i + 2);
+		triangle[1].vertex_index[2]= (i + 3);
+	}
+
+	out_level_data_.vertex_count+= c_side_count * 4;
+	out_level_data_.triangle_count+= c_side_count * 2;
+}
+
+void mx_LevelGenerator::CalculateNormals()
+{
+	mx_LevelVertex* vertices= out_level_data_.vertices;
+
+	mx_LevelData::Triangle* triangle= out_level_data_.triangles;
+	for( unsigned int i= 0; i < out_level_data_.triangle_count; i++, triangle++ )
+	{
+		float v[2][3];
+		mxVec3Sub( vertices[ triangle->vertex_index[0] ].xyz, vertices[ triangle->vertex_index[1] ].xyz, v[0] );
+		mxVec3Sub( vertices[ triangle->vertex_index[1] ].xyz, vertices[ triangle->vertex_index[2] ].xyz, v[1] );
+
+		float normal[3];
+		mxVec3Cross( v[0], v[1], normal );
+		mxVec3Normalize( normal );
+		for( unsigned int j= 0; j < 3; j++ )
+			for( unsigned int k= 0; k < 3; k++ )
+				vertices[ triangle->vertex_index[j] ].normal[k]= (char)( normal[k] * 126.9f );
 	}
 }

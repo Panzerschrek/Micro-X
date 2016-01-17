@@ -31,12 +31,12 @@ common input/output names
 const char world_shader_v[]=
 "#version 330\n"
 "in vec3 p;"
+"in vec3 n;"
 "uniform mat4 mat;"
-"const vec4 colors[4]= vec4[4]( vec4(1,0,0,0), vec4(0,1,0,0), vec4(0,0,1,0), vec4(0.5, 0.5, 0.5, 0) );"
 "out vec4 fc;"
 "void main()"
 "{"
-	"fc=colors[gl_VertexID & 3];"
+	"fc= vec4(n*0.5+vec3(0.5,0.5,0.5),0.5);"
 	"gl_Position=mat*vec4(p,1.0);"
 "}"
 ;

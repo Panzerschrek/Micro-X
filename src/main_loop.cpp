@@ -169,16 +169,23 @@ mx_MainLoop::mx_MainLoop(
 	{
 		mx_LevelGenerator* generator= new mx_LevelGenerator();
 		generator->Generate();
-		mx_LevelMesh mesh= generator->GenerateLevelMesh();
+		const mx_LevelData& level_data= generator->GetLevelData();
+
+		vertex_buffer_.VertexData( level_data.vertices, sizeof(mx_LevelVertex) * level_data.vertex_count, sizeof(mx_LevelVertex) );
+		vertex_buffer_.IndexData( level_data.triangles, level_data.triangle_count * sizeof(unsigned int) * 3 );
+		delete[] level_data.vertices;
+		delete[] level_data.triangles;
 		delete generator;
 
-		vertex_buffer_.VertexData( mesh.vertices, sizeof(mx_LevelVertex) * mesh.vertex_count, sizeof(mx_LevelVertex) );
-		vertex_buffer_.VertexAttrib( 0, 3, GL_FLOAT, false, 0 );
-		vertex_buffer_.IndexData( mesh.triangles, mesh.triangle_count * sizeof(unsigned short) * 3 );
-		delete[] mesh.vertices;
-		delete[] mesh.triangles;
+		{
+			mx_LevelVertex v;
+			vertex_buffer_.VertexAttrib( 0, 3, GL_FLOAT, false, ((char*)v.xyz) - ((char*)&v) );
+			vertex_buffer_.VertexAttrib( 1, 3, GL_BYTE, false, ((char*)v.normal) - ((char*)&v) );
+		}
+		
 
 		shader_.SetAttribLocation( "p", 0 );
+		shader_.SetAttribLocation( "n", 1 );
 		shader_.Create( mx_Shaders::world_shader_v, mx_Shaders::world_shader_f );
 		static const char* const uniforms[]= { "mat" };
 		shader_.FindUniforms( uniforms, sizeof(uniforms) / sizeof(char*) );
@@ -268,7 +275,7 @@ void mx_MainLoop::Loop()
 			vertex_buffer_.Bind();
 			//glEnable( GL_CULL_FACE );
 			//glCullFace( GL_FRONT );
-			glDrawElements( GL_TRIANGLES, vertex_buffer_.IndexDataSize() / sizeof(unsigned short), GL_UNSIGNED_SHORT, NULL );
+			glDrawElements( GL_TRIANGLES, vertex_buffer_.IndexDataSize() / sizeof(unsigned int), GL_UNSIGNED_INT, NULL );
 		}
 
 		SwapBuffers( hdc_ );

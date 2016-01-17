@@ -11,10 +11,53 @@
 
 #define MX_MIN_ROOM_DISTANCE 3
 
-
 struct mx_LevelVertex
 {
 	float xyz[3];
+	float tex_coord[3];
+	char normal[3];
+};
+
+struct mx_LevelData
+{
+	struct Plane
+	{
+		float normal[3];
+		float dist;
+	};
+
+	struct Triangle
+	{
+		unsigned vertex_index[3];
+	};
+/*
+	struct Sector
+	{
+		enum
+		{
+			ROOM,
+			CONNECTION,
+		} type;
+
+		Plane planes[16];
+		unsigned int planes_count;
+
+		Sector* connections[MX_MAX_ROOM_CONNECTIONS];
+		unsigned int connections_count;
+
+		unsigned int first_triangle;
+		unsigned int triangles_count;
+	};
+*/
+	//Sector* sectors;
+
+	mx_LevelVertex* vertices;
+	unsigned int vertices_capacity;
+	unsigned int vertex_count;
+
+	Triangle* triangles;
+	unsigned int triangles_capacity;
+	unsigned int triangle_count;
 };
 
 struct mx_LevelMesh
@@ -33,7 +76,7 @@ public:
 
 	void Generate();
 
-	mx_LevelMesh GenerateLevelMesh() const;
+	const mx_LevelData& GetLevelData();
 
 private:
 	struct Element
@@ -68,11 +111,18 @@ private:
 private:
 	Element*& ElementMap( int x, int y, int z );
 
+	void PlaceRooms();
 	void PlaceConnections();
 	bool TryPlaceConnection( Room* room, const int* begin_coord, const int* direction );
 
 	static bool CheckConnection( const Room* room0, const Room* room1 );
 	static void GenCube( const Room* room, mx_LevelVertex* vertices, unsigned short* indeces, unsigned int base_vertex );
+
+	void GenerateMeshes();
+	void AddRoomCube( const Room* room );
+	void AddConnectionCube( const Connection* connection );
+	
+	void CalculateNormals();
 
 private:
 	Element* element_map_[ MX_MAX_LEVEL_SIZE_CELLS * MX_MAX_LEVEL_SIZE_CELLS * MX_MAX_LEVEL_SIZE_CELLS ];
@@ -84,4 +134,6 @@ private:
 	unsigned int connection_count_;
 
 	mx_Rand rand_;
+
+	mx_LevelData out_level_data_;
 };
