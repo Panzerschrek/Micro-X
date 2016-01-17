@@ -1,7 +1,7 @@
 #pragma once
 #include "mx_math.h"
 
-#define MX_MAX_LEVEL_SIZE_CELLS 64 * 2
+#define MX_MAX_LEVEL_SIZE_CELLS 48
 #define MX_MAX_ROOMS 64 * 2
 #define MX_MAX_CONNECTIONS 256 * 4
 
@@ -50,8 +50,8 @@ private:
 
 	struct Room : public Element
 	{
-		int coord_min[2];
-		int coord_max[2];
+		int coord_min[3];
+		int coord_max[3];
 
 		Connection* connections[ MX_MAX_ROOM_CONNECTIONS ];
 		unsigned int connection_count;
@@ -66,13 +66,16 @@ private:
 	};
 
 private:
-	Element*& ElementMap( int x, int y );
+	Element*& ElementMap( int x, int y, int z );
 
 	void PlaceConnections();
 	bool TryPlaceConnection( Room* room, const int* begin_coord, const int* direction );
 
+	static bool CheckConnection( const Room* room0, const Room* room1 );
+	static void GenCube( const Room* room, mx_LevelVertex* vertices, unsigned short* indeces, unsigned int base_vertex );
+
 private:
-	Element* element_map_[ MX_MAX_LEVEL_SIZE_CELLS * MX_MAX_LEVEL_SIZE_CELLS ];
+	Element* element_map_[ MX_MAX_LEVEL_SIZE_CELLS * MX_MAX_LEVEL_SIZE_CELLS * MX_MAX_LEVEL_SIZE_CELLS ];
 
 	Room rooms_[ MX_MAX_ROOMS ];
 	unsigned int room_count_;

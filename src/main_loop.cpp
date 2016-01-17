@@ -157,6 +157,9 @@ mx_MainLoop::mx_MainLoop(
 		glDebugMessageCallback( &GLDebugMessageCallback, NULL );
 #endif
 
+	// Initial OpenGL state
+	glEnable( GL_DEPTH_TEST );
+
 	start_time_ms_= prev_time_ms_= GetTickCount();
 
 	fps_calc_.prev_calc_time= std::clock();

@@ -32,8 +32,11 @@ const char world_shader_v[]=
 "#version 330\n"
 "in vec3 p;"
 "uniform mat4 mat;"
+"const vec4 colors[4]= vec4[4]( vec4(1,0,0,0), vec4(0,1,0,0), vec4(0,0,1,0), vec4(0.5, 0.5, 0.5, 0) );"
+"out vec4 fc;"
 "void main()"
 "{"
+	"fc=colors[gl_VertexID & 3];"
 	"gl_Position=mat*vec4(p,1.0);"
 "}"
 ;
@@ -41,9 +44,10 @@ const char world_shader_v[]=
 const char world_shader_f[]=
 "#version 330\n"
 "out vec4 c_;"
+"in vec4 fc;"
 "void main()"
 "{"
-	"c_=vec4(1.0,1.0,1.0,0.5);"
+	"c_=fc;"
 "}"
 ;
 
