@@ -53,6 +53,7 @@ void mx_LevelGenerator::Generate()
 	PlaceConnections();
 	GenerateMeshes();
 	CalculateNormals();
+	ClaculateTextureCoordinates();
 }
 
 const mx_LevelData& mx_LevelGenerator::GetLevelData()
@@ -425,4 +426,30 @@ void mx_LevelGenerator::CalculateNormals()
 			for( unsigned int k= 0; k < 3; k++ )
 				vertices[ triangle->vertex_index[j] ].normal[k]= (char)( normal[k] * 126.9f );
 	}
+}
+
+void mx_LevelGenerator::ClaculateTextureCoordinates()
+{
+	mx_LevelVertex* vertex= out_level_data_.vertices;
+	for( unsigned int i= 0; i < out_level_data_.vertex_count; i++, vertex++ )
+	{
+		float abs_normal[3];
+		for( unsigned int j= 0; j < 3; j++ ) abs_normal[j]= std::fabsf(vertex->normal[j]);
+
+		if( abs_normal[0] >= abs_normal[1] && abs_normal[0] >= abs_normal[2] )
+		{
+			vertex->tex_coord[0]= vertex->xyz[1];
+			vertex->tex_coord[1]= vertex->xyz[2];
+		}
+		else if( abs_normal[1] >= abs_normal[2] )
+		{
+			vertex->tex_coord[0]= vertex->xyz[0];
+			vertex->tex_coord[1]= vertex->xyz[2];
+		}
+		else
+		{
+			vertex->tex_coord[0]= vertex->xyz[0];
+			vertex->tex_coord[1]= vertex->xyz[1];
+		}
+	} // for vertices
 }

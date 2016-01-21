@@ -123,6 +123,7 @@ private:
 	void AddConnectionCube( const Connection* connection );
 	
 	void CalculateNormals();
+	void ClaculateTextureCoordinates();
 
 private:
 	Element* element_map_[ MX_MAX_LEVEL_SIZE_CELLS * MX_MAX_LEVEL_SIZE_CELLS * MX_MAX_LEVEL_SIZE_CELLS ];

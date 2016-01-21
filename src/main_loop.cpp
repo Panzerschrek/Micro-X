@@ -180,12 +180,14 @@ mx_MainLoop::mx_MainLoop(
 		{
 			mx_LevelVertex v;
 			vertex_buffer_.VertexAttrib( 0, 3, GL_FLOAT, false, ((char*)v.xyz) - ((char*)&v) );
-			vertex_buffer_.VertexAttrib( 1, 3, GL_BYTE, false, ((char*)v.normal) - ((char*)&v) );
+			vertex_buffer_.VertexAttrib( 1, 3, GL_BYTE, true, ((char*)v.normal) - ((char*)&v) );
+			vertex_buffer_.VertexAttrib( 2, 3, GL_FLOAT, false, ((char*)v.tex_coord) - ((char*)&v) );
 		}
 		
 
 		shader_.SetAttribLocation( "p", 0 );
 		shader_.SetAttribLocation( "n", 1 );
+		shader_.SetAttribLocation( "tc", 2 );
 		shader_.Create( mx_Shaders::world_shader_v, mx_Shaders::world_shader_f );
 		static const char* const uniforms[]= { "mat" };
 		shader_.FindUniforms( uniforms, sizeof(uniforms) / sizeof(char*) );
