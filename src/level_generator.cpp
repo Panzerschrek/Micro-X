@@ -299,13 +299,137 @@ void mx_LevelGenerator::GenerateMeshes()
 	out_level_data_.triangles_capacity= room_count_ * 2 * 6 + connection_count_ * 2 * 6;
 
 	out_level_data_.vertices= new mx_LevelVertex[ out_level_data_.vertices_capacity ];
-	out_level_data_.triangles= new mx_LevelData::Triangle[ out_level_data_.triangles_capacity ];
+	out_level_data_.triangles= new mx_LevelTriangle[ out_level_data_.triangles_capacity ];
 
 	for( unsigned int i= 0; i < room_count_; i++ )
 		AddRoomCube( rooms_ + i );
 
 	for( unsigned int i= 0; i < connection_count_; i++ )
 		AddConnectionCube( connections_ + i );
+}
+
+void mx_LevelGenerator::SpitTriangle( unsigned int triangle_index, const mx_Plane& plane )
+{
+	unsigned int discarded_vertex_count= 0;
+	unsigned int first_discarded_vertex_index= 0; // TODO - remove 0
+
+	mx_LevelTriangle& triangle= out_level_data_.triangles [ triangle_index ];
+
+	float dist[3];
+	for( unsigned int i= 0; i < 3; i++ )
+	{
+		dist[i]= mxVec3Dot( out_level_data_.vertices[ triangle.vertex_index[i] ].xyz, plane.normal ) - plane.dist;
+		if( dist[i] < 0.0f )
+		{
+			if( discarded_vertex_count == 0 )
+				first_discarded_vertex_index= i;
+			discarded_vertex_count++;
+		}
+	}
+
+	if( discarded_vertex_count == 0 ) // triangle fully passed
+		return;
+	if( discarded_vertex_count == 3 ) // fully discarded
+	{
+		if( triangle_index != out_level_data_.triangle_count - 1 )
+			out_level_data_.triangles[ triangle_index ]= out_level_data_.triangles[ out_level_data_.triangle_count - 1 ];
+		out_level_data_.triangle_count--;
+		return;
+	}
+
+	float new_vertices[2][3];
+	for( unsigned int i= 0; i < 2; i++ )
+	{
+		unsigned int ind0, ind1;
+		if( discarded_vertex_count == 2 )
+		{
+			if( i == 0 )
+			{
+				ind0= (first_discarded_vertex_index    ) % 3;
+				ind1= (first_discarded_vertex_index + 2) % 3;
+			}
+			else
+			{
+				ind0= (first_discarded_vertex_index + 1) % 3;
+				ind1= (first_discarded_vertex_index + 2) % 3;
+			}
+		}
+		else
+		{
+			if( i == 0 )
+			{
+				ind0= (first_discarded_vertex_index    ) % 3;
+				ind1= (first_discarded_vertex_index + 2) % 3;
+			}
+			else
+			{
+				ind0= (first_discarded_vertex_index    ) % 3;
+				ind1= (first_discarded_vertex_index + 1) % 3;
+			}
+		}
+		
+		float dist_sum= std::fabsf(dist[ ind0 ]) + std::fabsf(dist[ ind1 ]);
+		float k0= std::fabsf(dist[ ind0 ]) / dist_sum;
+		float k1= 1.0f - k0;
+
+		for( unsigned int j= 0; j < 3; j++ )
+			new_vertices[i][j]=
+				out_level_data_.vertices[ triangle.vertex_index[ind0] ].xyz[j] * k1 +
+				out_level_data_.vertices[ triangle.vertex_index[ind1] ].xyz[j] * k0;
+	}
+
+	if( discarded_vertex_count == 2 ) // 1 triangle left
+	{
+		ReserveTrianglesAndVertices( 0, 2 );
+		out_level_data_.vertex_count+= 2;
+
+		// Just replace discarded vertices
+		VEC3_CPY(
+			out_level_data_.vertices[ out_level_data_.vertex_count - 2 ].xyz,
+			new_vertices[0] );
+		VEC3_CPY(
+			out_level_data_.vertices[ out_level_data_.vertex_count - 1 ].xyz,
+			new_vertices[1] );
+
+		triangle.vertex_index[ first_discarded_vertex_index ]= out_level_data_.vertex_count - 2;
+		triangle.vertex_index[ ( first_discarded_vertex_index + 1 ) % 3 ]= out_level_data_.vertex_count - 1;
+
+		return;
+	}
+	//else if( discarded_vertex_count == 1 ) // make 2 triangles
+	{
+	}
+}
+
+void mx_LevelGenerator::ReserveTrianglesAndVertices( unsigned int new_triangle_count, unsigned int new_vertex_count )
+{
+	// TODO - remove duplicated code
+
+	unsigned int total_triangle_count= out_level_data_.triangle_count + new_triangle_count;
+	unsigned int total_vertex_count= out_level_data_.vertex_count + new_vertex_count;
+
+	if( total_triangle_count > out_level_data_.triangles_capacity )
+	{
+		total_triangle_count= total_triangle_count * 5u / 4u + 1u;
+
+		mx_LevelTriangle* new_triangles= new mx_LevelTriangle[ total_triangle_count ];
+		std::memcpy( new_triangles, out_level_data_.triangles, sizeof(mx_LevelTriangle) * out_level_data_.triangle_count );
+		delete[] out_level_data_.triangles;
+
+		out_level_data_.triangles= new_triangles;
+		out_level_data_.triangles_capacity= total_triangle_count;
+	}
+	if( total_vertex_count > out_level_data_.vertices_capacity )
+	{
+		total_vertex_count= total_vertex_count * 5u / 4u + 1u;
+
+		mx_LevelVertex* new_vertices= new mx_LevelVertex[ total_vertex_count ];
+		std::memcpy( new_vertices, out_level_data_.vertices, sizeof(mx_LevelVertex) * out_level_data_.vertex_count );
+		delete[] out_level_data_.vertices;
+
+		out_level_data_.vertices= new_vertices;
+		out_level_data_.triangles_capacity= total_vertex_count;
+	}
 }
 
 void mx_LevelGenerator::AddRoomCube( const Room* room )
@@ -330,7 +454,7 @@ void mx_LevelGenerator::AddRoomCube( const Room* room )
 		v->xyz[2]= min_max[ c[2] ][2];
 	}
 
-	mx_LevelData::Triangle* triangle= out_level_data_.triangles + out_level_data_.triangle_count;
+	mx_LevelTriangle* triangle= out_level_data_.triangles + out_level_data_.triangle_count;
 	for(
 		unsigned int i= out_level_data_.vertex_count;
 		i < out_level_data_.vertex_count + 6 * 4; i+=4, triangle+=2 )
@@ -346,6 +470,22 @@ void mx_LevelGenerator::AddRoomCube( const Room* room )
 
 	out_level_data_.vertex_count+= 6 * 4;
 	out_level_data_.triangle_count+= 6 * 2;
+
+	mx_Plane plane;
+	plane.normal[0]= 0.5f;
+	plane.normal[1]= 0.5f;
+	plane.normal[2]= 0.0f;
+	mxVec3Normalize(plane.normal);
+	plane.dist= 20.0f;
+	for( unsigned int i= out_level_data_.triangle_count - 6 * 2; i < out_level_data_.triangle_count; )
+	{
+		unsigned int before= out_level_data_.triangle_count;
+		SpitTriangle( i, plane );
+		unsigned int after= out_level_data_.triangle_count;
+		if( after < before ){}
+		else if( after > before ) i+=2;
+		else i++;
+	}
 }
 
 void mx_LevelGenerator::AddConnectionCube( const Connection* connection )
@@ -390,7 +530,7 @@ void mx_LevelGenerator::AddConnectionCube( const Connection* connection )
 		v++;
 	}
 
-	mx_LevelData::Triangle* triangle= out_level_data_.triangles + out_level_data_.triangle_count;
+	mx_LevelTriangle* triangle= out_level_data_.triangles + out_level_data_.triangle_count;
 	for(
 		unsigned int i= out_level_data_.vertex_count;
 		i < out_level_data_.vertex_count + c_side_count * 4; i+=4, triangle+=2 )
@@ -412,7 +552,7 @@ void mx_LevelGenerator::CalculateNormals()
 {
 	mx_LevelVertex* vertices= out_level_data_.vertices;
 
-	mx_LevelData::Triangle* triangle= out_level_data_.triangles;
+	mx_LevelTriangle* triangle= out_level_data_.triangles;
 	for( unsigned int i= 0; i < out_level_data_.triangle_count; i++, triangle++ )
 	{
 		float v[2][3];
