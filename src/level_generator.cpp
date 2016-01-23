@@ -324,11 +324,33 @@ void mx_LevelGenerator::GenerateMeshes()
 	out_level_data_.vertices= new mx_LevelVertex[ out_level_data_.vertices_capacity ];
 	out_level_data_.triangles= new mx_LevelTriangle[ out_level_data_.triangles_capacity ];
 
-	for( unsigned int i= 0; i < room_count_; i++ )
-		AddRoomCube( rooms_ + i );
+	out_level_data_.sector_count= room_count_ + connection_count_;
+	out_level_data_.sectors= new mx_LevelData::Sector[ out_level_data_.sector_count ];
 
-	for( unsigned int i= 0; i < connection_count_; i++ )
+	mx_LevelData::Sector* sector= out_level_data_.sectors;
+	for( unsigned int i= 0; i < room_count_; i++, sector++ )
+	{
+		sector->type= mx_LevelData::Sector::ROOM;
+		sector->first_triangle= out_level_data_.triangle_count;
+		AddRoomCube( rooms_ + i );
+		sector->triangles_count= out_level_data_.triangle_count - sector->first_triangle;
+
+		// TODO
+		sector->connections_count= 0;
+		sector->planes_count= 0;
+	}
+
+	for( unsigned int i= 0; i < connection_count_; i++, sector++ )
+	{
+		sector->type= mx_LevelData::Sector::CONNECTION;
+		sector->first_triangle= out_level_data_.triangle_count;
 		AddConnectionCube( connections_ + i );
+		sector->triangles_count= out_level_data_.triangle_count - sector->first_triangle;
+
+		// TODO
+		sector->connections_count= 0;
+		sector->planes_count= 0;
+	}
 }
 
 void mx_LevelGenerator::SpitTriangle( unsigned int triangle_index, const mx_Plane& plane )
@@ -548,6 +570,7 @@ void mx_LevelGenerator::AddRoomCube( const Room* room )
 			out_level_data_.triangle_count+= 2;
 		}
 	} // or xyz
+
 }
 
 void mx_LevelGenerator::AddConnectionCube( const Connection* connection )

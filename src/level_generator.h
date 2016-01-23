@@ -31,7 +31,7 @@ struct mx_Plane
 
 struct mx_LevelData
 {
-/*
+
 	struct Sector
 	{
 		enum
@@ -40,7 +40,7 @@ struct mx_LevelData
 			CONNECTION,
 		} type;
 
-		Plane planes[16];
+		mx_Plane planes[16];
 		unsigned int planes_count;
 
 		Sector* connections[MX_MAX_ROOM_CONNECTIONS];
@@ -49,8 +49,9 @@ struct mx_LevelData
 		unsigned int first_triangle;
 		unsigned int triangles_count;
 	};
-*/
-	//Sector* sectors;
+
+	Sector* sectors;
+	unsigned int sector_count;
 
 	mx_LevelVertex* vertices;
 	unsigned int vertices_capacity;
