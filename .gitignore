@@ -11,3 +11,10 @@
 #ouput directories
 Debug/*
 Release/*
+
+#generated data
+models/*.mfmd
+models/*.h
+models/*.obj
+models/*.blend1
+models/*.blend2

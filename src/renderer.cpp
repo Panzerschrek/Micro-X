@@ -8,7 +8,7 @@
 #include "renderer.h"
 
 static const unsigned char g_test_model_data[]=
-#include "../models/f1949.h"
+#include "../models/robot.h"
 ;
 
 mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
