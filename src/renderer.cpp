@@ -1,3 +1,4 @@
+#include "drawing_model.h"
 #include "level.h"
 #include "main_loop.h"
 #include "mx_math.h"
@@ -5,6 +6,10 @@
 #include "shaders.h"
 
 #include "renderer.h"
+
+static const unsigned char g_test_model_data[]=
+#include "../models/f1949.h"
+;
 
 mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 	: main_loop_(*mx_MainLoop::Instance())
@@ -32,6 +37,23 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 		world_shader_.Create( mx_Shaders::world_shader_v, mx_Shaders::world_shader_f );
 		static const char* const uniforms[]= { "mat" };
 		world_shader_.FindUniforms( uniforms, sizeof(uniforms) / sizeof(char*) );
+	}
+
+	{
+		mx_DrawingModel model;
+		model.LoadFromMFMD( g_test_model_data );
+
+		model_vertex_buffer_.VertexData(
+			model.GetVertexData(),
+			model.GetVertexCount() * sizeof(mx_DrawingModelVertex),
+			sizeof(mx_DrawingModelVertex) );
+
+		model_vertex_buffer_.IndexData( model.GetIndexData(), model.GetIndexCount() * sizeof(unsigned short) );
+
+		mx_DrawingModelVertex v;
+		model_vertex_buffer_.VertexAttrib( 0, 3, GL_FLOAT, false, ((char*)v.pos) - ((char*)&v) );
+		model_vertex_buffer_.VertexAttrib( 1, 3, GL_FLOAT, true, ((char*)v.normal) - ((char*)&v) );
+		model_vertex_buffer_.VertexAttrib( 2, 3, GL_FLOAT, false, ((char*)v.tex_coord) - ((char*)&v) );
 	}
 }
 
@@ -86,4 +108,10 @@ void mx_Renderer::DrawWorld()
 	//glCullFace( GL_FRONT );
 	//glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	glDrawElements( GL_TRIANGLES, world_vertex_buffer_.IndexDataSize() / sizeof(unsigned int), GL_UNSIGNED_INT, NULL );
+
+	model_vertex_buffer_.Bind();
+	glEnable( GL_CULL_FACE );
+	glCullFace( GL_BACK );
+	//glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+	glDrawElements( GL_TRIANGLES, model_vertex_buffer_.IndexDataSize() / sizeof(unsigned short), GL_UNSIGNED_SHORT, NULL );
 }

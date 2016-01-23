@@ -30,5 +30,7 @@ private:
 	mx_GLSLProgram world_shader_;
 	mx_VertexBuffer world_vertex_buffer_;
 
+	mx_VertexBuffer model_vertex_buffer_;
+
 	float view_matrix_[16];
 };

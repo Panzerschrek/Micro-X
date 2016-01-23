@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9,00"
-	Name="Micro-X"
-	ProjectGUID="{AF0C18F0-9E98-444F-BF0A-2BBAD0B2E058}"
-	RootNamespace="MicroX"
+	Name="obj2mxmd_convertex"
+	ProjectGUID="{1D8C351D-D8FF-4C7A-BD9A-81C6523186F5}"
+	RootNamespace="obj2mxmd_convertex"
 	TargetFrameworkVersion="196613"
 	>
 	<Platforms>
@@ -40,13 +40,11 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS;MX_DEBUG"
+				PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				EnableEnhancedInstructionSet="2"
 				WarningLevel="4"
-				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="4"
 			/>
 			<Tool
@@ -60,8 +58,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib"
-				OutputFile="Micro-X_d.exe"
+				OutputFile="obj2mxmd_converter_d.exe"
 				GenerateDebugInformation="true"
 				TargetMachine="1"
 			/>
@@ -112,21 +109,12 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="1"
+				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				FavorSizeOrSpeed="2"
-				OmitFramePointers="true"
 				PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-				StringPooling="true"
-				ExceptionHandling="0"
 				RuntimeLibrary="2"
-				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
-				EnableEnhancedInstructionSet="2"
-				RuntimeTypeInfo="false"
-				AssemblerOutput="4"
 				WarningLevel="4"
-				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -140,10 +128,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib"
-				OutputFile="Micro-X.exe"
-				GenerateDebugInformation="false"
-				SubSystem="2"
+				OutputFile="obj2mxmd_converter.exe"
+				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				TargetMachine="1"
@@ -180,119 +166,19 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\src\drawing_model.cpp"
+				RelativePath=".\src\mx_model.h"
 				>
 			</File>
 			<File
-				RelativePath=".\src\glsl_program.cpp"
+				RelativePath=".\src\obj2mxmd_converter.cpp"
 				>
 			</File>
-			<File
-				RelativePath=".\src\level.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\level_generator.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\main.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\main_loop.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\mx_math.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\player.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\renderer.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\shaders.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\vertex_buffer.cpp"
-				>
-			</File>
-			<Filter
-				Name="gl"
-				>
-				<File
-					RelativePath=".\src\gl\funcs.cpp"
-					>
-				</File>
-			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath=".\src\drawing_model.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\glsl_program.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\level.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\level_generator.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\main_loop.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\mx_assert.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\mx_math.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\mx_model.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\player.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\renderer.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\shaders.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\vertex_buffer.h"
-				>
-			</File>
-			<Filter
-				Name="gl"
-				>
-				<File
-					RelativePath=".\src\gl\funcs.h"
-					>
-				</File>
-			</Filter>
 		</Filter>
 		<Filter
 			Name="Resource Files"
