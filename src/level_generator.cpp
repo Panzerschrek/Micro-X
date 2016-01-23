@@ -25,6 +25,27 @@ static bool IsPointOutsideMap( int* coord )
 	coord[2] < 0 || coord[2] >= MX_MAX_LEVEL_SIZE_CELLS;;
 }
 
+static void GenQuadIndexation( mx_LevelTriangle* quad_triangles, unsigned int base_vertex )
+{
+	quad_triangles[0].vertex_index[0]= (base_vertex    );
+	quad_triangles[0].vertex_index[1]= (base_vertex + 1);
+	quad_triangles[0].vertex_index[2]= (base_vertex + 2);
+
+	quad_triangles[1].vertex_index[0]= (base_vertex    );
+	quad_triangles[1].vertex_index[1]= (base_vertex + 2);
+	quad_triangles[1].vertex_index[2]= (base_vertex + 3);
+}
+
+static const void SwapVertices( float* v0, float* v1 )
+{
+	for( unsigned int i= 0; i < 3; i++ )
+	{
+			float tmp= v0[i];
+			v0[i]= v1[i];
+			v1[i]= tmp;
+	}
+}
+
 mx_LevelGenerator::mx_LevelGenerator()
 	: room_count_(0)
 	, connection_count_(0)
@@ -48,12 +69,13 @@ void mx_LevelGenerator::Generate()
 	MX_ASSERT( room_count_ == 0 );
 	MX_ASSERT( connection_count_ == 0 );
 
-
 	PlaceRooms();
 	PlaceConnections();
 	GenerateMeshes();
 	CalculateNormals();
 	ClaculateTextureCoordinates();
+
+	printf( "triangles: %u vertices: %u\n", out_level_data_.triangle_count, out_level_data_.vertex_count );
 }
 
 const mx_LevelData& mx_LevelGenerator::GetLevelData()
@@ -226,6 +248,7 @@ bool mx_LevelGenerator::TryPlaceConnection( Room* room, const int* begin_coord, 
 					coord[1]+= direction[1];
 					coord[2]+= direction[2];
 				}
+				ElementMap( connection->coord_end[0], connection->coord_end[1], connection->coord_end[2] )= connection;
 				return true;
 			}
 			else
@@ -438,77 +461,100 @@ void mx_LevelGenerator::ReserveTrianglesAndVertices( unsigned int new_triangle_c
 
 void mx_LevelGenerator::AddRoomCube( const Room* room )
 {
-	MX_ASSERT( out_level_data_.vertex_count + 6 * 4 <= out_level_data_.vertices_capacity );
-	MX_ASSERT( out_level_data_.triangle_count + 6 * 2 <= out_level_data_.triangles_capacity );
-
-	float min_max[2][3]; // 0 - min, 1 - max
-	for( unsigned int i= 0; i < 3; i++ )
+	for( int z= room->coord_min[2] - 1; z < room->coord_max[2]; z++ )
+	for( int y= room->coord_min[1] - 1; y < room->coord_max[1]; y++ )
+	for( int x= room->coord_min[0] - 1; x < room->coord_max[0]; x++ )
 	{
-		min_max[0][i]= float(room->coord_min[i]);
-		min_max[1][i]= float(room->coord_max[i]);
-	}
+		Element* element= ElementMap( x, y, z );
+		Element* el_x= ElementMap( x + 1, y, z );
+		Element* el_y= ElementMap( x, y + 1, z );
+		Element* el_z= ElementMap( x, y, z + 1 );
 
-	mx_LevelVertex* v= out_level_data_.vertices + out_level_data_.vertex_count;
-	for( unsigned int i= 0; i < 4 * 6; i++ )
-	{
-		const unsigned char *c= c_cube_vertices + 3 * i;
-		v->xyz[0]= min_max[ c[0] ][0];
-		v->xyz[1]= min_max[ c[1] ][1];
-		v->xyz[2]= min_max[ c[2] ][2];
-		
-		if( (i & 3) == 3 )
+		bool is_element= element == NULL;
+		bool is_el_x= el_x == NULL;
+		bool is_el_y= el_y == NULL;
+		bool is_el_z= el_z == NULL;
+
+		if( (is_element ^ is_el_x) && (element == room || el_x == room ) )
 		{
-			unsigned int vi= out_level_data_.vertex_count;
-			out_level_data_.vertex_count += 4;
+			ReserveTrianglesAndVertices( 2, 4 );
+			mx_LevelVertex* v= out_level_data_.vertices + out_level_data_.vertex_count;
 
-			mx_Plane plane;
-			plane.normal[0]= 0.5f;
-			plane.normal[1]= 0.8f;
-			plane.normal[2]= 0.5f;
-			mxVec3Normalize(plane.normal);
-			plane.dist= 30.0f;
+			v[0].xyz[0]= float(x+1);
+			v[0].xyz[1]= float(y);
+			v[0].xyz[2]= float(z);
+			v[1].xyz[0]= float(x+1);
+			v[1].xyz[1]= float(y+1);
+			v[1].xyz[2]= float(z);
+			v[2].xyz[0]= float(x+1);
+			v[2].xyz[1]= float(y+1);
+			v[2].xyz[2]= float(z+1);
+			v[3].xyz[0]= float(x+1);
+			v[3].xyz[1]= float(y);
+			v[3].xyz[2]= float(z+1);
 
-			mx_LevelTriangle* triangle= out_level_data_.triangles + out_level_data_.triangle_count;
+			if( is_element ) SwapVertices( v[1].xyz, v[3].xyz );
 
-			triangle->vertex_index[0]= (vi    );
-			triangle->vertex_index[1]= (vi + 1);
-			triangle->vertex_index[2]= (vi + 2);
-			out_level_data_.triangle_count++;
-			SpitTriangle( out_level_data_.triangle_count - 1, plane );
-
-			triangle= out_level_data_.triangles + out_level_data_.triangle_count;
-
-			triangle->vertex_index[0]= (vi    );
-			triangle->vertex_index[1]= (vi + 2);
-			triangle->vertex_index[2]= (vi + 3);
-			out_level_data_.triangle_count++;
-			SpitTriangle( out_level_data_.triangle_count - 1, plane );
-
-			v= out_level_data_.vertices + out_level_data_.vertex_count;
+			GenQuadIndexation( out_level_data_.triangles + out_level_data_.triangle_count, out_level_data_.vertex_count );
+			out_level_data_.vertex_count+= 4;
+			out_level_data_.triangle_count+= 2;
 		}
-		else
-			v++;
-	}
-/*
-	
-	
-	for( unsigned int i= out_level_data_.triangle_count - 6 * 2, i_max= out_level_data_.triangle_count;
-		i < i_max; )
-	{
-		unsigned int before= out_level_data_.triangle_count;
-		SpitTriangle( i, plane );
-		unsigned int after= out_level_data_.triangle_count;
+		if( (is_element ^ is_el_y) && (element == room || el_y == room ) )
+		{
+			ReserveTrianglesAndVertices( 2, 4 );
+			mx_LevelVertex* v= out_level_data_.vertices + out_level_data_.vertex_count;
 
-		if( after < before )i_max--;
-		else if ( after > before ) i++;
-		else i++;
-	}*/
+			v[0].xyz[0]= float(x);
+			v[0].xyz[1]= float(y+1);
+			v[0].xyz[2]= float(z);
+			v[1].xyz[0]= float(x);
+			v[1].xyz[1]= float(y+1);
+			v[1].xyz[2]= float(z+1);
+			v[2].xyz[0]= float(x+1);
+			v[2].xyz[1]= float(y+1);
+			v[2].xyz[2]= float(z+1);
+			v[3].xyz[0]= float(x+1);
+			v[3].xyz[1]= float(y+1);
+			v[3].xyz[2]= float(z);
+
+			if( is_element ) SwapVertices( v[1].xyz, v[3].xyz );
+
+			GenQuadIndexation( out_level_data_.triangles + out_level_data_.triangle_count, out_level_data_.vertex_count );
+			out_level_data_.vertex_count+= 4;
+			out_level_data_.triangle_count+= 2;
+		}
+		if( (is_element ^ is_el_z) && (element == room || el_z == room ) )
+		{
+			ReserveTrianglesAndVertices( 2, 4 );
+			mx_LevelVertex* v= out_level_data_.vertices + out_level_data_.vertex_count;
+
+			v[0].xyz[0]= float(x);
+			v[0].xyz[1]= float(y);
+			v[0].xyz[2]= float(z+1);
+			v[1].xyz[0]= float(x+1);
+			v[1].xyz[1]= float(y);
+			v[1].xyz[2]= float(z+1);
+			v[2].xyz[0]= float(x+1);
+			v[2].xyz[1]= float(y+1);
+			v[2].xyz[2]= float(z+1);
+			v[3].xyz[0]= float(x);
+			v[3].xyz[1]= float(y+1);
+			v[3].xyz[2]= float(z+1);
+
+			if( is_element ) SwapVertices( v[1].xyz, v[3].xyz );
+
+			GenQuadIndexation( out_level_data_.triangles + out_level_data_.triangle_count, out_level_data_.vertex_count );
+			out_level_data_.vertex_count+= 4;
+			out_level_data_.triangle_count+= 2;
+		}
+	} // or xyz
 }
 
 void mx_LevelGenerator::AddConnectionCube( const Connection* connection )
 {
 	const unsigned int c_side_count= 4;
 
+	ReserveTrianglesAndVertices( c_side_count * 2, c_side_count * 4 );
 	MX_ASSERT( out_level_data_.vertex_count + c_side_count * 4 <= out_level_data_.vertices_capacity );
 	MX_ASSERT( out_level_data_.triangle_count + c_side_count * 2 < out_level_data_.triangles_capacity );
 
