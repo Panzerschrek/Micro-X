@@ -378,26 +378,44 @@ void mx_LevelGenerator::SpitTriangle( unsigned int triangle_index, const mx_Plan
 				out_level_data_.vertices[ triangle.vertex_index[ind1] ].xyz[j] * k0;
 	}
 
+	ReserveTrianglesAndVertices( 0, 2 );
+	out_level_data_.vertex_count+= 2;
+
+	VEC3_CPY(
+		out_level_data_.vertices[ out_level_data_.vertex_count - 2 ].xyz,
+		new_vertices[0] );
+	VEC3_CPY(
+		out_level_data_.vertices[ out_level_data_.vertex_count - 1 ].xyz,
+		new_vertices[1] );
+
 	if( discarded_vertex_count == 2 ) // 1 triangle left
 	{
-		ReserveTrianglesAndVertices( 0, 2 );
-		out_level_data_.vertex_count+= 2;
-
-		// Just replace discarded vertices
-		VEC3_CPY(
-			out_level_data_.vertices[ out_level_data_.vertex_count - 2 ].xyz,
-			new_vertices[0] );
-		VEC3_CPY(
-			out_level_data_.vertices[ out_level_data_.vertex_count - 1 ].xyz,
-			new_vertices[1] );
-
+		// Replace old vertices and place new
 		triangle.vertex_index[ first_discarded_vertex_index ]= out_level_data_.vertex_count - 2;
 		triangle.vertex_index[ ( first_discarded_vertex_index + 1 ) % 3 ]= out_level_data_.vertex_count - 1;
-
 		return;
 	}
 	//else if( discarded_vertex_count == 1 ) // make 2 triangles
 	{
+		ReserveTrianglesAndVertices( 1, 0 );
+		out_level_data_.triangle_count++;
+		// Update reference after buffer reallocation
+		mx_LevelTriangle& triangle2= out_level_data_.triangles[ triangle_index ];
+
+		unsigned int ind0= triangle2.vertex_index[ (first_discarded_vertex_index + 2 ) % 3 ];
+		unsigned int ind1= triangle2.vertex_index[ (first_discarded_vertex_index + 1 ) % 3 ];
+
+		triangle2.vertex_index[0]= ind0;
+		triangle2.vertex_index[1]= out_level_data_.vertex_count - 2;
+		triangle2.vertex_index[2]= out_level_data_.vertex_count - 1;
+
+		mx_LevelTriangle& triangle3= out_level_data_.triangles[ out_level_data_.triangle_count - 1 ];
+
+		triangle3.vertex_index[0]= ind0;
+		triangle3.vertex_index[1]= out_level_data_.vertex_count - 1;
+		triangle3.vertex_index[2]= ind1;
+
+		return;
 	}
 }
 
@@ -428,7 +446,7 @@ void mx_LevelGenerator::ReserveTrianglesAndVertices( unsigned int new_triangle_c
 		delete[] out_level_data_.vertices;
 
 		out_level_data_.vertices= new_vertices;
-		out_level_data_.triangles_capacity= total_vertex_count;
+		out_level_data_.vertices_capacity= total_vertex_count;
 	}
 }
 
@@ -473,17 +491,21 @@ void mx_LevelGenerator::AddRoomCube( const Room* room )
 
 	mx_Plane plane;
 	plane.normal[0]= 0.5f;
-	plane.normal[1]= 0.5f;
+	plane.normal[1]= 0.8f;
 	plane.normal[2]= 0.0f;
 	mxVec3Normalize(plane.normal);
 	plane.dist= 20.0f;
-	for( unsigned int i= out_level_data_.triangle_count - 6 * 2; i < out_level_data_.triangle_count; )
+
+	
+	for( unsigned int i= out_level_data_.triangle_count - 6 * 2, i_max= out_level_data_.triangle_count;
+		i < i_max; )
 	{
 		unsigned int before= out_level_data_.triangle_count;
 		SpitTriangle( i, plane );
 		unsigned int after= out_level_data_.triangle_count;
-		if( after < before ){}
-		else if( after > before ) i+=2;
+
+		if( after < before )i_max--;
+		else if ( after > vefore ) i++;
 		else i++;
 	}
 }

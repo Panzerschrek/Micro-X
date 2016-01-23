@@ -18,18 +18,19 @@ struct mx_LevelVertex
 	char normal[3];
 };
 
+struct mx_LevelTriangle
+{
+	unsigned vertex_index[3];
+};
+
+struct mx_Plane
+{
+	float normal[3];
+	float dist;
+};
+
 struct mx_LevelData
 {
-	struct Plane
-	{
-		float normal[3];
-		float dist;
-	};
-
-	struct Triangle
-	{
-		unsigned vertex_index[3];
-	};
 /*
 	struct Sector
 	{
@@ -55,7 +56,7 @@ struct mx_LevelData
 	unsigned int vertices_capacity;
 	unsigned int vertex_count;
 
-	Triangle* triangles;
+	mx_LevelTriangle* triangles;
 	unsigned int triangles_capacity;
 	unsigned int triangle_count;
 };
@@ -119,6 +120,8 @@ private:
 	static void GenCube( const Room* room, mx_LevelVertex* vertices, unsigned short* indeces, unsigned int base_vertex );
 
 	void GenerateMeshes();
+	void SpitTriangle( unsigned int triangle_index, const mx_Plane& plane );
+	void ReserveTrianglesAndVertices( unsigned int new_triangle_count, unsigned int new_vertex_count );
 	void AddRoomCube( const Room* room );
 	void AddConnectionCube( const Connection* connection );
 	
