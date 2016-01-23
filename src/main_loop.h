@@ -2,13 +2,12 @@
 
 #include <windows.h>
 
-#include "glsl_program.h"
-#include "vertex_buffer.h"
-
 #define MX_MIN_VIEWPORT_WIDTH  800
 #define MX_MIN_VIEWPORT_HEIGHT 600
 
+class mx_Level;
 class mx_Player;
+class mx_Renderer;
 
 class mx_MainLoop
 {
@@ -75,11 +74,9 @@ private:
 		unsigned int current_calc_frame_count;
 	}fps_calc_;
 
-	// Temp
-	mx_GLSLProgram shader_;
-	mx_VertexBuffer vertex_buffer_;
-
 	mx_Player* player_;
+	mx_Level* level_;
+	mx_Renderer* renderer_;
 };
 
 inline mx_MainLoop* mx_MainLoop::Instance()

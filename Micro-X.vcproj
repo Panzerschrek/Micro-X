@@ -184,6 +184,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\level.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\level_generator.cpp"
 				>
 			</File>
@@ -201,6 +205,10 @@
 			</File>
 			<File
 				RelativePath=".\src\player.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\renderer.cpp"
 				>
 			</File>
 			<File
@@ -230,6 +238,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\level.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\level_generator.h"
 				>
 			</File>
@@ -247,6 +259,10 @@
 			</File>
 			<File
 				RelativePath=".\src\player.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\renderer.h"
 				>
 			</File>
 			<File

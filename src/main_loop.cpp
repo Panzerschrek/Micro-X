@@ -2,10 +2,11 @@
 #include <ctime>
 
 #include "gl/funcs.h"
+#include "level.h"
 #include "level_generator.h"
-#include "mx_math.h"
+#include "mx_assert.h"
 #include "player.h"
-#include "shaders.h"
+#include "renderer.h"
 
 #include "main_loop.h"
 
@@ -43,7 +44,8 @@ void mx_MainLoop::CreateInstance(
 	bool invert_mouse_y,
 	float mouse_speed_x, float mouse_speed_y )
 {
-	instance_= new
+	MX_ASSERT( !instance_ );
+	new
 		mx_MainLoop(
 			viewport_width, viewport_height,
 			fullscreen, vsync,
@@ -53,6 +55,8 @@ void mx_MainLoop::CreateInstance(
 
 void mx_MainLoop::DeleteInstance()
 {
+	MX_ASSERT( instance_ );
+
 	delete instance_;
 	instance_= NULL;
 }
@@ -69,6 +73,8 @@ mx_MainLoop::mx_MainLoop(
 	, quit_(false)
 	, prev_cursor_pos_(), mouse_captured_(false)
 {
+	instance_= this;
+
 	int border_size, top_border_size, bottom_border_size;
 
 	window_class_.cbSize= sizeof(WNDCLASSEX);
@@ -166,34 +172,14 @@ mx_MainLoop::mx_MainLoop(
 	fps_calc_.frame_count_to_show= 0;
 	fps_calc_.current_calc_frame_count= 0;
 
-	{
-		mx_LevelGenerator* generator= new mx_LevelGenerator();
-		generator->Generate();
-		const mx_LevelData& level_data= generator->GetLevelData();
-
-		vertex_buffer_.VertexData( level_data.vertices, sizeof(mx_LevelVertex) * level_data.vertex_count, sizeof(mx_LevelVertex) );
-		vertex_buffer_.IndexData( level_data.triangles, level_data.triangle_count * sizeof(unsigned int) * 3 );
-		delete[] level_data.vertices;
-		delete[] level_data.triangles;
-		delete generator;
-
-		{
-			mx_LevelVertex v;
-			vertex_buffer_.VertexAttrib( 0, 3, GL_FLOAT, false, ((char*)v.xyz) - ((char*)&v) );
-			vertex_buffer_.VertexAttrib( 1, 3, GL_BYTE, true, ((char*)v.normal) - ((char*)&v) );
-			vertex_buffer_.VertexAttrib( 2, 3, GL_FLOAT, false, ((char*)v.tex_coord) - ((char*)&v) );
-		}
-		
-
-		shader_.SetAttribLocation( "p", 0 );
-		shader_.SetAttribLocation( "n", 1 );
-		shader_.SetAttribLocation( "tc", 2 );
-		shader_.Create( mx_Shaders::world_shader_v, mx_Shaders::world_shader_f );
-		static const char* const uniforms[]= { "mat" };
-		shader_.FindUniforms( uniforms, sizeof(uniforms) / sizeof(char*) );
-	}
-
 	player_= new mx_Player();
+
+	mx_LevelGenerator* generator= new mx_LevelGenerator();
+	generator->Generate();
+	level_= new mx_Level( generator->GetLevelData() );
+	delete generator;
+	
+	renderer_= new mx_Renderer( *level_, *player_ );
 
 	//CaptureMouse( true );
 }
@@ -249,43 +235,7 @@ void mx_MainLoop::Loop()
 		glClearColor( 0.1f, 0.1f, 0.1f, 0.0f );
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-		{
-			float translate_vec[3];
-			float pers_mat[16];
-			float rot_mat[16];
-			float basis_change_mat[16];
-			float translate_mat[16];
-			float result_mat[16];
-
-			mxVec3Mul( player_->Pos(), -1.0f, translate_vec );
-			mxMat4Translate( translate_mat, translate_vec );
-
-			mxMat4Perspective( pers_mat,
-				float(viewport_width_)/ float(viewport_height_),
-				player_->Fov(), 0.5f, 256.0f );
-
-			player_->CreateRotationMatrix4( rot_mat );
-
-			{
-				mxMat4RotateX( basis_change_mat, -MX_PI2 );
-				float tmp_mat[16];
-				mxMat4Identity( tmp_mat );
-				tmp_mat[10]= -1.0f;
-				mxMat4Mul( basis_change_mat, tmp_mat );
-			}
-			
-			mxMat4Mul( translate_mat, rot_mat, result_mat );
-			mxMat4Mul( result_mat, basis_change_mat );
-			mxMat4Mul( result_mat, pers_mat );
-
-			shader_.Bind();
-			shader_.UniformMat4( "mat", result_mat );
-
-			vertex_buffer_.Bind();
-			//glEnable( GL_CULL_FACE );
-			//glCullFace( GL_FRONT );
-			glDrawElements( GL_TRIANGLES, vertex_buffer_.IndexDataSize() / sizeof(unsigned int), GL_UNSIGNED_INT, NULL );
-		}
+		renderer_->Draw();
 
 		SwapBuffers( hdc_ );
 		//CalculateFPS();
@@ -294,11 +244,8 @@ void mx_MainLoop::Loop()
 
 LRESULT CALLBACK mx_MainLoop::WindowProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
-	// This method calls just after creation of window, in class constructor.
-	// At this moment instance_ is nullptr.
-	if( !instance_ ) goto def_proc;
-
 	mx_Player* player= instance_->player_;
+	if( !player ) goto def_proc;
 
 	switch(uMsg)
 	{
