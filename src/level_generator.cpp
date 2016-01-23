@@ -71,11 +71,11 @@ void mx_LevelGenerator::Generate()
 
 	PlaceRooms();
 	PlaceConnections();
+	CalculateLinkage();
+
 	GenerateMeshes();
 	CalculateNormals();
 	ClaculateTextureCoordinates();
-
-	printf( "triangles: %u vertices: %u\n", out_level_data_.triangle_count, out_level_data_.vertex_count );
 }
 
 const mx_LevelData& mx_LevelGenerator::GetLevelData()
@@ -303,6 +303,65 @@ bool mx_LevelGenerator::TryPlaceConnection( Room* room, const int* begin_coord, 
 	return false;
 }
 
+void mx_LevelGenerator::CalculateLinkage()
+{
+	// Initial state - all rooms unlinked
+	for( unsigned int i= 0; i < room_count_; i++ )
+		rooms_[i].linkage_group_id= 0;
+
+	unsigned int linkage_id= 1;
+
+	for( unsigned int i= 0; i < room_count_; i++ )
+	{
+		Room* room= rooms_ + i;
+
+		if( room->linkage_group_id == 0 )
+		{
+			room->linkage_group_id= linkage_id;
+			SetRoomLinkage_r( room );
+
+			linkage_id++;
+		}
+	}
+
+	unsigned int* linkage_groups= new unsigned int[ linkage_id ];
+	for( unsigned int i= 0; i < linkage_id; i++ )
+		linkage_groups[i]= 0;
+
+	for( unsigned int i= 0; i < room_count_; i++ )
+		linkage_groups[ rooms_[i].linkage_group_id ] ++;
+
+	MX_ASSERT( linkage_groups[0] == 0 );
+
+	max_linkage_group_id_= 0;
+	for( unsigned int i= 0; i < linkage_id; i++ )
+	{
+		if( linkage_groups[i] > linkage_groups[max_linkage_group_id_] )
+			max_linkage_group_id_= i;
+	}
+
+	delete[] linkage_groups;
+}
+
+void mx_LevelGenerator::SetRoomLinkage_r( Room* room )
+{
+	for( unsigned int i= 0; i < room->connection_count; i++ )
+	{
+		Connection* connection= room->connections[i];
+		Room* next_room= connection->begin == room ? connection->end : connection->begin;
+
+		if( next_room->linkage_group_id == 0 )
+		{
+			next_room->linkage_group_id= room->linkage_group_id;
+			SetRoomLinkage_r( next_room );
+		}
+		else
+		{
+			MX_ASSERT( next_room->linkage_group_id == room->linkage_group_id );
+		}
+	}
+}
+
 bool mx_LevelGenerator::CheckConnection( const Room* room0, const Room* room1 )
 {
 	for( unsigned int i= 0; i < room0->connection_count; i++ )
@@ -324,32 +383,45 @@ void mx_LevelGenerator::GenerateMeshes()
 	out_level_data_.vertices= new mx_LevelVertex[ out_level_data_.vertices_capacity ];
 	out_level_data_.triangles= new mx_LevelTriangle[ out_level_data_.triangles_capacity ];
 
-	out_level_data_.sector_count= room_count_ + connection_count_;
-	out_level_data_.sectors= new mx_LevelData::Sector[ out_level_data_.sector_count ];
+	out_level_data_.sectors= new mx_LevelData::Sector[ room_count_ + connection_count_ ];
 
 	mx_LevelData::Sector* sector= out_level_data_.sectors;
-	for( unsigned int i= 0; i < room_count_; i++, sector++ )
+	for( unsigned int i= 0; i < room_count_; i++ )
 	{
-		sector->type= mx_LevelData::Sector::ROOM;
-		sector->first_triangle= out_level_data_.triangle_count;
-		AddRoomCube( rooms_ + i );
-		sector->triangles_count= out_level_data_.triangle_count - sector->first_triangle;
+		// Discard unlinked level parts
+		if( rooms_[i].linkage_group_id == max_linkage_group_id_ )
+		{
+			sector->type= mx_LevelData::Sector::ROOM;
+			sector->first_triangle= out_level_data_.triangle_count;
+			AddRoomCube( rooms_ + i );
+			sector->triangles_count= out_level_data_.triangle_count - sector->first_triangle;
 
-		// TODO
-		sector->connections_count= 0;
-		sector->planes_count= 0;
+			// TODO
+			sector->connections_count= 0;
+			sector->planes_count= 0;
+
+			out_level_data_.sector_count++;
+			sector++;
+		}
 	}
 
-	for( unsigned int i= 0; i < connection_count_; i++, sector++ )
+	for( unsigned int i= 0; i < connection_count_; i++ )
 	{
-		sector->type= mx_LevelData::Sector::CONNECTION;
-		sector->first_triangle= out_level_data_.triangle_count;
-		AddConnectionCube( connections_ + i );
-		sector->triangles_count= out_level_data_.triangle_count - sector->first_triangle;
+		// Discard unlinked level parts
+		if( connections_[i].begin->linkage_group_id == max_linkage_group_id_ )
+		{
+			sector->type= mx_LevelData::Sector::CONNECTION;
+			sector->first_triangle= out_level_data_.triangle_count;
+			AddConnectionCube( connections_ + i );
+			sector->triangles_count= out_level_data_.triangle_count - sector->first_triangle;
 
-		// TODO
-		sector->connections_count= 0;
-		sector->planes_count= 0;
+			// TODO
+			sector->connections_count= 0;
+			sector->planes_count= 0;
+
+			out_level_data_.sector_count++;
+			sector++;
+		}
 	}
 }
 

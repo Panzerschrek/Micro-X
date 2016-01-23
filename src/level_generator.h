@@ -100,6 +100,8 @@ private:
 
 		Connection* connections[ MX_MAX_ROOM_CONNECTIONS ];
 		unsigned int connection_count;
+
+		unsigned int linkage_group_id;
 	};
 
 	struct Connection : public Element
@@ -116,6 +118,8 @@ private:
 	void PlaceRooms();
 	void PlaceConnections();
 	bool TryPlaceConnection( Room* room, const int* begin_coord, const int* direction );
+	void CalculateLinkage();
+	void SetRoomLinkage_r( Room* room );
 
 	static bool CheckConnection( const Room* room0, const Room* room1 );
 	static void GenCube( const Room* room, mx_LevelVertex* vertices, unsigned short* indeces, unsigned int base_vertex );
@@ -134,6 +138,7 @@ private:
 
 	Room rooms_[ MX_MAX_ROOMS ];
 	unsigned int room_count_;
+	unsigned int max_linkage_group_id_;
 
 	Connection connections_[ MX_MAX_CONNECTIONS ];
 	unsigned int connection_count_;
