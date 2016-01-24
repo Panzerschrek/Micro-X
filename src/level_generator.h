@@ -119,16 +119,16 @@ private:
 	void PlaceConnections();
 	bool TryPlaceConnection( Room* room, const int* begin_coord, const int* direction );
 	void CalculateLinkage();
-	void SetRoomLinkage_r( Room* room );
+	static void SetRoomLinkage_r( Room* room );
 
 	static bool CheckConnection( const Room* room0, const Room* room1 );
-	static void GenCube( const Room* room, mx_LevelVertex* vertices, unsigned short* indeces, unsigned int base_vertex );
 
 	void GenerateMeshes();
 	void SpitTriangle( unsigned int triangle_index, const mx_Plane& plane );
 	void ReserveTrianglesAndVertices( unsigned int new_triangle_count, unsigned int new_vertex_count );
 	void AddRoomCube( const Room* room );
 	void AddConnectionCube( const Connection* connection );
+	static void SetupRoomPlanes( const Room* room, mx_LevelData::Sector* sector );
 	
 	void CalculateNormals();
 	void ClaculateTextureCoordinates();

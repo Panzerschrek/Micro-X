@@ -17,6 +17,16 @@ static const unsigned char c_cube_vertices[]=
 	1, 0, 1,   1, 1, 1,   0, 1, 1,   0, 0, 1, // Z positiove
 };
 
+static const int c_cube_normals[6][3]=
+{
+	{ -1,  0,  0 },
+	{ +1,  0,  0 },
+	{  0, -1,  0 },
+	{  0, +1,  0 },
+	{  0,  0, -1 },
+	{  0,  0, +1 },
+};
+
 static bool IsPointOutsideMap( int* coord )
 {
 	return
@@ -137,16 +147,6 @@ void mx_LevelGenerator::PlaceRooms()
 
 void mx_LevelGenerator::PlaceConnections()
 {
-	static const int normals[6][3]=
-	{
-		{ -1,  0,  0 },
-		{ +1,  0,  0 },
-		{  0, -1,  0 },
-		{  0, +1,  0 },
-		{  0,  0, -1 },
-		{  0,  0, +1 },
-	};
-
 	// Try place X or Y connections for random room
 	for( unsigned int r=0; r < room_count_ * 256 && connection_count_ < MX_MAX_CONNECTIONS; r++ )
 	{
@@ -164,9 +164,9 @@ void mx_LevelGenerator::PlaceConnections()
 				coord[2]= z;
 
 				coord[0]= room->coord_min[0] - 1;
-				if( TryPlaceConnection( room, coord, normals[0] ) ) goto try_next;
+				if( TryPlaceConnection( room, coord, c_cube_normals[0] ) ) goto try_next;
 				coord[0]= room->coord_max[0];
-				if( TryPlaceConnection( room, coord, normals[1] ) ) goto try_next;
+				if( TryPlaceConnection( room, coord, c_cube_normals[1] ) ) goto try_next;
 			}
 		}
 		else if( side == 1 )
@@ -178,9 +178,9 @@ void mx_LevelGenerator::PlaceConnections()
 				coord[2]= z;
 
 				coord[1]= room->coord_min[1] - 1;
-				if( TryPlaceConnection( room, coord, normals[2] ) ) goto try_next;
+				if( TryPlaceConnection( room, coord, c_cube_normals[2] ) ) goto try_next;
 				coord[1]= room->coord_max[1];
-				if( TryPlaceConnection( room, coord, normals[3] ) ) goto try_next;
+				if( TryPlaceConnection( room, coord, c_cube_normals[3] ) ) goto try_next;
 			}
 		}
 		else // if( coord = 2 )
@@ -192,9 +192,9 @@ void mx_LevelGenerator::PlaceConnections()
 				coord[1]= y;
 
 				coord[2]= room->coord_min[2] - 1;
-				if( TryPlaceConnection( room, coord, normals[4] ) ) goto try_next;
+				if( TryPlaceConnection( room, coord, c_cube_normals[4] ) ) goto try_next;
 				coord[2]= room->coord_max[2];
-				if( TryPlaceConnection( room, coord, normals[5] ) ) goto try_next;
+				if( TryPlaceConnection( room, coord, c_cube_normals[5] ) ) goto try_next;
 			}
 		}
 
@@ -383,6 +383,7 @@ void mx_LevelGenerator::GenerateMeshes()
 	out_level_data_.vertices= new mx_LevelVertex[ out_level_data_.vertices_capacity ];
 	out_level_data_.triangles= new mx_LevelTriangle[ out_level_data_.triangles_capacity ];
 
+	out_level_data_.sector_count= 0;
 	out_level_data_.sectors= new mx_LevelData::Sector[ room_count_ + connection_count_ ];
 
 	mx_LevelData::Sector* sector= out_level_data_.sectors;
@@ -391,6 +392,8 @@ void mx_LevelGenerator::GenerateMeshes()
 		// Discard unlinked level parts
 		if( rooms_[i].linkage_group_id == max_linkage_group_id_ )
 		{
+			SetupRoomPlanes( rooms_ + i, sector );
+
 			sector->type= mx_LevelData::Sector::ROOM;
 			sector->first_triangle= out_level_data_.triangle_count;
 			AddRoomCube( rooms_ + i );
@@ -398,7 +401,6 @@ void mx_LevelGenerator::GenerateMeshes()
 
 			// TODO
 			sector->connections_count= 0;
-			sector->planes_count= 0;
 
 			out_level_data_.sector_count++;
 			sector++;
@@ -704,6 +706,19 @@ void mx_LevelGenerator::AddConnectionCube( const Connection* connection )
 
 	out_level_data_.vertex_count+= c_side_count * 4;
 	out_level_data_.triangle_count+= c_side_count * 2;
+}
+
+void mx_LevelGenerator::SetupRoomPlanes( const Room* room, mx_LevelData::Sector* sector )
+{
+	sector->planes_count= 6;
+	for( unsigned int i= 0; i < 6; i++ )
+	{
+		for( unsigned int j= 0;j < 3; j++ )
+			sector->planes[i].normal[j]= float(c_cube_normals[i][j]);
+
+		unsigned int c= i >> 1;
+		sector->planes[i].dist= sector->planes[i].normal[c] * float((i&1) ? room->coord_min[c] : room->coord_max[c]);
+	}
 }
 
 void mx_LevelGenerator::CalculateNormals()

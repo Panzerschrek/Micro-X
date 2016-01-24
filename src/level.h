@@ -14,6 +14,8 @@ public:
 	const mx_LevelTriangle* GetTriangles() const;
 	unsigned int GetTriangleCount() const;
 
+	const mx_LevelData::Sector* FindSectorForPoint( const float* point ) const;
+
 private:
 	mx_Level(const mx_Level&);
 	mx_Level& operator=(const mx_Level&);
