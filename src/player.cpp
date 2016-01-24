@@ -133,7 +133,7 @@ void mx_Player::Tick( float dt )
 	mxMat4Transpose( move_vec_mat );
 	mxVec3Mat4Mul( move_vector, move_vec_mat );
 
-	const float speed= 20.0f;
+	const float speed= 5.0f;
 	float ds= dt * speed;
 	pos_[0]+= ds * move_vector[0];
 	pos_[1]+= ds * move_vector[1];

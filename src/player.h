@@ -46,9 +46,10 @@ public:
 	void ZoomIn();
 	void ZoomOut();
 
-private:
+//private:
+	// TEMP HACK REMOVE ME
 	float pos_[3];
-
+private:
 	// 0 - pitch / tangaž
 	// 1 - yaw / ryskanije
 	// 2 - roll / kren

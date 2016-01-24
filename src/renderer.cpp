@@ -104,8 +104,8 @@ void mx_Renderer::DrawWorld()
 	world_shader_.UniformMat4( "mat", view_matrix_ );
 
 	world_vertex_buffer_.Bind();
-	//glEnable( GL_CULL_FACE );
-	//glCullFace( GL_FRONT );
+	glEnable( GL_CULL_FACE );
+	glCullFace( GL_FRONT );
 	//glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	glDrawElements( GL_TRIANGLES, world_vertex_buffer_.IndexDataSize() / sizeof(unsigned int), GL_UNSIGNED_INT, NULL );
 

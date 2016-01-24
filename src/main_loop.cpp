@@ -232,6 +232,18 @@ void mx_MainLoop::Loop()
 		if( dt_s >= c_dt_eps )
 			player_->Tick( dt_s );
 
+		{
+			const mx_LevelData::Sector* sector= level_->FindSectorForPoint( player_->Pos() );
+			if( sector )
+			{
+				float new_pos[3];
+				if( level_->CollideWithSectorTriangles( player_->Pos(), 0.5f, sector, new_pos ) )
+				{
+					VEC3_CPY( player_->pos_, new_pos );
+				}
+			}
+		}
+
 		glClearColor( 0.1f, 0.1f, 0.1f, 0.0f );
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 

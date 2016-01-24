@@ -733,7 +733,7 @@ void mx_LevelGenerator::CalculateNormals()
 		mxVec3Sub( vertices[ triangle->vertex_index[1] ].xyz, vertices[ triangle->vertex_index[2] ].xyz, v[1] );
 
 		float normal[3];
-		mxVec3Cross( v[0], v[1], normal );
+		mxVec3Cross( v[1], v[0], normal );
 		mxVec3Normalize( normal );
 		for( unsigned int j= 0; j < 3; j++ )
 			for( unsigned int k= 0; k < 3; k++ )
