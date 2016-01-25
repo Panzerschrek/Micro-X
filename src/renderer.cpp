@@ -1,6 +1,7 @@
 #include "drawing_model.h"
 #include "level.h"
 #include "main_loop.h"
+#include "monster.h"
 #include "mx_math.h"
 #include "player.h"
 #include "shaders.h"
@@ -65,6 +66,7 @@ void mx_Renderer::Draw()
 {
 	CalculateMatrices();
 	DrawWorld();
+	DrawMonsters();
 }
 
 void mx_Renderer::CalculateMatrices()
@@ -108,10 +110,31 @@ void mx_Renderer::DrawWorld()
 	glCullFace( GL_FRONT );
 	//glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	glDrawElements( GL_TRIANGLES, world_vertex_buffer_.IndexDataSize() / sizeof(unsigned int), GL_UNSIGNED_INT, NULL );
+}
 
-	model_vertex_buffer_.Bind();
+void mx_Renderer::DrawMonsters()
+{
+	world_shader_.Bind();
+
 	glEnable( GL_CULL_FACE );
 	glCullFace( GL_BACK );
-	//glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-	glDrawElements( GL_TRIANGLES, model_vertex_buffer_.IndexDataSize() / sizeof(unsigned short), GL_UNSIGNED_SHORT, NULL );
+
+	model_vertex_buffer_.Bind();
+
+	const mx_Monster* const* monsters= level_.GetMonsters();
+	for( unsigned int m= 0, m_end= level_.GetMonsterCount(); m < m_end; m++ )
+	{
+		float translate_mat[16];
+		float scale_mat[16];
+		float result_mat[16];
+
+		mxMat4Scale( scale_mat, 0.125f );
+		mxMat4Translate( translate_mat, monsters[m]->Pos() );
+		mxMat4Mul( scale_mat, translate_mat, result_mat );
+		mxMat4Mul( result_mat, view_matrix_ );
+
+		world_shader_.UniformMat4( "mat", result_mat );
+
+		glDrawElements( GL_TRIANGLES, model_vertex_buffer_.IndexDataSize() / sizeof(unsigned short), GL_UNSIGNED_SHORT, NULL );
+	}
 }

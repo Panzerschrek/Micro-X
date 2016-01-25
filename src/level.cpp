@@ -1,9 +1,28 @@
+#include "monster.h"
 #include "mx_math.h"
 
 #include "level.h"
 
 mx_Level::mx_Level( const mx_LevelData& level_data )
 	: level_data_(level_data)
+	, monster_count_(0)
+{
+	for( unsigned int i= 0; i < level_data_.sector_count; i++, monster_count_ < MX_MAX_MONSTERS )
+	{
+		const mx_LevelData::Sector& sector= level_data_.sectors[i];
+		if( sector.type != mx_LevelData::Sector::ROOM )
+			continue;
+		
+		float pos[3];
+		for( unsigned int j= 0; j < 3; j++ )
+			pos[j]= ( sector.bb_min[j] + sector.bb_max[j] ) * 0.5f;
+
+		monsters_[ monster_count_ ]= new mx_Monster( pos );
+		monster_count_++;
+	}
+}
+
+mx_Level::~mx_Level()
 {
 }
 

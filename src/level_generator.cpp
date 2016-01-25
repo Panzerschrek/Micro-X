@@ -392,7 +392,7 @@ void mx_LevelGenerator::GenerateMeshes()
 		// Discard unlinked level parts
 		if( rooms_[i].linkage_group_id == max_linkage_group_id_ )
 		{
-			SetupRoomPlanes( rooms_ + i, sector );
+			SetupRoomSector( rooms_ + i, sector );
 
 			sector->type= mx_LevelData::Sector::ROOM;
 			sector->first_triangle= out_level_data_.triangle_count;
@@ -412,6 +412,8 @@ void mx_LevelGenerator::GenerateMeshes()
 		// Discard unlinked level parts
 		if( connections_[i].begin->linkage_group_id == max_linkage_group_id_ )
 		{
+			SetupConnectionSector( connections_ + i, sector );
+
 			sector->type= mx_LevelData::Sector::CONNECTION;
 			sector->first_triangle= out_level_data_.triangle_count;
 			AddConnectionCube( connections_ + i );
@@ -419,7 +421,6 @@ void mx_LevelGenerator::GenerateMeshes()
 
 			// TODO
 			sector->connections_count= 0;
-			sector->planes_count= 0;
 
 			out_level_data_.sector_count++;
 			sector++;
@@ -708,7 +709,7 @@ void mx_LevelGenerator::AddConnectionCube( const Connection* connection )
 	out_level_data_.triangle_count+= c_side_count * 2;
 }
 
-void mx_LevelGenerator::SetupRoomPlanes( const Room* room, mx_LevelData::Sector* sector )
+void mx_LevelGenerator::SetupRoomSector( const Room* room, mx_LevelData::Sector* sector )
 {
 	sector->planes_count= 6;
 	for( unsigned int i= 0; i < 6; i++ )
@@ -718,6 +719,31 @@ void mx_LevelGenerator::SetupRoomPlanes( const Room* room, mx_LevelData::Sector*
 
 		unsigned int c= i >> 1;
 		sector->planes[i].dist= sector->planes[i].normal[c] * float((i&1) ? room->coord_min[c] : room->coord_max[c]);
+	}
+
+	for( unsigned int i= 0; i < 3; i++ )
+	{
+		sector->bb_min[i]= float(room->coord_min[i]);
+		sector->bb_max[i]= float(room->coord_max[i]);
+	}
+}
+
+void mx_LevelGenerator::SetupConnectionSector( const Connection* connection, mx_LevelData::Sector* sector )
+{
+	sector->planes_count= 0;
+
+	for( unsigned int i= 0; i < 3; i++ )
+	{
+		if( connection->coord_begin[i] > connection->coord_end[i] )
+		{
+			sector->bb_min[i]= float(connection->coord_end[i]);
+			sector->bb_max[i]= float(connection->coord_begin[i]+1);
+		}
+		else
+		{
+			sector->bb_min[i]= float(connection->coord_begin[i]);
+			sector->bb_max[i]= float(connection->coord_end[i]+1);
+		}
 	}
 }
 

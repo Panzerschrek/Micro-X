@@ -208,6 +208,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\monster.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\mx_math.cpp"
 				>
 			</File>
@@ -263,6 +267,10 @@
 			</File>
 			<File
 				RelativePath=".\src\main_loop.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\monster.h"
 				>
 			</File>
 			<File

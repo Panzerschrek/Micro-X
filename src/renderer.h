@@ -21,6 +21,7 @@ private:
 
 	void CalculateMatrices();
 	void DrawWorld();
+	void DrawMonsters();
 
 private:
 	const mx_MainLoop& main_loop_;

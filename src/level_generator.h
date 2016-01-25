@@ -40,6 +40,9 @@ struct mx_LevelData
 			CONNECTION,
 		} type;
 
+		float bb_min[3];
+		float bb_max[3];
+
 		mx_Plane planes[16];
 		unsigned int planes_count;
 
@@ -128,7 +131,8 @@ private:
 	void ReserveTrianglesAndVertices( unsigned int new_triangle_count, unsigned int new_vertex_count );
 	void AddRoomCube( const Room* room );
 	void AddConnectionCube( const Connection* connection );
-	static void SetupRoomPlanes( const Room* room, mx_LevelData::Sector* sector );
+	static void SetupRoomSector( const Room* room, mx_LevelData::Sector* sector );
+	static void SetupConnectionSector( const Connection* connection, mx_LevelData::Sector* sector );
 	
 	void CalculateNormals();
 	void ClaculateTextureCoordinates();
