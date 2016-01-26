@@ -17,7 +17,25 @@ mx_Level::mx_Level( const mx_LevelData& level_data )
 		for( unsigned int j= 0; j < 3; j++ )
 			pos[j]= ( sector.bb_min[j] + sector.bb_max[j] ) * 0.5f;
 
-		monsters_[ monster_count_ ]= new mx_Monster( pos );
+		unsigned int longest_coord= 0;
+		float longest_width= 0.0f;
+		for( unsigned int j= 0; j < 3; j++ )
+		{
+			float width= sector.bb_max[j] - sector.bb_min[j];
+			if( width > longest_width )
+			{
+				longest_width= width;
+				longest_coord= j;
+			}
+		}
+
+		mx_PatrolPath path;
+		VEC3_CPY( path.points[0], pos );
+		VEC3_CPY( path.points[1], pos );
+		path.points[0][longest_coord]= sector.bb_min[ longest_coord ] + 0.5f;
+		path.points[1][longest_coord]= sector.bb_max[ longest_coord ] - 0.5f;
+
+		monsters_[ monster_count_ ]= new mx_Monster( pos, &path );
 		monster_count_++;
 	}
 }
@@ -107,4 +125,12 @@ outside_triangle:;
 	}
 
 	return collided;
+}
+
+void mx_Level::Tick()
+{
+	for( unsigned int m= 0; m < monster_count_; m++ )
+	{
+		monsters_[m]->Exec();
+	}
 }

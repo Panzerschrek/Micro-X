@@ -220,17 +220,18 @@ void mx_MainLoop::Loop()
 			SetCursorPos( prev_cursor_pos_.x, prev_cursor_pos_.y );
 		}
 
-		static const float c_dt_eps= 1.0f / 512.0f;
+		static const float c_min_dt= 1.0f / 128.0f;
+		static const float c_max_dt= 1.0f /  16.0f;
 		DWORD current_time_ms= GetTickCount() - start_time_ms_;
 		float dt_s= float( current_time_ms - prev_time_ms_ ) * 0.001f;
-		if( dt_s >= c_dt_eps )
+		if( dt_s >= c_min_dt )
 		{
 			prev_time_ms_= current_time_ms;
-			dt_s_= dt_s;
-		}
+			dt_s_= dt_s < c_max_dt ? dt_s : c_max_dt;
 
-		if( dt_s >= c_dt_eps )
 			player_->Tick( dt_s );
+			level_->Tick();
+		}
 
 		{
 			const mx_LevelData::Sector* sector= level_->FindSectorForPoint( player_->Pos() );

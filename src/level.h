@@ -28,6 +28,8 @@ public:
 		const mx_LevelData::Sector* sector,
 		float* out_pos ) const;
 
+	void Tick();
+
 private:
 	mx_Level(const mx_Level&);
 	mx_Level& operator=(const mx_Level&);

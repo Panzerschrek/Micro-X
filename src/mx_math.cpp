@@ -94,9 +94,21 @@ void mxVec3Cross( const float* v0, const float* v1, float* v_dst )
 	v_dst[2]= v0[0] * v1[1] - v0[1] * v1[0];
 }
 
+float mxVec3SquareLen( const float* v )
+{
+	return v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
+}
+
 float mxVec3Len( const float* v )
 {
-	return std::sqrtf( v[0]*v[0] + v[1]*v[1] + v[2]*v[2] );
+	return std::sqrtf( mxVec3SquareLen(v) );
+}
+
+float mxSquareDistance( const float* v0, const float* v1 )
+{
+	float v[3];
+	mxVec3Sub( v0, v1, v );
+	return mxVec3SquareLen(v);
 }
 
 float mxDistance( const float* v0, const float* v1 )

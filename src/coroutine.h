@@ -19,12 +19,12 @@ struct mx_StateBuff
 	unsigned int ebx; // 20
 };
 
-class Coroutine
+class mx_Coroutine
 {
 public:
 	// Create coroutine with proper stack.
 	// Warning! Beware stack overflowing.
-	Coroutine( unsigned int stack_size= 65536 );
+	mx_Coroutine( unsigned int stack_size= 65536 );
 
 	// Call this, if you need coroutine execution.
 	// Function returns, after working code calls Resume.
@@ -38,6 +38,9 @@ protected:
 
 private:
 	static void Do(void* this_p);
+
+	mx_Coroutine( const mx_Coroutine& );
+	mx_Coroutine& operator=(const mx_Coroutine& );
 
 private:
 	mx_StateBuff inner_state_;

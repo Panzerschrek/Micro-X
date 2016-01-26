@@ -23,7 +23,9 @@ public:
 
 	unsigned int ViewportWidth () const;
 	unsigned int ViewportHeight() const;
-	unsigned int mx_MainLoop::FPS() const;
+	unsigned int FPS() const;
+
+	float GetTickTime() const;
 
 	void Loop();
 	void Quit();
@@ -102,4 +104,9 @@ inline unsigned int mx_MainLoop::FPS() const
 inline void mx_MainLoop::Quit()
 {
 	quit_= true;
+}
+
+inline float mx_MainLoop::GetTickTime() const
+{
+	return dt_s_;
 }

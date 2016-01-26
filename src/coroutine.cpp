@@ -37,7 +37,7 @@ __declspec(naked) void mxLongJump(const mx_StateBuff* /*state*/)
 	}
 }
 
-Coroutine::Coroutine( unsigned int stack_size )
+mx_Coroutine::mx_Coroutine( unsigned int stack_size )
 	: stack_( new unsigned char[stack_size] )
 	, stack_size_(stack_size)
 {
@@ -51,21 +51,25 @@ Coroutine::Coroutine( unsigned int stack_size )
 	inner_state_.esp[1]= reinterpret_cast<unsigned int>(this);
 }
 
-void Coroutine::Exec()
+void mx_Coroutine::Exec()
 {
 	if( mxSetJump(&outer_state_) )
 		return;
 	mxLongJump( &inner_state_ );
 }
 
-void Coroutine::Resume()
+void mx_Coroutine::Resume()
 {
 	if( mxSetJump(&inner_state_) )
 		return;
 	mxLongJump( &outer_state_ );
 }
-
-void Coroutine::Do(void* this_p)
+void mx_Coroutine::Do(void* this_p)
 {
-	static_cast<Coroutine*>(this_p)->ExecFunc();
+	mx_Coroutine* th= static_cast<mx_Coroutine*>(this_p);
+	th->ExecFunc();
+
+	// We should never return, because this function is first in our stack
+	for(;;)
+		th->Resume();
 }
