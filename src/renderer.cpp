@@ -80,7 +80,7 @@ void mx_Renderer::CalculateMatrices()
 	mxVec3Mul( player_.Pos(), -1.0f, translate_vec );
 	mxMat4Translate( translate_mat, translate_vec );
 
-	player_.CreateRotationMatrix4( rotation_mat );
+	player_.CreateRotationMatrix4( rotation_mat, false );
 
 	{
 		mxMat4RotateX( basis_change_mat, -MX_PI2 );
@@ -124,13 +124,16 @@ void mx_Renderer::DrawMonsters()
 	const mx_Monster* const* monsters= level_.GetMonsters();
 	for( unsigned int m= 0, m_end= level_.GetMonsterCount(); m < m_end; m++ )
 	{
-		float translate_mat[16];
 		float scale_mat[16];
+		float rotate_mat[16];
+		float translate_mat[16];
 		float result_mat[16];
 
 		mxMat4Scale( scale_mat, 0.125f );
 		mxMat4Translate( translate_mat, monsters[m]->Pos() );
-		mxMat4Mul( scale_mat, translate_mat, result_mat );
+		monsters[m]->CreateRotationMatrix4( rotate_mat, true );
+		mxMat4Mul( scale_mat, rotate_mat, result_mat );
+		mxMat4Mul( result_mat, translate_mat );
 		mxMat4Mul( result_mat, view_matrix_ );
 
 		world_shader_.UniformMat4( "mat", result_mat );

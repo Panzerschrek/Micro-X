@@ -178,6 +178,8 @@ mx_MainLoop::mx_MainLoop(
 	generator->Generate();
 	level_= new mx_Level( generator->GetLevelData() );
 	delete generator;
+
+	player_->SetLevel(level_);
 	
 	renderer_= new mx_Renderer( *level_, *player_ );
 
@@ -231,18 +233,6 @@ void mx_MainLoop::Loop()
 
 			player_->Tick( dt_s );
 			level_->Tick();
-		}
-
-		{
-			const mx_LevelData::Sector* sector= level_->FindSectorForPoint( player_->Pos() );
-			if( sector )
-			{
-				float new_pos[3];
-				if( level_->CollideWithSectorTriangles( player_->Pos(), 0.5f, sector, new_pos ) )
-				{
-					VEC3_CPY( player_->pos_, new_pos );
-				}
-			}
 		}
 
 		glClearColor( 0.1f, 0.1f, 0.1f, 0.0f );

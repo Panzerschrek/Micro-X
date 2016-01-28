@@ -1,3 +1,4 @@
+#include "level.h"
 #include "mx_math.h"
 
 #include "player.h"
@@ -11,7 +12,8 @@
 #define MF_START_ROCKET_COUNT 3
 
 mx_Player::mx_Player()
-	:  aspect_(1.0f), fov_(MX_INITIAL_FOV), target_fov_(MX_INITIAL_FOV)
+	: level_(NULL)
+	, aspect_(1.0f), fov_(MX_INITIAL_FOV), target_fov_(MX_INITIAL_FOV)
 	, forward_pressed_(false), backward_pressed_(false), left_pressed_(false), right_pressed_(false)
 	, up_pressed_(false), down_pressed_(false)
 	, rotate_up_pressed_(false), rotate_down_pressed_(false), rotate_left_pressed_(false), rotate_right_pressed_(false)
@@ -36,17 +38,6 @@ mx_Player::mx_Player()
 
 mx_Player::~mx_Player()
 {
-}
-
-void mx_Player::CreateRotationMatrix4( float* out_mat ) const
-{
-	mxMat4Identity( out_mat );
-	for( unsigned int i= 0; i < 3; i++ )
-	{
-		out_mat[ 4 * i + 0 ]= axis_[0][i];
-		out_mat[ 4 * i + 1 ]= axis_[1][i];
-		out_mat[ 4 * i + 2 ]= axis_[2][i];
-	}
 }
 
 void mx_Player::Tick( float dt )
@@ -119,17 +110,12 @@ void mx_Player::Tick( float dt )
 		mxVec3Mat4Mul( axis_[1], rotate_mat );
 		mxVec3Mat4Mul( axis_[2], rotate_mat );
 
-		// make axis orthogonal and with identity vectors
-		mxVec3Cross( axis_[0], axis_[1], axis_[2] );
-		mxVec3Cross( axis_[1], axis_[2], axis_[0] );
-		mxVec3Normalize( axis_[0] );
-		mxVec3Normalize( axis_[1] );
-		mxVec3Normalize( axis_[2] );
+		CorrectAxis();
 	}
 
 	// Get final move vector
 	float move_vec_mat[16];
-	CreateRotationMatrix4( move_vec_mat );
+	CreateRotationMatrix4( move_vec_mat, false );
 	mxMat4Transpose( move_vec_mat );
 	mxVec3Mat4Mul( move_vector, move_vec_mat );
 
@@ -138,6 +124,19 @@ void mx_Player::Tick( float dt )
 	pos_[0]+= ds * move_vector[0];
 	pos_[1]+= ds * move_vector[1];
 	pos_[2]+= ds * move_vector[2];
+
+	if( level_ )
+	{
+		const mx_LevelData::Sector* sector= level_->FindSectorForPoint( pos_ );
+		if( sector )
+		{
+			float new_pos[3];
+			if( level_->CollideWithSectorTriangles( pos_, 0.5f, sector, new_pos ) )
+			{
+				VEC3_CPY( pos_, new_pos );
+			}
+		}
+	}
 }
 
 void mx_Player::Rotate( float pixel_delta_x, float pixel_delta_y )

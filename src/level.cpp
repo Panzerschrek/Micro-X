@@ -7,7 +7,7 @@ mx_Level::mx_Level( const mx_LevelData& level_data )
 	: level_data_(level_data)
 	, monster_count_(0)
 {
-	for( unsigned int i= 0; i < level_data_.sector_count; i++, monster_count_ < MX_MAX_MONSTERS )
+	for( unsigned int i= 0; i < level_data_.sector_count && monster_count_ < MX_MAX_MONSTERS; i++ )
 	{
 		const mx_LevelData::Sector& sector= level_data_.sectors[i];
 		if( sector.type != mx_LevelData::Sector::ROOM )
@@ -34,6 +34,7 @@ mx_Level::mx_Level( const mx_LevelData& level_data )
 		VEC3_CPY( path.points[1], pos );
 		path.points[0][longest_coord]= sector.bb_min[ longest_coord ] + 0.5f;
 		path.points[1][longest_coord]= sector.bb_max[ longest_coord ] - 0.5f;
+		path.path_plane= longest_coord;
 
 		monsters_[ monster_count_ ]= new mx_Monster( pos, &path );
 		monster_count_++;

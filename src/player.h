@@ -1,14 +1,17 @@
 ﻿#pragma once
 
-class mx_Player
+#include "pawn.h"
+
+class mx_Level;
+
+class mx_Player : public mx_Pawn
 {
 public:
 	mx_Player();
 	~mx_Player();
 
-	const float* Pos() const;
-	//const float* Angle() const;
-	void CreateRotationMatrix4( float* out_mat ) const;
+	void SetLevel( mx_Level* level );
+
 	const float Fov() const;
 
 	void Tick( float dt );
@@ -46,15 +49,12 @@ public:
 	void ZoomIn();
 	void ZoomOut();
 
-//private:
-	// TEMP HACK REMOVE ME
-	float pos_[3];
 private:
 	// 0 - pitch / tangaž
 	// 1 - yaw / ryskanije
 	// 2 - roll / kren
 	//float angle_[3];
-	float axis_[3][3];
+	mx_Level* level_;
 
 	float cam_radius_;
 	float aspect_;
@@ -69,10 +69,11 @@ private:
 	bool rotate_clockwise_pressed_, rotate_anticlockwise_pressed_;
 };
 
-inline const float* mx_Player::Pos() const
+inline void mx_Player::SetLevel( mx_Level* level )
 {
-	return pos_;
+	level_= level;
 }
+
 /*
 inline const float* mx_Player::Angle() const
 {

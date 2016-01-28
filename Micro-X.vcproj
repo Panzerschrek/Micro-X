@@ -216,6 +216,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\pawn.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\player.cpp"
 				>
 			</File>
@@ -283,6 +287,10 @@
 			</File>
 			<File
 				RelativePath=".\src\mx_model.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\pawn.h"
 				>
 			</File>
 			<File
