@@ -31,6 +31,13 @@ inline float mxClamp( float min, float max, float x )
 	return x;
 }
 
+inline float mxSign( float x )
+{
+	if( x > 0.0f ) return +1.0f;
+	if( x < 0.0f ) return -1.0f;
+	return 0.0f;
+}
+
 #define VEC3_CPY(dst,src) (dst)[0]= (src)[0]; (dst)[1]= (src)[1]; (dst)[2]= src[2];
 
 void mxVec3Mul( const float* v, float s, float* v_out );
