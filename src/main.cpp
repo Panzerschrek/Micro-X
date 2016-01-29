@@ -13,15 +13,18 @@ int WINAPI WinMain(
 	int /*nCmdShow*/)
 #endif
 {
+	// TODO - remove this code, if we reach 32kb limit
+	const char* cmd= GetCommandLine();
+	bool fullscreen= strstr( cmd, "--fullscreen" ) != NULL;
+
 	mx_MainLoop::CreateInstance(
 		1024, 768,
-		false, true,
+		fullscreen, true,
 		false,
 		1.0f, 0.7f );
 
 	mx_MainLoop::Instance()->Loop();
 	mx_MainLoop::DeleteInstance();
-
 
 	return 0;
 }
