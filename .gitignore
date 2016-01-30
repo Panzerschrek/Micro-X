@@ -13,7 +13,7 @@ Debug/*
 Release/*
 
 #generated data
-models/*.mfmd
+models/*.mxmd
 models/*.h
 models/*.obj
 models/*.blend1

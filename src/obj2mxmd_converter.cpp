@@ -442,7 +442,7 @@ int main( int argc, char* argv[] )
 		if( i <= 0 )
 		{
 			strcpy( out_file_name, input_file_name );
-			strcat( out_file_name + len, ".mfmd" );
+			strcat( out_file_name + len, ".mxmd" );
 		}
 		else
 		{
@@ -451,7 +451,7 @@ int main( int argc, char* argv[] )
 				out_file_name[i]= input_file_name[i];
 			out_file_name[len+0]= '.';
 			out_file_name[len+1]= 'm';
-			out_file_name[len+2]= 'f';
+			out_file_name[len+2]= 'x';
 			out_file_name[len+3]= 'm';
 			out_file_name[len+4]= 'd';
 			out_file_name[len+5]= 0;
