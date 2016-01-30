@@ -67,6 +67,7 @@ void mx_Renderer::Draw()
 	CalculateMatrices();
 	DrawWorld();
 	DrawMonsters();
+	DrawBullets();
 }
 
 void mx_Renderer::CalculateMatrices()
@@ -134,6 +135,34 @@ void mx_Renderer::DrawMonsters()
 		monsters[m]->CreateRotationMatrix4( rotate_mat, true );
 		mxMat4Mul( scale_mat, rotate_mat, result_mat );
 		mxMat4Mul( result_mat, translate_mat );
+		mxMat4Mul( result_mat, view_matrix_ );
+
+		world_shader_.UniformMat4( "mat", result_mat );
+
+		glDrawElements( GL_TRIANGLES, model_vertex_buffer_.IndexDataSize() / sizeof(unsigned short), GL_UNSIGNED_SHORT, NULL );
+	}
+}
+
+void mx_Renderer::DrawBullets()
+{
+	// Test drawing of bullets using monster model
+	world_shader_.Bind();
+
+	glEnable( GL_CULL_FACE );
+	glCullFace( GL_BACK );
+
+	model_vertex_buffer_.Bind();
+
+	const mx_Bullet* bullets= level_.GetBullets();
+	for( unsigned int b= 0, b_end= level_.GetBulletCount(); b < b_end; b++ )
+	{
+		float scale_mat[16];
+		float translate_mat[16];
+		float result_mat[16];
+
+		mxMat4Scale( scale_mat, 1.0f / 32.0f );
+		mxMat4Translate( translate_mat, bullets[b].pos );
+		mxMat4Mul( scale_mat, translate_mat, result_mat );
 		mxMat4Mul( result_mat, view_matrix_ );
 
 		world_shader_.UniformMat4( "mat", result_mat );

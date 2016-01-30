@@ -3,8 +3,16 @@
 #include "level_generator.h"
 
 #define MX_MAX_MONSTERS 256
+#define MX_MAX_BULLETS 512
 
 class mx_Monster;
+
+struct mx_Bullet
+{
+	float pos[3];
+	float speed[3];
+	float birth_time;
+};
 
 class mx_Level
 {
@@ -21,6 +29,9 @@ public:
 	const mx_Monster* const* GetMonsters() const;
 	unsigned int GetMonsterCount() const;
 
+	const mx_Bullet* GetBullets() const;
+	unsigned int GetBulletCount() const;
+
 	const mx_LevelData::Sector* FindSectorForPoint( const float* point ) const;
 
 	bool CollideWithSectorTriangles(
@@ -29,6 +40,7 @@ public:
 		float* out_pos ) const;
 
 	void Tick();
+	void Shot( const float* pos, const float* normalized_dir );
 
 private:
 	mx_Level(const mx_Level&);
@@ -39,6 +51,9 @@ private:
 
 	unsigned int monster_count_;
 	mx_Monster* monsters_[ MX_MAX_MONSTERS ];
+
+	unsigned int bullet_count_;
+	mx_Bullet bullets_[ MX_MAX_BULLETS ];
 };
 
 inline const mx_LevelVertex* mx_Level::GetVertices() const
@@ -69,4 +84,14 @@ inline const mx_Monster* const* mx_Level::GetMonsters() const
 inline unsigned int mx_Level::GetMonsterCount() const
 {
 	return monster_count_;
+}
+
+inline const mx_Bullet* mx_Level::GetBullets() const
+{
+	return bullets_;
+}
+
+inline unsigned int mx_Level::GetBulletCount() const
+{
+	return bullet_count_;
 }

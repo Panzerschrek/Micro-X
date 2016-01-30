@@ -166,8 +166,6 @@ mx_MainLoop::mx_MainLoop(
 	// Initial OpenGL state
 	glEnable( GL_DEPTH_TEST );
 
-	start_time_ms_= prev_time_ms_= GetTickCount();
-
 	fps_calc_.prev_calc_time= std::clock();
 	fps_calc_.frame_count_to_show= 0;
 	fps_calc_.current_calc_frame_count= 0;
@@ -182,6 +180,10 @@ mx_MainLoop::mx_MainLoop(
 	player_->SetLevel(level_);
 	
 	renderer_= new mx_Renderer( *level_, *player_ );
+
+	// Start game time calculations after all heavy operations
+	start_time_ms_= prev_time_ms_= GetTickCount();
+	toatal_time_s_= 0.0f;
 
 	//CaptureMouse( true );
 }
@@ -230,8 +232,9 @@ void mx_MainLoop::Loop()
 		{
 			prev_time_ms_= current_time_ms;
 			dt_s_= dt_s < c_max_dt ? dt_s : c_max_dt;
+			toatal_time_s_+= dt_s_;
 
-			player_->Tick( dt_s );
+			player_->Tick();
 			level_->Tick();
 		}
 
@@ -266,12 +269,14 @@ LRESULT CALLBACK mx_MainLoop::WindowProc( HWND hwnd, UINT uMsg, WPARAM wParam, L
 		instance_->FocusChange( HWND(wParam) == instance_->hwnd_ );
 		break;
 	case WM_LBUTTONDOWN:
+		player->ShotButtonPressed();
 		break;
 	case WM_RBUTTONDOWN:
 		break;
 	case WM_MBUTTONDOWN:
 		break;
 	case WM_LBUTTONUP:
+		player->ShotButtonReleased();
 		//instance->gui_->MouseClick( lParam&65535, lParam>>16 );
 		break;
 	case WM_MOUSEMOVE:

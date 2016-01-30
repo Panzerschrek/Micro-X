@@ -1,5 +1,7 @@
 #include "level.h"
+#include "mx_assert.h"
 #include "mx_math.h"
+#include "main_loop.h"
 
 #include "player.h"
 
@@ -14,6 +16,8 @@
 mx_Player::mx_Player()
 	: level_(NULL)
 	, aspect_(1.0f), fov_(MX_INITIAL_FOV), target_fov_(MX_INITIAL_FOV)
+	, shot_button_pressed_(false)
+	, last_shot_time_s_(0.0f)
 	, forward_pressed_(false), backward_pressed_(false), left_pressed_(false), right_pressed_(false)
 	, up_pressed_(false), down_pressed_(false)
 	, rotate_up_pressed_(false), rotate_down_pressed_(false), rotate_left_pressed_(false), rotate_right_pressed_(false)
@@ -43,8 +47,11 @@ mx_Player::~mx_Player()
 {
 }
 
-void mx_Player::Tick( float dt )
+void mx_Player::Tick()
 {
+	float dt= mx_MainLoop::Instance()->GetTickTime();
+	float total_time= mx_MainLoop::Instance()->GetTime();
+
 	float move_vector[3]= { 0.0f, 0.0f, 0.0f };
 	float rotation_angles[3]= { 0.0f, 0.0f, 0.0f };
 
@@ -128,10 +135,11 @@ void mx_Player::Tick( float dt )
 	pos_[1]+= ds * move_vector[1];
 	pos_[2]+= ds * move_vector[2];
 
+	MX_ASSERT(level_);
+	// Collide
 #ifdef MX_DEBUG
 	if( !debug_noclip_ )
 #endif
-	if( level_ )
 	{
 		const mx_LevelData::Sector* sector= level_->FindSectorForPoint( pos_ );
 		if( sector )
@@ -140,6 +148,13 @@ void mx_Player::Tick( float dt )
 			for( unsigned int i= 0; i < sector->connections_count; i++ )
 				CollideWithSector( sector->connections[i] );
 		}
+	}
+
+	// Shot
+	if( shot_button_pressed_ && total_time - last_shot_time_s_ > 1.0f / 8.0f )
+	{
+		last_shot_time_s_= total_time;
+		level_->Shot( pos_, axis_[1] );
 	}
 }
 

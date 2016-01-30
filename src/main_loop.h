@@ -25,7 +25,9 @@ public:
 	unsigned int ViewportHeight() const;
 	unsigned int FPS() const;
 
-	float GetTickTime() const;
+	// Time - in seconds
+	float GetTickTime() const; // time of current tick
+	float GetTime() const; // total time sinse game start, include this tick
 
 	void Loop();
 	void Quit();
@@ -68,6 +70,7 @@ private:
 	DWORD start_time_ms_;
 	DWORD prev_time_ms_;
 	float dt_s_;
+	float toatal_time_s_;
 
 	struct
 	{
@@ -109,4 +112,9 @@ inline void mx_MainLoop::Quit()
 inline float mx_MainLoop::GetTickTime() const
 {
 	return dt_s_;
+}
+
+inline float mx_MainLoop::GetTime() const
+{
+	return toatal_time_s_;
 }

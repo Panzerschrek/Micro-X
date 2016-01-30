@@ -1,4 +1,6 @@
+#include "main_loop.h"
 #include "monster.h"
+#include "mx_assert.h"
 #include "mx_math.h"
 
 #include "level.h"
@@ -6,6 +8,7 @@
 mx_Level::mx_Level( const mx_LevelData& level_data )
 	: level_data_(level_data)
 	, monster_count_(0)
+	, bullet_count_(0)
 {
 	for( unsigned int i= 0; i < level_data_.sector_count && monster_count_ < MX_MAX_MONSTERS; i++ )
 	{
@@ -130,8 +133,46 @@ outside_triangle:;
 
 void mx_Level::Tick()
 {
+	float dt= mx_MainLoop::Instance()->GetTickTime();
+	float total_time= mx_MainLoop::Instance()->GetTime();
+
 	for( unsigned int m= 0; m < monster_count_; m++ )
 	{
 		monsters_[m]->Exec();
 	}
+
+	for( unsigned int b= 0; b < bullet_count_; )
+	{
+		mx_Bullet& bullet= bullets_[b];
+		if( total_time - bullet.birth_time > 3.0f )
+		{
+			if( b != bullet_count_ - 1u )
+				bullets_[b]= bullets_[ bullet_count_ - 1u ];
+			bullet_count_--;
+			continue;
+		}
+
+		float d_pos[3];
+		mxVec3Mul( bullet.speed, dt, d_pos );
+		mxVec3Add( bullet.pos, d_pos );
+		
+		// TODO - add collision with level, player, monsters
+		b++;
+	}
+}
+
+void mx_Level::Shot( const float* pos, const float* normalized_dir )
+{
+	MX_ASSERT( bullet_count_ <= MX_MAX_BULLETS );
+
+	mx_Bullet& bullet= bullets_[bullet_count_];
+
+	bullet.birth_time= mx_MainLoop::Instance()->GetTime();
+
+	VEC3_CPY( bullet.pos, pos );
+
+	const float c_speed= 5.0f;
+	mxVec3Mul( normalized_dir, c_speed, bullet.speed );
+
+	bullet_count_++;
 }

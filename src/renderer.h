@@ -22,6 +22,7 @@ private:
 	void CalculateMatrices();
 	void DrawWorld();
 	void DrawMonsters();
+	void DrawBullets();
 
 private:
 	const mx_MainLoop& main_loop_;

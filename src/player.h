@@ -14,8 +14,11 @@ public:
 
 	const float Fov() const;
 
-	void Tick( float dt );
+	void Tick();
 	void Rotate( float pixel_delta_x, float pixel_delta_y );
+
+	void ShotButtonPressed();
+	void ShotButtonReleased();
 
 	void ForwardPressed();
 	void BackwardPressed();
@@ -70,6 +73,9 @@ private:
 
 	float controller_rotation_[3];
 
+	bool shot_button_pressed_;
+	float last_shot_time_s_;
+
 	bool forward_pressed_, backward_pressed_, left_pressed_, right_pressed_;
 	bool up_pressed_, down_pressed_;
 	bool rotate_up_pressed_, rotate_down_pressed_, rotate_left_pressed_, rotate_right_pressed_;
@@ -94,6 +100,16 @@ inline const float* mx_Player::Angle() const
 inline const float mx_Player::Fov() const
 {
 	return fov_;
+}
+
+inline void mx_Player::ShotButtonPressed()
+{
+	shot_button_pressed_= true;
+}
+
+inline void mx_Player::ShotButtonReleased()
+{
+	shot_button_pressed_= false;
 }
 
 inline void mx_Player::ForwardPressed()
