@@ -40,6 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="C:\SDK`s\DXSDK\include"
 				PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS;MX_DEBUG"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -60,8 +61,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib"
+				AdditionalDependencies="opengl32.lib dsound.lib dxguid.lib"
 				OutputFile="Micro-X_d.exe"
+				AdditionalLibraryDirectories="C:\SDK`s\DXSDK\lib\x86"
 				GenerateDebugInformation="true"
 				TargetMachine="1"
 			/>
@@ -116,6 +118,7 @@
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="2"
 				OmitFramePointers="true"
+				AdditionalIncludeDirectories="C:\SDK`s\DXSDK\include"
 				PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
 				StringPooling="true"
 				ExceptionHandling="0"
@@ -140,8 +143,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib"
+				AdditionalDependencies="opengl32.lib dsound.lib dxguid.lib"
 				OutputFile="Micro-X.exe"
+				AdditionalLibraryDirectories="C:\SDK`s\DXSDK\lib\x86"
 				GenerateDebugInformation="false"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -232,6 +236,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\sound_engine.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\sounds_generation.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\vertex_buffer.cpp"
 				>
 			</File>
@@ -303,6 +315,14 @@
 			</File>
 			<File
 				RelativePath=".\src\shaders.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\sound_engine.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\sounds_generation.h"
 				>
 			</File>
 			<File

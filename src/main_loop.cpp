@@ -7,6 +7,7 @@
 #include "mx_assert.h"
 #include "player.h"
 #include "renderer.h"
+#include "sound_engine.h"
 
 #include "main_loop.h"
 
@@ -56,6 +57,12 @@ void mx_MainLoop::CreateInstance(
 void mx_MainLoop::DeleteInstance()
 {
 	MX_ASSERT( instance_ );
+
+	mx_SoundEngine::DeleteInstance();
+
+	delete instance_->renderer_;
+	delete instance_->player_;
+	delete instance_->level_;
 
 	delete instance_;
 	instance_= NULL;
@@ -181,6 +188,14 @@ mx_MainLoop::mx_MainLoop(
 	
 	renderer_= new mx_Renderer( *level_, *player_ );
 
+	mx_SoundEngine::CreateInstance( hwnd_ );
+
+	mx_SoundSource* src= mx_SoundEngine::Instance()->CreateSoundSource( SoundPlasmajetEngine );
+	static const float c_zero_vec[3]= { 0.0f, 0.0f, 0.0f };
+	src->SetOrientation( c_zero_vec, c_zero_vec );
+	src->SetVolume( 40.0f );
+	src->Play();
+
 	// Start game time calculations after all heavy operations
 	start_time_ms_= prev_time_ms_= GetTickCount();
 	toatal_time_s_= 0.0f;
@@ -236,6 +251,15 @@ void mx_MainLoop::Loop()
 
 			player_->Tick();
 			level_->Tick();
+			
+		}
+
+		{ // Sound here
+				float player_mat[16];
+				player_->CreateRotationMatrix4( player_mat, true );
+				static const float vel[3]= { 0.0f, 0.0f, 0.0f };
+				mx_SoundEngine::Instance()->SetListenerOrinetation( player_->Pos(),player_mat, vel );
+				mx_SoundEngine::Instance()->Tick();
 		}
 
 		glClearColor( 0.1f, 0.1f, 0.1f, 0.0f );

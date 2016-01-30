@@ -38,6 +38,11 @@ inline float mxSign( float x )
 	return 0.0f;
 }
 
+inline float mxRound( float x )
+{
+	return std::ceilf( x - 0.5f );
+}
+
 #define VEC3_CPY(dst,src) (dst)[0]= (src)[0]; (dst)[1]= (src)[1]; (dst)[2]= src[2];
 
 void mxVec3Mul( const float* v, float s, float* v_out );
