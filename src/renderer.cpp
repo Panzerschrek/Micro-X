@@ -93,7 +93,7 @@ void mx_Renderer::CalculateMatrices()
 	mxMat4Perspective( perspective_mat,
 		float(main_loop_.ViewportWidth())/ float(main_loop_.ViewportHeight()),
 		player_.Fov(),
-		0.125f, 128.0f );
+		1.0f / 16.0f, 128.0f );
 	
 	mxMat4Mul( translate_mat, rotation_mat, view_matrix_ );
 	mxMat4Mul( view_matrix_, basis_change_mat );

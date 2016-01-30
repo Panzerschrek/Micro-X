@@ -54,6 +54,9 @@ public:
 #endif
 
 private:
+	void CollideWithSector( const mx_LevelData::Sector* sector );
+
+private:
 	// 0 - pitch / tangaž
 	// 1 - yaw / ryskanije
 	// 2 - roll / kren

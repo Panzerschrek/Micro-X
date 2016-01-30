@@ -136,11 +136,9 @@ void mx_Player::Tick( float dt )
 		const mx_LevelData::Sector* sector= level_->FindSectorForPoint( pos_ );
 		if( sector )
 		{
-			float new_pos[3];
-			if( level_->CollideWithSectorTriangles( pos_, 0.5f, sector, new_pos ) )
-			{
-				VEC3_CPY( pos_, new_pos );
-			}
+			CollideWithSector(sector);
+			for( unsigned int i= 0; i < sector->connections_count; i++ )
+				CollideWithSector( sector->connections[i] );
 		}
 	}
 }
@@ -161,4 +159,13 @@ void mx_Player::ZoomOut()
 {
 	target_fov_+= MX_FOV_STEP;
 	if( target_fov_ > MX_MAX_FOV ) target_fov_= MX_MAX_FOV;
+}
+
+void mx_Player::CollideWithSector( const mx_LevelData::Sector* sector )
+{
+	float new_pos[3];
+	if( level_->CollideWithSectorTriangles( pos_, 0.3f, sector, new_pos ) )
+	{
+		VEC3_CPY( pos_, new_pos );
+	}
 }

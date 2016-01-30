@@ -386,6 +386,9 @@ void mx_LevelGenerator::GenerateMeshes()
 	out_level_data_.sector_count= 0;
 	out_level_data_.sectors= new mx_LevelData::Sector[ room_count_ + connection_count_ ];
 
+	unsigned int* room_to_sector_index= new unsigned int[ room_count_ ];
+	unsigned int* connection_to_sector_index= new unsigned int[ connection_count_ ];
+
 	mx_LevelData::Sector* sector= out_level_data_.sectors;
 	for( unsigned int i= 0; i < room_count_; i++ )
 	{
@@ -399,8 +402,7 @@ void mx_LevelGenerator::GenerateMeshes()
 			AddRoomCube( rooms_ + i );
 			sector->triangles_count= out_level_data_.triangle_count - sector->first_triangle;
 
-			// TODO
-			sector->connections_count= 0;
+			room_to_sector_index[i]= out_level_data_.sector_count;
 
 			out_level_data_.sector_count++;
 			sector++;
@@ -419,13 +421,43 @@ void mx_LevelGenerator::GenerateMeshes()
 			AddConnectionCube( connections_ + i );
 			sector->triangles_count= out_level_data_.triangle_count - sector->first_triangle;
 
-			// TODO
-			sector->connections_count= 0;
+			connection_to_sector_index[i]= out_level_data_.sector_count;
 
 			out_level_data_.sector_count++;
 			sector++;
 		}
 	}
+
+	// Setup sectors linkage
+
+	for( unsigned int i= 0; i < room_count_; i++ )
+	{
+		const Room* room= rooms_ + i;
+		// Discard unlinked level parts
+		if( room->linkage_group_id == max_linkage_group_id_ )
+		{
+			sector= out_level_data_.sectors + room_to_sector_index[i];
+			sector->connections_count= room->connection_count;
+			for( unsigned int j= 0; j < room->connection_count; j++ )
+				sector->connections[j]= out_level_data_.sectors + connection_to_sector_index[ room->connections[j] - connections_ ];
+		}
+	}
+
+	for( unsigned int i= 0; i < connection_count_; i++ )
+	{
+		const Connection* connection= connections_ + i;
+		// Discard unlinked level parts
+		if( connection->begin->linkage_group_id == max_linkage_group_id_ )
+		{
+			sector= out_level_data_.sectors + connection_to_sector_index[i];
+			sector->connections_count= 2;
+			sector->connections[0]= out_level_data_.sectors + room_to_sector_index[ connection->begin - rooms_ ];
+			sector->connections[1]= out_level_data_.sectors + room_to_sector_index[ connection->end   - rooms_ ];
+		}
+	}
+
+	delete[] room_to_sector_index;
+	delete[] connection_to_sector_index;
 }
 
 void mx_LevelGenerator::SpitTriangle( unsigned int triangle_index, const mx_Plane& plane )
@@ -730,8 +762,6 @@ void mx_LevelGenerator::SetupRoomSector( const Room* room, mx_LevelData::Sector*
 
 void mx_LevelGenerator::SetupConnectionSector( const Connection* connection, mx_LevelData::Sector* sector )
 {
-	sector->planes_count= 0;
-
 	for( unsigned int i= 0; i < 3; i++ )
 	{
 		if( connection->coord_begin[i] > connection->coord_end[i] )
@@ -744,6 +774,16 @@ void mx_LevelGenerator::SetupConnectionSector( const Connection* connection, mx_
 			sector->bb_min[i]= float(connection->coord_begin[i]);
 			sector->bb_max[i]= float(connection->coord_end[i]+1);
 		}
+	}
+
+	sector->planes_count= 6;
+	for( unsigned int i= 0; i < 6; i++ )
+	{
+		for( unsigned int j= 0; j < 3; j++ )
+			sector->planes[i].normal[j]= float(c_cube_normals[i][j]);
+
+		unsigned int c= i >> 1;
+		sector->planes[i].dist= sector->planes[i].normal[c] * float((i&1) ? sector->bb_min[c] : sector->bb_max[c]);
 	}
 }
 
