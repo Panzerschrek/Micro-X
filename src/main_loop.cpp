@@ -286,6 +286,11 @@ LRESULT CALLBACK mx_MainLoop::WindowProc( HWND hwnd, UINT uMsg, WPARAM wParam, L
 	case WM_KEYUP:
 		switch(wParam)
 		{
+#ifdef MX_DEBUG
+		case KEY('N'):
+			player->DebugToggleNoclip();
+			break;
+#endif
 		case KEY('W'):
 			player->ForwardReleased();
 			break;

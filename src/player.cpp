@@ -18,6 +18,9 @@ mx_Player::mx_Player()
 	, up_pressed_(false), down_pressed_(false)
 	, rotate_up_pressed_(false), rotate_down_pressed_(false), rotate_left_pressed_(false), rotate_right_pressed_(false)
 	, rotate_clockwise_pressed_(false), rotate_anticlockwise_pressed_(false)
+#ifdef MX_DEBUG
+	, debug_noclip_(false)
+#endif
 {
 	pos_[0]= pos_[1]= pos_[2]= 0.0f;
 	//angle_[0]= angle_[1]= angle_[2]= 0.0f;
@@ -125,6 +128,9 @@ void mx_Player::Tick( float dt )
 	pos_[1]+= ds * move_vector[1];
 	pos_[2]+= ds * move_vector[2];
 
+#ifdef MX_DEBUG
+	if( !debug_noclip_ )
+#endif
 	if( level_ )
 	{
 		const mx_LevelData::Sector* sector= level_->FindSectorForPoint( pos_ );

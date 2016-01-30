@@ -49,6 +49,10 @@ public:
 	void ZoomIn();
 	void ZoomOut();
 
+#ifdef MX_DEBUG
+	void DebugToggleNoclip();
+#endif
+
 private:
 	// 0 - pitch / tangaž
 	// 1 - yaw / ryskanije
@@ -67,6 +71,10 @@ private:
 	bool up_pressed_, down_pressed_;
 	bool rotate_up_pressed_, rotate_down_pressed_, rotate_left_pressed_, rotate_right_pressed_;
 	bool rotate_clockwise_pressed_, rotate_anticlockwise_pressed_;
+
+#ifdef MX_DEBUG
+	bool debug_noclip_;
+#endif
 };
 
 inline void mx_Player::SetLevel( mx_Level* level )
@@ -204,3 +212,10 @@ inline void mx_Player::RotateAnticlockwiseReleased()
 {
 	rotate_anticlockwise_pressed_= false;
 }
+
+#ifdef MX_DEBUG
+inline void mx_Player::DebugToggleNoclip()
+{
+	debug_noclip_= !debug_noclip_;
+}
+#endif
