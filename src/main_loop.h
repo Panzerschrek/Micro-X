@@ -8,6 +8,7 @@
 class mx_Level;
 class mx_Player;
 class mx_Renderer;
+class mx_Text;
 
 class mx_MainLoop
 {
@@ -74,7 +75,7 @@ private:
 
 	struct
 	{
-		unsigned int prev_calc_time;
+		unsigned int prev_calc_time_ms; // time since program start
 		unsigned int frame_count_to_show;
 		unsigned int current_calc_frame_count;
 	}fps_calc_;
@@ -82,6 +83,7 @@ private:
 	mx_Player* player_;
 	mx_Level* level_;
 	mx_Renderer* renderer_;
+	mx_Text* text_;
 };
 
 inline mx_MainLoop* mx_MainLoop::Instance()

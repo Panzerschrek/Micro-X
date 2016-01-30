@@ -49,16 +49,18 @@ void mx_VertexBuffer::IndexData( const void* data, unsigned int data_size )
 
 void mx_VertexBuffer::VertexSubData( const void* data, unsigned int data_size, unsigned int shift )
 {
-	MX_ASSERT( vertex_vbo_ == MX_BUFFER_NOT_CREATED );
+	MX_ASSERT( vertex_vbo_ != MX_BUFFER_NOT_CREATED );
 
+	glBindVertexArray(vao_);
 	glBindBuffer( GL_ARRAY_BUFFER, vertex_vbo_ );
 	glBufferSubData( GL_ARRAY_BUFFER, shift, data_size, data );
 }
 
 void mx_VertexBuffer::IndexSubData( const void* data, unsigned int data_size, unsigned int shift )
 {
-	MX_ASSERT( index_vbo_ == MX_BUFFER_NOT_CREATED );
+	MX_ASSERT( index_vbo_ != MX_BUFFER_NOT_CREATED );
 
+	glBindVertexArray(vao_);
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, index_vbo_ );
 	glBufferSubData( GL_ELEMENT_ARRAY_BUFFER, shift, data_size, data );
 }

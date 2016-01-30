@@ -1,5 +1,6 @@
 #include "shaders.h"
 
+#define VERSION_HEADER "#version 330\n"
 namespace mx_Shaders
 {
 
@@ -28,8 +29,38 @@ common input/output names
 "c_" - output color of fragment shader
 */
 
+//text shader
+const char text_shader_v[]=
+VERSION_HEADER
+"in vec2 v;"//in position
+"in vec2 tc;"//in texture coord
+"in vec4 c;"//in color
+"out vec4 fc;"//out color
+"out vec2 ftc;"//out texture coord
+"void main()"
+"{"
+	"fc=c;"
+	"ftc=tc*vec2(1.0/96.0,1.0);"
+	"gl_Position=vec4(v,-1.0,1.0);"
+"}"
+;
+
+const char text_shader_f[]=
+VERSION_HEADER
+"uniform sampler2D tex;"
+"in vec4 fc;"
+"in vec2 ftc;"
+"out vec4 c_;"
+"void main()"
+"{"
+	"float x=texture(tex,ftc).x;"
+	"c_=vec4(fc.xyz*x,max(fc.a,x));"
+"}"
+;
+
+// world shader
 const char world_shader_v[]=
-"#version 330\n"
+VERSION_HEADER
 "in vec3 p;"
 "in vec3 n;"
 "in vec3 tc;"
@@ -45,7 +76,7 @@ const char world_shader_v[]=
 ;
 
 const char world_shader_f[]=
-"#version 330\n"
+VERSION_HEADER
 "out vec4 c_;"
 "in vec4 fc;"
 "in vec3 ftc;"

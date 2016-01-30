@@ -111,6 +111,8 @@ void mx_Renderer::DrawWorld()
 	glCullFace( GL_FRONT );
 	//glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	glDrawElements( GL_TRIANGLES, world_vertex_buffer_.IndexDataSize() / sizeof(unsigned int), GL_UNSIGNED_INT, NULL );
+
+	glDisable (GL_CULL_FACE );
 }
 
 void mx_Renderer::DrawMonsters()
@@ -141,6 +143,8 @@ void mx_Renderer::DrawMonsters()
 
 		glDrawElements( GL_TRIANGLES, model_vertex_buffer_.IndexDataSize() / sizeof(unsigned short), GL_UNSIGNED_SHORT, NULL );
 	}
+
+	glDisable (GL_CULL_FACE );
 }
 
 void mx_Renderer::DrawBullets()
@@ -169,4 +173,6 @@ void mx_Renderer::DrawBullets()
 
 		glDrawElements( GL_TRIANGLES, model_vertex_buffer_.IndexDataSize() / sizeof(unsigned short), GL_UNSIGNED_SHORT, NULL );
 	}
+
+	glDisable (GL_CULL_FACE );
 }

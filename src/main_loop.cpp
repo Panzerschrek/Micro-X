@@ -1,5 +1,4 @@
 #include <cstdio>
-#include <ctime>
 
 #include "gl/funcs.h"
 #include "level.h"
@@ -8,6 +7,7 @@
 #include "player.h"
 #include "renderer.h"
 #include "sound_engine.h"
+#include "text.h"
 
 #include "main_loop.h"
 
@@ -60,6 +60,7 @@ void mx_MainLoop::DeleteInstance()
 
 	mx_SoundEngine::DeleteInstance();
 
+	delete instance_->text_;
 	delete instance_->renderer_;
 	delete instance_->player_;
 	delete instance_->level_;
@@ -173,7 +174,7 @@ mx_MainLoop::mx_MainLoop(
 	// Initial OpenGL state
 	glEnable( GL_DEPTH_TEST );
 
-	fps_calc_.prev_calc_time= std::clock();
+	fps_calc_.prev_calc_time_ms= 0;
 	fps_calc_.frame_count_to_show= 0;
 	fps_calc_.current_calc_frame_count= 0;
 
@@ -187,6 +188,7 @@ mx_MainLoop::mx_MainLoop(
 	player_->SetLevel(level_);
 	
 	renderer_= new mx_Renderer( *level_, *player_ );
+	text_= new mx_Text();
 
 	mx_SoundEngine::CreateInstance( hwnd_ );
 
@@ -266,9 +268,26 @@ void mx_MainLoop::Loop()
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
 		renderer_->Draw();
+		
+		{ // texts
+			//TODO: remove this, if we reach 32kb limit
+
+			char str[]= "fps:    0";
+			str[8]= '0' + fps_calc_.frame_count_to_show % 10;
+			if( fps_calc_.frame_count_to_show >=   10 )
+				str[7]= '0' + fps_calc_.frame_count_to_show /   10 % 10;
+			if( fps_calc_.frame_count_to_show >=  100 )
+				str[6]= '0' + fps_calc_.frame_count_to_show /  100 % 10;
+			if( fps_calc_.frame_count_to_show >= 1000 )
+				str[5]= '0' + fps_calc_.frame_count_to_show / 1000 % 10;
+
+			text_->AddText( 0, 0, 1, mx_Text::default_color, str );
+
+			text_->Draw();
+		}
 
 		SwapBuffers( hdc_ );
-		//CalculateFPS();
+		CalculateFPS();
 	} // while !quit
 }
 
@@ -486,17 +505,18 @@ void mx_MainLoop::CaptureMouse( bool need_capture )
 
 void mx_MainLoop::CalculateFPS()
 {
-	const unsigned int fps_calc_interval_ticks= CLOCKS_PER_SEC * 3 / 4;
+	// TODO: remove this, if we reach 32kb limit
+
+	const unsigned int fps_calc_interval_ms= 500;
 
 	fps_calc_.current_calc_frame_count++;
 
-	unsigned int current_time= clock();
-	unsigned int dt= current_time - fps_calc_.prev_calc_time;
-	if( dt >= fps_calc_interval_ticks )
+	unsigned int current_time= GetTickCount() - start_time_ms_;
+	unsigned int dt= current_time - fps_calc_.prev_calc_time_ms;
+	if( dt >= fps_calc_interval_ms )
 	{
-		fps_calc_.frame_count_to_show= fps_calc_.current_calc_frame_count * CLOCKS_PER_SEC / fps_calc_interval_ticks;
+		fps_calc_.frame_count_to_show= fps_calc_.current_calc_frame_count * 1000u / fps_calc_interval_ms;
 		fps_calc_.current_calc_frame_count= 0;
-
-		fps_calc_.prev_calc_time= current_time;
+		fps_calc_.prev_calc_time_ms+= fps_calc_interval_ms;
 	}
 }
