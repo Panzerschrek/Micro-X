@@ -2,6 +2,7 @@
 #include "monster.h"
 #include "mx_assert.h"
 #include "mx_math.h"
+#include "sound_engine.h"
 
 #include "level.h"
 
@@ -173,6 +174,8 @@ void mx_Level::Shot( const float* pos, const float* normalized_dir )
 
 	const float c_speed= 5.0f;
 	mxVec3Mul( normalized_dir, c_speed, bullet.speed );
+
+	mx_SoundEngine::Instance()->AddSingleSound( SoundPlasmagunShot, 1.0f, 1.0f, bullet.pos );
 
 	bullet_count_++;
 }
