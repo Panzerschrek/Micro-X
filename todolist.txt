@@ -1,0 +1,30 @@
+﻿* Upravlenije povorotami i peremescenijem igroka plavno, s plavnoj proizvodnoj po uglam i koordinatam.
+* Igrovoj proçess
+	* Nacalo / koneç urovnä.
+	* Smertji igroka.
+	* Perezapusk igry, vozraždenije igroka.
+* Vragi
+	* Ot tröh vragov s dvumä raznymi modelämi.
+	* Obnaruženije igroka.
+	* Presledovanije.
+	* Vozvrascenije k patrulirovaniju.
+	* Uklonenije ot vystrelov igroka.
+	* Vzaimodejstvije drug s drugim.
+* Fizika
+	* Rascöt polötov pulj i snarädov. Stolknovenije s urovnem, igrokom, monstrami.
+	* Vosproizvedenije zvukov pri stolknovenijak, popadanii snarädov.
+	* Rascöt traektorij samonavodäscihsä raket.
+* Generator urovnej.
+	* Skošennyje ugly komnat.
+	* Sdvinutyje komnaty.
+	* Vyroždennyje v izgib tonnelä komnaty.
+	* Tonneli s peremennoj tolscinoj.
+* Grafika
+	* Razlicnyje tekstury na stenah.
+	* Tekstury vragov.
+	* Dekoraçii ( lampy, tablicki, drugije predmety ).
+	* Osvescenije.
+	* Kabina korablä igroka.
+* Zvuki
+	* Zvuki vystrelov, udarov, vzryvov.
+	* Vozmožno, muzyka.
