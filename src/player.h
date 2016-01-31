@@ -66,6 +66,7 @@ private:
 	//float angle_[3];
 	mx_Level* level_;
 
+	float speed_[3];
 	float angular_speed_[3];
 
 	float cam_radius_;

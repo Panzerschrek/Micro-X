@@ -43,6 +43,7 @@ mx_Player::mx_Player()
 	axis_[2][2]= 1.0f;
 
 	angular_speed_[0]= angular_speed_[1]= angular_speed_[2]= 0.0f;
+	speed_[0]= speed_[1]= speed_[2]= 0.0f;
 }
 
 mx_Player::~mx_Player()
@@ -115,11 +116,26 @@ void mx_Player::Tick()
 	mxMat4Transpose( move_vec_mat );
 	mxVec3Mat4Mul( move_vector, move_vec_mat );
 
-	const float speed= 5.0f;
-	float ds= dt * speed;
-	pos_[0]+= ds * move_vector[0];
-	pos_[1]+= ds * move_vector[1];
-	pos_[2]+= ds * move_vector[2];
+	static const float c_acceleration= 20.0f;
+	static const float c_deceleration= -7.0f;
+	static const float c_max_speed= 4.0f;
+	for( unsigned int i= 0; i < 3; i++ )
+	{
+		speed_[i]+= c_acceleration * dt * move_vector[i];
+		if( std::fabsf(speed_[i]) > 0.0f )
+		{
+			float ds= c_deceleration * dt;
+			if( -ds > std::fabsf(speed_[i]) ) speed_[i]= 0.0f;
+			else speed_[i]+= ds * mxSign(speed_[i]);
+		}
+	}
+	float speed_length= mxVec3Len( speed_ );
+	if( speed_length > c_max_speed )
+		mxVec3Mul( speed_, c_max_speed / speed_length );
+
+	float d_pos[3];
+	mxVec3Mul( speed_, dt, d_pos );
+	mxVec3Add( pos_, d_pos );
 
 	MX_ASSERT(level_);
 	// Collide
