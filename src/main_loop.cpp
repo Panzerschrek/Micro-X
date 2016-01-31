@@ -202,7 +202,8 @@ mx_MainLoop::mx_MainLoop(
 	start_time_ms_= prev_time_ms_= GetTickCount();
 	toatal_time_s_= 0.0f;
 
-	//CaptureMouse( true );
+	need_capture_mouse_= true;
+	CaptureMouse( need_capture_mouse_ );
 }
 
 mx_MainLoop::~mx_MainLoop()
@@ -339,6 +340,10 @@ LRESULT CALLBACK mx_MainLoop::WindowProc( HWND hwnd, UINT uMsg, WPARAM wParam, L
 			player->DebugToggleNoclip();
 			break;
 #endif
+		case KEY('M'):
+			instance_->need_capture_mouse_= !instance_->need_capture_mouse_;
+			instance_->CaptureMouse( instance_->need_capture_mouse_ );
+			break;
 		case KEY('W'):
 			player->ForwardReleased();
 			break;
@@ -482,13 +487,12 @@ void mx_MainLoop::Resize()
 
 void mx_MainLoop::FocusChange( bool focus_in )
 {
-	if( !focus_in )
-		CaptureMouse( false );
+	CaptureMouse( focus_in && need_capture_mouse_ );
 }
 
 void mx_MainLoop::CaptureMouse( bool need_capture )
 {
-	if( need_capture == mouse_captured_) return;
+	if( need_capture == mouse_captured_ ) return;
 
 	if(mouse_captured_)
 	{
@@ -499,7 +503,13 @@ void mx_MainLoop::CaptureMouse( bool need_capture )
 	{
 		mouse_captured_= true;
 		ShowCursor( false );
-		GetCursorPos( &prev_cursor_pos_ );
+
+		RECT window_rect;
+		GetWindowRect( hwnd_, & window_rect );
+		prev_cursor_pos_.x= ( window_rect.left + window_rect.right  ) >> 1;
+		prev_cursor_pos_.y= ( window_rect.top  + window_rect.bottom ) >> 1;
+
+		SetCursorPos( prev_cursor_pos_.x, prev_cursor_pos_.y );
 	}
 }
 

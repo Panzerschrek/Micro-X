@@ -67,6 +67,7 @@ private:
 
 	POINT prev_cursor_pos_;
 	bool mouse_captured_;
+	bool need_capture_mouse_;
 
 	DWORD start_time_ms_;
 	DWORD prev_time_ms_;
