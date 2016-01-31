@@ -1,6 +1,7 @@
 #include "main_loop.h"
 #include "mx_assert.h"
 #include "shaders.h"
+#include "texture.h"
 
 #include "text.h"
 
@@ -139,13 +140,9 @@ void mx_Text::CreateTexture()
 	unsigned char* decompressed_font= new unsigned char[ MX_FONT_BITMAP_WIDTH * MX_FONT_BITMAP_HEIGHT ];
 	font_data_= decompressed_font;
 
-	//mfMonochromeImageTo8Bit( font_data, decompressed_font, MF_FONT_BITMAP_WIDTH * MF_FONT_BITMAP_HEIGHT );
-	for( unsigned int i= 0; i< MX_FONT_BITMAP_WIDTH * MX_FONT_BITMAP_HEIGHT / 8; i++ )
-		for( unsigned int j= 0; j< 8; j++ )
-			decompressed_font[ (i<<3) + (7-j) ]= ( (g_font_data[i] & (1<<j)) >> j ) * 255;
+	mxMonochromeImageTo8Bit( g_font_data, decompressed_font, MX_FONT_BITMAP_WIDTH * MX_FONT_BITMAP_HEIGHT );
 
 	glGenTextures( 1, &font_texture_id_ );
-
 	glBindTexture( GL_TEXTURE_2D, font_texture_id_ );
 
 	glTexImage2D( GL_TEXTURE_2D, 0, GL_R8,

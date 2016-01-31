@@ -5,6 +5,7 @@
 #include "mx_math.h"
 #include "player.h"
 #include "shaders.h"
+#include "texture.h"
 
 #include "renderer.h"
 
@@ -36,7 +37,7 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 		world_shader_.SetAttribLocation( "n", 1 );
 		world_shader_.SetAttribLocation( "tc", 2 );
 		world_shader_.Create( mx_Shaders::world_shader_v, mx_Shaders::world_shader_f );
-		static const char* const uniforms[]= { "mat" };
+		static const char* const uniforms[]= { "mat", "tex" };
 		world_shader_.FindUniforms( uniforms, sizeof(uniforms) / sizeof(char*) );
 	}
 
@@ -55,6 +56,54 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 		model_vertex_buffer_.VertexAttrib( 0, 3, GL_FLOAT, false, ((char*)v.pos) - ((char*)&v) );
 		model_vertex_buffer_.VertexAttrib( 1, 3, GL_FLOAT, true, ((char*)v.normal) - ((char*)&v) );
 		model_vertex_buffer_.VertexAttrib( 2, 3, GL_FLOAT, false, ((char*)v.tex_coord) - ((char*)&v) );
+	}
+	{
+		mx_Texture cracked( 10, 10 );
+		{
+			cracked.PoissonDiskPoints( 256, 0 );
+
+			static const float c_save_green[4]= { 0.0f, 3.0f, 0.0f, 0.0f };
+			static const float c_one[4]= { 1.0f, 1.0f, 1.0f, 1.0f };
+			static const float c_zero[4]= { 0.0f, 0.0f, 0.0f, 0.0f };
+			static const float c_sub[4]= { 0.8f, 0.8f, 0.8f, 0.0f };
+			cracked.Mul( c_save_green );
+			cracked.Grayscale();
+			cracked.Invert( c_one );
+			cracked.Pow( 16.0f );
+			cracked.Sub( c_sub );
+			cracked.Max( c_zero );
+
+			cracked.Invert( c_one );
+
+			cracked.SinWaveDeformX( 128.0f, 1.0f / 512.0f, 0 );
+			cracked.SinWaveDeformX( 64.0f, 1.0f / 1024.0f, 180 );
+
+			cracked.SinWaveDeformY( 128.0f, 1.0f / 512.0f, 0 );
+			cracked.SinWaveDeformY( 64.0f, 1.0f / 1024.0f, 60 );
+		}
+
+		mx_Texture texture( 10, 10 );
+		texture.Noise( 0, 8 );
+
+		static const float c_mul[4]= { 0.2f, 0.2f, 0.2f, 0.0f };
+		static const float c_add[4]= { 0.8f, 0.8f, 0.8f, 1.0f };
+		texture.Mul( c_mul );
+		texture.Add( c_add );
+
+		static const float c_color[4]= { 0.7f, 0.65f, 0.6f, 1.0f };
+		texture.Mul( c_color );
+		texture.Mul( &cracked );
+		texture.LinearNormalization( 1.0f );
+
+		glGenTextures( 1, &tex_id_ );
+		glBindTexture( GL_TEXTURE_2D, tex_id_ );
+
+		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8,
+			texture.SizeX(), texture.SizeY(), 0,
+			GL_RGBA, GL_UNSIGNED_BYTE, texture.GetNormalizedData() );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+		glGenerateMipmap( GL_TEXTURE_2D );
 	}
 }
 
@@ -103,8 +152,12 @@ void mx_Renderer::CalculateMatrices()
 
 void mx_Renderer::DrawWorld()
 {
+	glActiveTexture( GL_TEXTURE0 );
+	glBindTexture( GL_TEXTURE_2D, tex_id_ );
+
 	world_shader_.Bind();
 	world_shader_.UniformMat4( "mat", view_matrix_ );
+	world_shader_.UniformInt( "tex", 0 );
 
 	world_vertex_buffer_.Bind();
 	glEnable( GL_CULL_FACE );

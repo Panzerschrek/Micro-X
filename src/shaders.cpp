@@ -77,12 +77,13 @@ VERSION_HEADER
 
 const char world_shader_f[]=
 VERSION_HEADER
+"uniform sampler2D tex;"
 "out vec4 c_;"
 "in vec4 fc;"
 "in vec3 ftc;"
 "void main()"
 "{"
-"c_=fc * 0.25 * (step(1.0, mod(ftc.x, 2.0)) + 1.0) * ( step(1.0, mod(ftc.y, 2.0)) + 1.0);"
+"c_=texture(tex,ftc.xy)*fc * 0.25 * (step(1.0, mod(ftc.x, 2.0)) + 1.0) * ( step(1.0, mod(ftc.y, 2.0)) + 1.0);"
 "}"
 ;
 

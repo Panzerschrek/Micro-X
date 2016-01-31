@@ -35,4 +35,6 @@ private:
 	mx_VertexBuffer model_vertex_buffer_;
 
 	float view_matrix_[16];
+
+	GLuint tex_id_;
 };
