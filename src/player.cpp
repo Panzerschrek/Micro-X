@@ -29,6 +29,7 @@ mx_Player::mx_Player()
 	pos_[0]= pos_[1]= pos_[2]= 0.0f;
 	//angle_[0]= angle_[1]= angle_[2]= 0.0f;
 	controller_rotation_[0]= controller_rotation_[1]= controller_rotation_[2]= 0.0f;
+	controller_rotation_accumulated_[0]= controller_rotation_accumulated_[1]= controller_rotation_accumulated_[2]= 0.0f;
 
 	axis_[0][0]= 1.0f;
 	axis_[0][1]= 0.0f;
@@ -89,8 +90,15 @@ void mx_Player::Tick()
 		if( std::fabsf(angular_speed_[i] ) < 0.01f )
 			angular_speed_[i]= 0.0f;
 
+		// Mouse moving filtration
+		// a(n) = k * a(n-1) + (1-k) * i
+		// s= k^n
+		static const float c_value_saving_per_second= 0.005f;
+		float k= std::pow( c_value_saving_per_second, dt );
+		controller_rotation_accumulated_[i]= controller_rotation_accumulated_[i] * k + controller_rotation_[i] * ( 1.0f - k );
+
 		float axis_rotate_vec[3];
-		mxVec3Mul( axis_[i], angular_speed_[i] * dt + controller_rotation_[i], axis_rotate_vec );
+		mxVec3Mul( axis_[i], angular_speed_[i] * dt + controller_rotation_accumulated_[i], axis_rotate_vec );
 		mxVec3Add( rotation_vector, axis_rotate_vec );
 
 		controller_rotation_[i]= 0.0f;
@@ -162,8 +170,9 @@ void mx_Player::Tick()
 
 void mx_Player::Rotate( float pixel_delta_x, float pixel_delta_y )
 {
-	controller_rotation_[2]+= pixel_delta_x * 0.001f * std::sqrtf( std::tanf( fov_ * 0.5f ) );
-	controller_rotation_[0]+= pixel_delta_y * 0.001f * std::sqrtf( std::tanf( fov_ * 0.5f ) );
+	static const float c_sensitivity= 0.001f;
+	controller_rotation_[2]+= c_sensitivity * pixel_delta_x * std::sqrtf( std::tanf( fov_ * 0.5f ) );
+	controller_rotation_[0]+= c_sensitivity * pixel_delta_y * std::sqrtf( std::tanf( fov_ * 0.5f ) );
 }
 
 void mx_Player::ZoomIn()

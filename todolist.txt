@@ -1,4 +1,4 @@
-﻿* Upravlenije povorotami i peremescenijem igroka plavno, s plavnoj proizvodnoj po uglam i koordinatam.
+﻿* Upravlenije povorotami i peremescenijem igroka plavno, s plavnoj proizvodnoj po uglam i koordinatam. [sdelano]
 * Igrovoj proçess
 	* Nacalo / koneç urovnä.
 	* Smertji igroka.

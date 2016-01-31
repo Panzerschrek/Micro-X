@@ -75,6 +75,7 @@ private:
 	float target_fov_;
 
 	float controller_rotation_[3];
+	float controller_rotation_accumulated_[3];
 
 	bool shot_button_pressed_;
 	float last_shot_time_s_;

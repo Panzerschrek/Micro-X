@@ -76,7 +76,7 @@ mx_MainLoop::mx_MainLoop(
 	float mouse_speed_x, float mouse_speed_y )
 	: viewport_width_(viewport_width), viewport_height_(viewport_height)
 	, mouse_speed_x_( mouse_speed_x )
-	, mouse_speed_y_( mouse_speed_y * (invert_mouse_y ? -1.0f :1.0f ) )
+	, mouse_speed_y_( invert_mouse_y ? -mouse_speed_y : mouse_speed_y )
 	, fullscreen_(fullscreen)
 	, quit_(false)
 	, prev_cursor_pos_(), mouse_captured_(false)
@@ -237,8 +237,8 @@ void mx_MainLoop::Loop()
 			POINT new_cursor_pos;
 			GetCursorPos(&new_cursor_pos);
 			player_->Rotate(
-				float( prev_cursor_pos_.x - new_cursor_pos.x ),
-				float( prev_cursor_pos_.y - new_cursor_pos.y ) );
+				mouse_speed_x_ * float( prev_cursor_pos_.x - new_cursor_pos.x ),
+				mouse_speed_y_ * float( prev_cursor_pos_.y - new_cursor_pos.y ) );
 			SetCursorPos( prev_cursor_pos_.x, prev_cursor_pos_.y );
 		}
 
