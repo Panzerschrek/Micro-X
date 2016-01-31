@@ -41,6 +41,8 @@ mx_Player::mx_Player()
 	axis_[2][0]= 0.0f;
 	axis_[2][1]= 0.0f;
 	axis_[2][2]= 1.0f;
+
+	angular_speed_[0]= angular_speed_[1]= angular_speed_[2]= 0.0f;
 }
 
 mx_Player::~mx_Player()
@@ -69,41 +71,25 @@ void mx_Player::Tick()
 	if(rotate_left_pressed_) rotation_angles[2] += 1.0f;
 	if(rotate_right_pressed_) rotation_angles[2] += -1.0f;
 
-/*
-		float move_vector_rot_mat[16];
-		mxMat4RotateZ( move_vector_rot_mat, angle_[2] );
-		mxVec3Mat4Mul( move_vector, move_vector_rot_mat );
-
-		const float speed= 20.0f;
-		float ds= dt * speed;
-		pos_[0]+= ds * move_vector[0];
-		pos_[1]+= ds * move_vector[1];
-		pos_[2]+= ds * move_vector[2];
-
-		const float rot_speed= 2.0f;
-		float da= dt * rot_speed;
-		angle_[0]+= da * rotation_angles[0];
-		angle_[1]+= da * rotation_angles[1];
-		angle_[2]+= da * rotation_angles[2];
-
-		if( angle_[0] >= MX_PI2 ) angle_[0]= MX_PI2;
-		else if( angle_[0] <= -MX_PI2 ) angle_[0]= -MX_PI2;
-
-		if( angle_[1] >= MX_PI ) angle_[1]-= MX_2PI;
-		else if( angle_[1] < -MX_PI ) angle_[1]+= MX_2PI;
-
-		if( angle_[2] >= MX_PI ) angle_[2]-= MX_2PI;
-		else if( angle_[2] < -MX_PI ) angle_[2]+= MX_2PI;
-*/
-
 	// Calculate rotations
+	static const float c_max_angular_speed= 3.0f;
+	static const float c_angular_acceleration= 10.0f;
+	static const float c_angular_deceleration= -6.0f;
 	float rotation_vector[3]= { 0.0f, 0.0f, 0.0f };
-	const float rot_speed= 2.0f;
-	float da= dt * rot_speed;
 	for( unsigned int i= 0; i< 3; i++ )
 	{
+		angular_speed_[i]= mxClamp( -c_max_angular_speed, c_max_angular_speed, angular_speed_[i] + rotation_angles[i] * dt * c_angular_acceleration );
+		if ( std::fabsf(angular_speed_[i]) > 0.0f )
+		{
+			float ds= mxSign(angular_speed_[i]) * dt * c_angular_deceleration;
+			if( std::fabsf(ds) > std::fabsf(angular_speed_[i]) ) angular_speed_[i]= 0.0f;
+			else angular_speed_[i]+= ds;
+		}
+		if( std::fabsf(angular_speed_[i] ) < 0.01f )
+			angular_speed_[i]= 0.0f;
+
 		float axis_rotate_vec[3];
-		mxVec3Mul( axis_[i], rotation_angles[i] * da + controller_rotation_[i], axis_rotate_vec );
+		mxVec3Mul( axis_[i], angular_speed_[i] * dt + controller_rotation_[i], axis_rotate_vec );
 		mxVec3Add( rotation_vector, axis_rotate_vec );
 
 		controller_rotation_[i]= 0.0f;
