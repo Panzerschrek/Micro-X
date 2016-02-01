@@ -252,6 +252,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\textures_generation.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\vertex_buffer.cpp"
 				>
 			</File>
@@ -339,6 +343,10 @@
 			</File>
 			<File
 				RelativePath=".\src\texture.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\textures_generation.h"
 				>
 			</File>
 			<File

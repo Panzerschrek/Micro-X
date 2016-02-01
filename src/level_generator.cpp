@@ -830,5 +830,7 @@ void mx_LevelGenerator::ClaculateTextureCoordinates()
 			vertex->tex_coord[0]= vertex->xyz[0];
 			vertex->tex_coord[1]= vertex->xyz[1];
 		}
+		vertex->tex_coord[0] *= 0.5f;
+		vertex->tex_coord[1] *= 0.5f;
 	} // for vertices
 }
