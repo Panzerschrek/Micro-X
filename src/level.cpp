@@ -145,7 +145,41 @@ void mx_Level::Tick()
 	for( unsigned int b= 0; b < bullet_count_; )
 	{
 		mx_Bullet& bullet= bullets_[b];
-		if( total_time - bullet.birth_time > 3.0f )
+
+		bool dead= false;
+		if(  total_time - bullet.birth_time > 3.0f )
+		{
+			dead= true;
+			goto kill;
+		}
+
+		const mx_LevelData::Sector* sector= FindSectorForPoint( bullet.pos );
+		if( sector )
+		{
+			float dir[3];
+			mxVec3Normalize( bullet.speed, dir );
+			float max_dist= mxVec3Len( bullet.speed ) * dt;
+
+			for( unsigned int i= sector->first_triangle , i_end= sector->first_triangle + sector->triangles_count;
+				i < i_end;
+				i++ )
+			{
+				const float* triangle[3];
+				for( unsigned int j= 0; j < 3; j++ )
+					triangle[j]= level_data_.vertices[ level_data_.triangles[i].vertex_index[j] ].xyz;
+
+				float intersection_pos[3];
+				if( mxBeamIntersectModel( triangle, bullet.pos, dir, max_dist, intersection_pos ) )
+				{
+					dead= true;
+					mx_SoundEngine::Instance()->AddSingleSound( SoundBlast, 1.0f, 1.0f, bullet.pos );
+					break;
+				}
+			}
+		}
+
+kill:
+		if( dead )
 		{
 			if( b != bullet_count_ - 1u )
 				bullets_[b]= bullets_[ bullet_count_ - 1u ];
@@ -157,7 +191,6 @@ void mx_Level::Tick()
 		mxVec3Mul( bullet.speed, dt, d_pos );
 		mxVec3Add( bullet.pos, d_pos );
 		
-		// TODO - add collision with level, player, monsters
 		b++;
 	}
 }

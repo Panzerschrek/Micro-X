@@ -267,47 +267,22 @@ bool mx_DrawingModel::BeamIntersectModel( const float* beam_point, const float* 
 	const unsigned short* ind= indeces_;
 	for( unsigned int i= 0; i< index_count_; i+= 3, ind+= 3 )
 	{
-		float normal[3];
-		float edges[3][3];
-		for( unsigned int j= 0; j< 3; j++ )
-			mxVec3Sub( vertices_[ind[j]].pos, vertices_[ind[(j+1)%3]].pos, edges[j] );
+		float* triangle[3];
+		for( unsigned int j= 0; j < 3; j++ )
+			triangle[j]= vertices_[ind[j]].pos;
 
-		mxVec3Cross( edges[0], edges[1], normal );
-		mxVec3Normalize( normal );
-
-		float vec_to_triangle_point[3];
-		mxVec3Sub( beam_point, vertices_[ind[0]].pos, vec_to_triangle_point );
-		float t= -mxVec3Dot( vec_to_triangle_point, normal ) / mxVec3Dot( beam_dir, normal );
-
-		float beam_with_plane_intersection_point[3];
-		float vec_to_intersection_point[3];
-		mxVec3Mul( beam_dir, t, vec_to_intersection_point );
-		mxVec3Add( vec_to_intersection_point, beam_point, beam_with_plane_intersection_point );
-
-		if( mxVec3Dot( vec_to_intersection_point, beam_dir ) < 0.0f ) continue;
-		if( mxDistance( beam_with_plane_intersection_point, beam_point ) > max_distance ) continue;
-
-		float cross_normal_dots[3];
-		for( unsigned int j= 0; j< 3; j++ )
-		{
-			float vec_from_trianlgle_point_to_intersection_point[3];
-			mxVec3Sub( beam_with_plane_intersection_point, vertices_[ind[j]].pos, vec_from_trianlgle_point_to_intersection_point );
-			float cross[3];
-			mxVec3Cross( vec_from_trianlgle_point_to_intersection_point, edges[j], cross );
-			cross_normal_dots[j]= mxVec3Dot( cross, normal );
-		}
-		if(
-			(cross_normal_dots[0] >= 0.0f && cross_normal_dots[1] >= 0.0f && cross_normal_dots[2] >= 0.0f) || 
-			(cross_normal_dots[0] <= 0.0f && cross_normal_dots[1] <= 0.0f && cross_normal_dots[2] <= 0.0f) )
+		float intersection_pos[3];
+		if( mxBeamIntersectModel( triangle, beam_point, beam_dir, max_distance, intersection_pos ) )
 		{
 			is_intersection= true;
-			float dist= mxDistance( beam_point, beam_with_plane_intersection_point );
+
+			float dist= mxDistance( beam_point, intersection_pos );
 			if( dist < min_distance )
 			{
 				min_distance= dist;
 				if( out_pos_opt )
 				{
-					VEC3_CPY( out_pos_opt, beam_with_plane_intersection_point );
+					VEC3_CPY( out_pos_opt, intersection_pos );
 				}
 			}
 		}

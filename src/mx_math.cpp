@@ -440,6 +440,52 @@ float mxDistanceFromLineToPoint(const float* line_point, const float* line_dir, 
 	return mxVec3Len( perpendicular );
 }
 
+bool mxBeamIntersectModel(
+	const float* const* triangle, // 3 pointers to 3d vectors
+	const float* beam_point, const float* beam_dir,
+	float max_distance,
+	float* out_pos_opt )
+{
+	float normal[3];
+	float edges[3][3];
+	for( unsigned int j= 0; j< 3; j++ )
+		mxVec3Sub( triangle[j], triangle[(j+1)%3], edges[j] );
+
+	mxVec3Cross( edges[0], edges[1], normal );
+	mxVec3Normalize( normal );
+
+	float vec_to_triangle_point[3];
+	mxVec3Sub( beam_point, triangle[0], vec_to_triangle_point );
+	float t= -mxVec3Dot( vec_to_triangle_point, normal ) / mxVec3Dot( beam_dir, normal );
+
+	float beam_with_plane_intersection_point[3];
+	float vec_to_intersection_point[3];
+	mxVec3Mul( beam_dir, t, vec_to_intersection_point );
+	mxVec3Add( vec_to_intersection_point, beam_point, beam_with_plane_intersection_point );
+
+	if( mxVec3Dot( vec_to_intersection_point, beam_dir ) < 0.0f ) return false;
+	if( mxDistance( beam_with_plane_intersection_point, beam_point ) > max_distance ) return false;
+
+	float cross_normal_dots[3];
+	for( unsigned int j= 0; j< 3; j++ )
+	{
+		float vec_from_trianlgle_point_to_intersection_point[3];
+		mxVec3Sub( beam_with_plane_intersection_point, triangle[j], vec_from_trianlgle_point_to_intersection_point );
+		float cross[3];
+		mxVec3Cross( vec_from_trianlgle_point_to_intersection_point, edges[j], cross );
+		cross_normal_dots[j]= mxVec3Dot( cross, normal );
+	}
+	if(
+		(cross_normal_dots[0] >= 0.0f && cross_normal_dots[1] >= 0.0f && cross_normal_dots[2] >= 0.0f) || 
+		(cross_normal_dots[0] <= 0.0f && cross_normal_dots[1] <= 0.0f && cross_normal_dots[2] <= 0.0f) )
+	{
+		VEC3_CPY( out_pos_opt, beam_with_plane_intersection_point );
+		return true;
+	}
+
+	return false;
+}
+
 // mf_Rand class
 
 const unsigned int mx_Rand::rand_max_= 0x7FFF;
