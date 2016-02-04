@@ -212,6 +212,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\models.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\monster.cpp"
 				>
 			</File>
@@ -295,6 +299,10 @@
 			</File>
 			<File
 				RelativePath=".\src\main_loop.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\models.h"
 				>
 			</File>
 			<File

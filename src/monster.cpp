@@ -11,7 +11,9 @@ static const float g_axises[3][3][3]=
 };
 
 mx_Monster::mx_Monster( const float* pos, const mx_PatrolPath* patrol_path )
-	: patrol_path_( patrol_path ? *patrol_path : mx_PatrolPath() )
+	: type_(MonsterOctoRobot)
+	, health_(100)
+	, patrol_path_( patrol_path ? *patrol_path : mx_PatrolPath() )
 	, have_patrol_path_( patrol_path != NULL )
 	, destroy_(false)
 {

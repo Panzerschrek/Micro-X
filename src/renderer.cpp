@@ -1,6 +1,7 @@
 #include "drawing_model.h"
 #include "level.h"
 #include "main_loop.h"
+#include "models.h"
 #include "monster.h"
 #include "mx_math.h"
 #include "player.h"
@@ -9,10 +10,6 @@
 #include "textures_generation.h"
 
 #include "renderer.h"
-
-static const unsigned char g_test_model_data[]=
-#include "../models/robot.h"
-;
 
 mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 	: main_loop_(*mx_MainLoop::Instance())
@@ -44,7 +41,8 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 
 	{
 		mx_DrawingModel model;
-		model.LoadFromMFMD( g_test_model_data );
+		model.LoadFromMFMD( mx_Models::monsters_models[0] );
+		model.Scale( mx_Models::monsters_models_scale[0] );
 
 		model_vertex_buffer_.VertexData(
 			model.GetVertexData(),
@@ -148,16 +146,15 @@ void mx_Renderer::DrawMonsters()
 	const mx_Monster* const* monsters= level_.GetMonsters();
 	for( unsigned int m= 0, m_end= level_.GetMonsterCount(); m < m_end; m++ )
 	{
-		float scale_mat[16];
 		float rotate_mat[16];
 		float translate_mat[16];
 		float result_mat[16];
 
-		mxMat4Scale( scale_mat, 0.125f );
-		mxMat4Translate( translate_mat, monsters[m]->Pos() );
-		monsters[m]->CreateRotationMatrix4( rotate_mat, true );
-		mxMat4Mul( scale_mat, rotate_mat, result_mat );
-		mxMat4Mul( result_mat, translate_mat );
+		const mx_Monster* monster= monsters[m];
+
+		mxMat4Translate( translate_mat, monster->Pos() );
+		monster->CreateRotationMatrix4( rotate_mat, true );
+		mxMat4Mul( rotate_mat, translate_mat, result_mat );
 		mxMat4Mul( result_mat, view_matrix_ );
 
 		world_shader_.UniformMat4( "mat", result_mat );
@@ -185,7 +182,7 @@ void mx_Renderer::DrawBullets()
 		float translate_mat[16];
 		float result_mat[16];
 
-		mxMat4Scale( scale_mat, 1.0f / 32.0f );
+		mxMat4Scale( scale_mat, 1.0f / 4.0f );
 		mxMat4Translate( translate_mat, bullets[b].pos );
 		mxMat4Mul( scale_mat, translate_mat, result_mat );
 		mxMat4Mul( result_mat, view_matrix_ );

@@ -1,6 +1,8 @@
 #pragma once
 
+#include "drawing_model.h"
 #include "level_generator.h"
+#include "monster.h"
 
 #define MX_MAX_MONSTERS 256
 #define MX_MAX_BULLETS 512
@@ -48,6 +50,8 @@ private:
 
 private:
 	const mx_LevelData level_data_;
+
+	mx_DrawingModel monsters_models_[ LastMonster ];
 
 	unsigned int monster_count_;
 	mx_Monster* monsters_[ MX_MAX_MONSTERS ];

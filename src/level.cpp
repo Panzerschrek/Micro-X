@@ -1,5 +1,5 @@
 #include "main_loop.h"
-#include "monster.h"
+#include "models.h"
 #include "mx_assert.h"
 #include "mx_math.h"
 #include "sound_engine.h"
@@ -42,6 +42,12 @@ mx_Level::mx_Level( const mx_LevelData& level_data )
 
 		monsters_[ monster_count_ ]= new mx_Monster( pos, &path );
 		monster_count_++;
+	}
+
+	for( unsigned int i= 0; i < LastMonster; i++ )
+	{
+		monsters_models_[i].LoadFromMFMD( mx_Models::monsters_models[i] );
+		monsters_models_[i].Scale( mx_Models::monsters_models_scale[i] );
 	}
 }
 
@@ -137,29 +143,71 @@ void mx_Level::Tick()
 	float dt= mx_MainLoop::Instance()->GetTickTime();
 	float total_time= mx_MainLoop::Instance()->GetTime();
 
+	// Monsters think
 	for( unsigned int m= 0; m < monster_count_; m++ )
 	{
 		monsters_[m]->Exec();
 	}
 
+	// Process bullets
 	for( unsigned int b= 0; b < bullet_count_; )
 	{
 		mx_Bullet& bullet= bullets_[b];
 
 		bool dead= false;
-		if(  total_time - bullet.birth_time > 3.0f )
+		if( total_time - bullet.birth_time > 3.0f )
 		{
 			dead= true;
 			goto kill;
 		}
 
+		float dir[3];
+		mxVec3Normalize( bullet.speed, dir );
+		float max_dist= mxVec3Len( bullet.speed ) * dt;
+
+		float nearest_hit_dist= mxInf();
+		mx_Monster* hited_monster= NULL;
+		//float nearest_hit_pos[3];
+
+		// Collide with monsters first. Monsters are always inside sector
+		for( unsigned int j= 0; j < monster_count_; j++ )
+		{
+			mx_Monster* monster= monsters_[j];
+
+			float monster_space_pos[3];
+			float monster_space_dir[3];
+			float monster_space_hit_pos[3];
+
+			float pos_relative_monster[3];
+			mxVec3Sub( bullet.pos, monster->Pos(), pos_relative_monster );
+
+			float monster_rot_mat[16];
+			//float monster_rot_mat_invert[16];
+			monster->CreateRotationMatrix4( monster_rot_mat, false );
+			//monster->CreateRotationMatrix4( monster_rot_mat_invert, true );
+			mxVec3Mat4Mul( pos_relative_monster, monster_rot_mat, monster_space_pos );
+			mxVec3Mat4Mul( dir, monster_rot_mat, monster_space_dir );
+	
+			if( monsters_models_[monster->GetType()].BeamIntersectModel( monster_space_pos, monster_space_dir, max_dist, monster_space_hit_pos ) )
+			{
+				float dist= mxDistance( monster_space_hit_pos, monster_space_pos );
+				if( dist < nearest_hit_dist )
+				{
+					nearest_hit_dist= dist;
+					hited_monster= monster;
+					//mxVec3Mat4Mul( monster_space_hit_pos, monster_rot_mat_invert, nearest_hit_pos );
+					//mxVec3Add( nearest_hit_pos, monster->Pos() );
+				}
+				dead= true;
+			}
+		} // for monsters
+
+		if( hited_monster )
+			hited_monster->Hit( 20 );
+
 		const mx_LevelData::Sector* sector= FindSectorForPoint( bullet.pos );
 		if( sector )
 		{
-			float dir[3];
-			mxVec3Normalize( bullet.speed, dir );
-			float max_dist= mxVec3Len( bullet.speed ) * dt;
-
 			for( unsigned int i= sector->first_triangle , i_end= sector->first_triangle + sector->triangles_count;
 				i < i_end;
 				i++ )
@@ -171,16 +219,18 @@ void mx_Level::Tick()
 				float intersection_pos[3];
 				if( mxBeamIntersectModel( triangle, bullet.pos, dir, max_dist, intersection_pos ) )
 				{
+					// TODO - find nearest intersection
 					dead= true;
-					mx_SoundEngine::Instance()->AddSingleSound( SoundBlast, 1.0f, 1.0f, bullet.pos );
 					break;
 				}
 			}
-		}
+		} // collide with sector
 
 kill:
 		if( dead )
 		{
+			mx_SoundEngine::Instance()->AddSingleSound( SoundBlast, 1.0f, 1.0f, bullet.pos );
+
 			if( b != bullet_count_ - 1u )
 				bullets_[b]= bullets_[ bullet_count_ - 1u ];
 			bullet_count_--;
@@ -192,6 +242,18 @@ kill:
 		mxVec3Add( bullet.pos, d_pos );
 		
 		b++;
+	}
+
+	// Remove killed monsters
+	for( unsigned int m= 0; m < monster_count_; )
+	{
+		if( monsters_[m]->GetHealth() <= 0 )
+		{
+			if( m < monster_count_ - 1 )
+				monsters_[m]= monsters_[ monster_count_ - 1 ];
+			continue;
+		}
+		m++;
 	}
 }
 
