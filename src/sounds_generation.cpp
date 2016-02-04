@@ -216,6 +216,37 @@ static short* GenAutomaticCannonShotSound( unsigned int sample_rate, unsigned in
 	return data;
 }
 
+static short* GenMelodySound( unsigned int sample_rate, unsigned int* out_samples_count )
+{
+	unsigned int samples_count= 32 * sample_rate;
+	short* data= new short[ samples_count ];
+
+	for( unsigned int i= 0; i < samples_count; i++ )
+	{
+		short main_wave= ( ((i << 9) & 65535) - 32768 ) >> 2;
+
+		if( (i & (1<<12)) > (1<<12) * 15/16 )
+			main_wave+= ( ((i << 10) & 65535) - 32768 ) >> 2;
+
+		if( (i & (1<<14)) < (1<<14) * 1/64 )
+			main_wave+= ( ( ((i<<10) / 3) & 65535 ) - 32768 ) >> 2;
+
+		if( i & (1<<16) )
+		{
+			unsigned int k= i & ((1<<16) - 1);
+			if( (k >= (1<<16) * 29 / 32 && k < (1<<16) * 30 / 32) ||
+				(k >= (1<<16) * 31 / 32) )
+				main_wave= ( ( ((i<<8) * 3) & 65535 ) - 32768 ) >> 2;
+		}
+
+		// Make square wave
+		data[i]= main_wave > 0 ? 32767 : -32768;
+	}
+
+	*out_samples_count= samples_count;
+	return data;
+}
+
 
 short* (* const sound_gen_func[LastSound])(unsigned int sample_rate, unsigned int* out_samples_count)=
 {
@@ -225,5 +256,6 @@ short* (* const sound_gen_func[LastSound])(unsigned int sample_rate, unsigned in
 	GenMachinegunShotSound,
 	GenAutomaticCannonShotSound, // TODO: automatic cannon sound
 	GenPlasmagunSound,
-	GenBlastSound
+	GenBlastSound,
+	GenMelodySound,
 };

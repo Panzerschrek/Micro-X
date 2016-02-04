@@ -18,6 +18,7 @@ enum mx_SoundType
 	SoundAutomaticCannonShot,
 	SoundPlasmagunShot,
 	SoundBlast,
+	SoundMelody,
 	LastSound
 };
 

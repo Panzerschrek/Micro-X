@@ -192,7 +192,7 @@ mx_MainLoop::mx_MainLoop(
 
 	mx_SoundEngine::CreateInstance( hwnd_ );
 
-	mx_SoundSource* src= mx_SoundEngine::Instance()->CreateSoundSource( SoundPlasmajetEngine );
+	mx_SoundSource* src= mx_SoundEngine::Instance()->CreateSoundSource( SoundMelody );
 	static const float c_zero_vec[3]= { 0.0f, 0.0f, 0.0f };
 	src->SetOrientation( c_zero_vec, c_zero_vec );
 	src->SetVolume( 40.0f );
