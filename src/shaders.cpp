@@ -32,7 +32,7 @@ common input/output names
 //text shader
 const char text_shader_v[]=
 VERSION_HEADER
-"in vec2 v;"//in position
+"in vec2 p;"//in position
 "in vec2 tc;"//in texture coord
 "in vec4 c;"//in color
 "out vec4 fc;"//out color
@@ -41,7 +41,7 @@ VERSION_HEADER
 "{"
 	"fc=c;"
 	"ftc=tc*vec2(1.0/96.0,1.0);"
-	"gl_Position=vec4(v,-1.0,1.0);"
+	"gl_Position=vec4(p,-1.0,1.0);"
 "}"
 ;
 
@@ -84,6 +84,28 @@ VERSION_HEADER
 "void main()"
 "{"
 "c_=texture(tex,ftc.xy)*fc * 0.25 * (step(1.0, mod(ftc.x, 2.0)) + 1.0) * ( step(1.0, mod(ftc.y, 2.0)) + 1.0);"
+"}"
+;
+
+const char plasma_ball_shader_v[]=
+VERSION_HEADER
+"in vec3 p;"
+"uniform mat4 mat;"
+"void main()"
+"{"
+"vec4 v=mat*vec4(p,1.0);"
+"gl_Position=v;"
+"gl_PointSize=64.0/v.w;"
+"}"
+;
+
+const char plasma_ball_shader_f[]=
+VERSION_HEADER
+"out vec4 c_;"
+"void main()"
+"{"
+"vec2 r=gl_PointCoord.xy-vec2(0.5,0.5);"
+"c_=vec4(1.0,0.6,0.1,1.0-4.0*dot(r,r));"
 "}"
 ;
 

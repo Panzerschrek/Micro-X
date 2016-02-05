@@ -39,6 +39,18 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 		world_shader_.FindUniforms( uniforms, sizeof(uniforms) / sizeof(char*) );
 	}
 
+	{ // plasma ball shader
+		plasma_ball_shader_.SetAttribLocation( "p", 0 );
+		plasma_ball_shader_.Create( mx_Shaders::plasma_ball_shader_v, mx_Shaders::plasma_ball_shader_f );
+		static const char* const uniforms[]= { "mat" };
+		plasma_ball_shader_.FindUniforms( uniforms, sizeof(uniforms) / sizeof(char*) );
+	}
+
+	{ // plasma ball vbo
+		plasma_balls_vertex_buffer_.VertexData( NULL, MX_MAX_BULLETS * sizeof(float) * 3, sizeof(float) * 3 );
+		plasma_balls_vertex_buffer_.VertexAttrib( 0, 3, GL_FLOAT, false, 0 );
+	}
+
 	{
 		mx_DrawingModel model;
 		model.LoadFromMFMD( mx_Models::monsters_models[0] );
@@ -167,30 +179,26 @@ void mx_Renderer::DrawMonsters()
 
 void mx_Renderer::DrawBullets()
 {
-	// Test drawing of bullets using monster model
-	world_shader_.Bind();
-
-	glEnable( GL_CULL_FACE );
-	glCullFace( GL_BACK );
-
-	model_vertex_buffer_.Bind();
+	float bullets_pos[ MX_MAX_BULLETS * 3 ];
 
 	const mx_Bullet* bullets= level_.GetBullets();
-	for( unsigned int b= 0, b_end= level_.GetBulletCount(); b < b_end; b++ )
+	unsigned int bullet_count= level_.GetBulletCount();
+	for( unsigned int b= 0; b < bullet_count; b++ )
 	{
-		float scale_mat[16];
-		float translate_mat[16];
-		float result_mat[16];
-
-		mxMat4Scale( scale_mat, 1.0f / 4.0f );
-		mxMat4Translate( translate_mat, bullets[b].pos );
-		mxMat4Mul( scale_mat, translate_mat, result_mat );
-		mxMat4Mul( result_mat, view_matrix_ );
-
-		world_shader_.UniformMat4( "mat", result_mat );
-
-		glDrawElements( GL_TRIANGLES, model_vertex_buffer_.IndexDataSize() / sizeof(unsigned short), GL_UNSIGNED_SHORT, NULL );
+		VEC3_CPY( bullets_pos + b * 3, bullets[b].pos );
 	}
 
-	glDisable (GL_CULL_FACE );
+	plasma_balls_vertex_buffer_.VertexSubData( bullets_pos, bullet_count * 3 * sizeof(float), 0 );
+
+	plasma_ball_shader_.Bind();
+	plasma_ball_shader_.UniformMat4( "mat", view_matrix_ );
+
+	glEnable( GL_PROGRAM_POINT_SIZE );
+	glEnable( GL_BLEND );
+	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+
+	glDrawArrays( GL_POINTS, 0, bullet_count );
+
+	glDisable( GL_BLEND );
+	glDisable( GL_PROGRAM_POINT_SIZE );
 }

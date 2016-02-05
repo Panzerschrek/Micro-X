@@ -4,17 +4,6 @@
 
 mx_Pawn::mx_Pawn()
 {
-	axis_[0][0]= 1.0f;
-	axis_[0][1]= 0.0f;
-	axis_[0][2]= 0.0f;
-
-	axis_[1][0]= 0.0f;
-	axis_[1][1]= 1.0f;
-	axis_[1][2]= 0.0f;
-
-	axis_[2][0]= 0.0f;
-	axis_[2][1]= 0.0f;
-	axis_[2][2]= 1.0f;
 }
 
 mx_Pawn::~mx_Pawn()

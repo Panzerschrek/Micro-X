@@ -196,7 +196,9 @@ mx_MainLoop::mx_MainLoop(
 	static const float c_zero_vec[3]= { 0.0f, 0.0f, 0.0f };
 	src->SetOrientation( c_zero_vec, c_zero_vec );
 	src->SetVolume( 40.0f );
+	/*
 	src->Play();
+	*/
 
 	// Start game time calculations after all heavy operations
 	start_time_ms_= prev_time_ms_= GetTickCount();

@@ -34,6 +34,9 @@ private:
 
 	mx_VertexBuffer model_vertex_buffer_;
 
+	mx_GLSLProgram plasma_ball_shader_;
+	mx_VertexBuffer plasma_balls_vertex_buffer_;
+
 	float view_matrix_[16];
 
 	GLuint tex_id_;
