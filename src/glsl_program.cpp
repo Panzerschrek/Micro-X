@@ -34,7 +34,7 @@ static void LoadShader( GLuint program, GLenum shader_type, const char* text )
 }
 
 mx_GLSLProgram::mx_GLSLProgram()
-	: attrib_count_(0), uniform_count_(0)
+	: attrib_count_(0), uniform_count_(0), frag_out_attrib_count_(0)
 	, program_id_(MX_SHADER_OT_CREATED)
 {
 }
@@ -55,6 +55,17 @@ void mx_GLSLProgram::SetAttribLocation( const char* attrib_name, unsigned int at
 	attrib_count_++;
 }
 
+void mx_GLSLProgram::SetFragDataLocation( const char* name, unsigned int index )
+{
+	MX_ASSERT( program_id_ == MX_SHADER_OT_CREATED );
+	MX_ASSERT( frag_out_attrib_count_ < MX_MAX_SHADER_FRAG_OUT_ATTRIBS );
+	MX_ASSERT( std::strlen(name) <= MX_MAX_SHADER_FRAG_OUT_NAME );
+
+	strcpy( frag_out_attribs_names_[ frag_out_attrib_count_ ], name );
+	frag_out_attribs_[ frag_out_attrib_count_ ]= index;
+	frag_out_attrib_count_++;
+}
+
 void mx_GLSLProgram::Create( const char* vertex_shader, const char* fragment_shader, const char* geometry_shader )
 {
 	MX_ASSERT( program_id_ == MX_SHADER_OT_CREATED );
@@ -67,6 +78,9 @@ void mx_GLSLProgram::Create( const char* vertex_shader, const char* fragment_sha
 
 	for( unsigned int i= 0; i< attrib_count_; i++ )
 		glBindAttribLocation( program_id_, attribs_[i], attrib_names_[i] );
+
+	for( unsigned int i= 0; i< frag_out_attrib_count_; i++ )
+		glBindFragDataLocation( program_id_, frag_out_attribs_[i], frag_out_attribs_names_[i] );
 
 	glLinkProgram( program_id_ );
 

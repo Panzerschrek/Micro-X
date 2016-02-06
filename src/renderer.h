@@ -19,6 +19,8 @@ private:
 	mx_Renderer(const mx_Renderer&);
 	mx_Renderer& operator=(const mx_Renderer&);
 
+	void CreateGBuffer();
+
 	void CalculateMatrices();
 	void DrawWorld();
 	void DrawMonsters();
@@ -40,4 +42,16 @@ private:
 	float view_matrix_[16];
 
 	GLuint tex_id_;
+
+	struct
+	{
+		GLuint fbo_id;
+
+		GLuint albedo_tex_id;
+		GLuint normals_tex_id;
+		GLuint depth_tex_id;
+	} g_buffer_;
+
+	mx_GLSLProgram postprocessing_shader_;
+	mx_VertexBuffer light_source_vertex_buffer_;
 };

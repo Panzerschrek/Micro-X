@@ -27,6 +27,7 @@ common input/output names
 "ftc" - fragment texture coordinates
 "fc" - fragment color
 "c_" - output color of fragment shader
+"n_" - output normal in fragment shader
 */
 
 //text shader
@@ -65,11 +66,11 @@ VERSION_HEADER
 "in vec3 n;"
 "in vec3 tc;"
 "uniform mat4 mat;"
-"out vec4 fc;"
+"out vec3 fn;"
 "out vec3 ftc;"
 "void main()"
 "{"
-	"fc= vec4(n*0.5+vec3(0.5,0.5,0.5),0.5);"
+	"fn=n*0.5+vec3(0.5,0.5,0.5);"
 	"ftc=tc;"
 	"gl_Position=mat*vec4(p,1.0);"
 "}"
@@ -79,11 +80,13 @@ const char world_shader_f[]=
 VERSION_HEADER
 "uniform sampler2D tex;"
 "out vec4 c_;"
-"in vec4 fc;"
+"out vec4 n_;"
+"in vec3 fn;"
 "in vec3 ftc;"
 "void main()"
 "{"
-"c_=texture(tex,ftc.xy)*fc * 0.25 * (step(1.0, mod(ftc.x, 2.0)) + 1.0) * ( step(1.0, mod(ftc.y, 2.0)) + 1.0);"
+	"c_=texture(tex,ftc.xy);"
+	"n_=vec4(fn,1.0);"
 "}"
 ;
 
@@ -108,5 +111,37 @@ VERSION_HEADER
 "c_=vec4(1.0,0.6,0.1,1.0-4.0*dot(r,r));"
 "}"
 ;
+
+const char postprocessing_shader_v[]=
+VERSION_HEADER
+/*"const vec2 coord[6]=vec2[6]"
+"("
+	"vec2(0.0,0.0),vec2(1.0,0.0),vec2(1.0,1.0),"
+	"vec2(0.0,0.0),vec2(0.0,1.0),vec2(1.0,1.0)"
+");"*/
+
+//"out vec2 ftc;"
+"in vec3 p;"
+"uniform mat4 mat;"
+"void main()"
+"{"
+	//"ftc=coord[gl_VertexID];"
+	//"gl_Position=vec4(coord[gl_VertexID]*2.0-vec2(1.0,1.0),0.0,1.0);"
+	"gl_Position=mat*vec4(p,1.0);"
+"}"
+;
+
+const char postprocessing_shader_f[]=
+VERSION_HEADER
+"uniform sampler2D tex;"
+//"in vec2 ftc;"
+"out vec4 c_;"
+"void main()"
+"{"
+	//"c_=texture(tex,ftc);"
+	"c_=vec4(1.0,0.0,1.0,0.5);"
+"}"
+;
+
 
 } // namespace mx_Shaders

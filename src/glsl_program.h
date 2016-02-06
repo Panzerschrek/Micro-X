@@ -6,6 +6,9 @@
 #define MX_MAX_SHADER_UNIFORMS 20
 #define MX_MAX_SHADER_UNIFORM_NAME 32
 
+#define MX_MAX_SHADER_FRAG_OUT_ATTRIBS 8
+#define MX_MAX_SHADER_FRAG_OUT_NAME 16
+
 class mx_GLSLProgram
 {
 public:
@@ -13,6 +16,7 @@ public:
 	~mx_GLSLProgram();
 
 	void SetAttribLocation( const char* attrib_name, unsigned int attrib );
+	void SetFragDataLocation( const char* name, unsigned int index );
 
 	void Create( const char* vertex_shader, const char* fragment_shader= NULL, const char* geometry_shader= NULL );
 
@@ -50,6 +54,10 @@ private:
 	GLint uniforms_[ MX_MAX_SHADER_UNIFORMS ];
 	char uniform_names_[ MX_MAX_SHADER_UNIFORMS ][ MX_MAX_SHADER_UNIFORM_NAME + 1 ];
 	unsigned int uniform_count_;
+
+	GLuint frag_out_attribs_[ MX_MAX_SHADER_FRAG_OUT_ATTRIBS ];
+	char frag_out_attribs_names_[ MX_MAX_SHADER_FRAG_OUT_ATTRIBS ][ MX_MAX_SHADER_FRAG_OUT_NAME + 1 ];
+	unsigned int frag_out_attrib_count_;
 };
 
 inline void mx_GLSLProgram::Bind()
