@@ -116,12 +116,12 @@ const char fullscreen_postprocessing_shader_v[]=
 VERSION_HEADER
 "const vec2 coord[6]=vec2[6]"
 "("
-	"vec2(0.0,0.0),vec2(1.0,0.0),vec2(1.0,1.0),"
+	"vec2(0.0,0.0),vec2(1.0,1.0),vec2(1.0,0.0),"
 	"vec2(0.0,0.0),vec2(0.0,1.0),vec2(1.0,1.0)"
 ");"
 "void main()"
 "{"
-	"gl_Position=vec4(coord[gl_VertexID]*2.0-vec2(1.0,1.0),0.0,1.0);"
+	"gl_Position=vec4(coord[gl_VertexID]*2.0-vec2(1.0,1.0),-1.0,1.0);"
 "}"
 ;
 
@@ -133,26 +133,17 @@ VERSION_HEADER
 "void main()"
 "{"
 	"ivec2 tc=ivec2(gl_FragCoord.xy);"
-	"c_=0.05*texelFetch(atex,tc,0);"
-	"gl_FragCoord=texelFetch(dtex,tc,0);"
+	"gl_FragDepth=texelFetch(dtex,tc,0).x;"
+	"c_=0.1*texelFetch(atex,tc,0);"
 "}"
 ;
 
 const char postprocessing_shader_v[]=
 VERSION_HEADER
-/*"const vec2 coord[6]=vec2[6]"
-"("
-	"vec2(0.0,0.0),vec2(1.0,0.0),vec2(1.0,1.0),"
-	"vec2(0.0,0.0),vec2(0.0,1.0),vec2(1.0,1.0)"
-");"*/
-
-//"out vec2 ftc;"
 "in vec3 p;"
 "uniform mat4 mat;"
 "void main()"
 "{"
-	//"ftc=coord[gl_VertexID];"
-	//"gl_Position=vec4(coord[gl_VertexID]*2.0-vec2(1.0,1.0),0.0,1.0);"
 	"gl_Position=mat*vec4(p,1.0);"
 "}"
 ;
@@ -193,8 +184,10 @@ VERSION_HEADER
 	"vec3 normal= texelFetch(ntex, ivec2(gl_FragCoord.xy), 0).xyz * vec3(2.0,2.0,2.0) - vec3(1.0,1.0,1.0);"
 	"float normal_k= max( 0.0, dot(normal, vec_to_light_normalized) );"
 
+	//"normal_k= 1.0;"
+	//"vec_to_light= vec3(4.0,0.0,0.0);"
+
 	"c_.xyz*= lc * (normal_k / dot(vec_to_light,vec_to_light));"
-	//"c_=vec4(0.1,0.0, 0.1, 0.5);"
 "}"
 ;
 

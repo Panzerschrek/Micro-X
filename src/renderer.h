@@ -56,6 +56,7 @@ private:
 		GLuint depth_tex_id;
 	} g_buffer_;
 
+	mx_GLSLProgram fullscreen_postprocessing_shader_;
 	mx_GLSLProgram postprocessing_shader_;
 
 	mx_DrawingModel light_source_model_;

@@ -95,10 +95,16 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
 		glGenerateMipmap( GL_TEXTURE_2D );
 	}
+	{ // fullscreen postprocessing shader
+		fullscreen_postprocessing_shader_.Create(
+			mx_Shaders::fullscreen_postprocessing_shader_v,
+			mx_Shaders::fullscreen_postprocessing_shader_f );
+
+		static const char* const uniforms[]= { "atex", "dtex" };
+		fullscreen_postprocessing_shader_.FindUniforms( uniforms, sizeof(uniforms) / sizeof(char*) );
+	}
 	{ // postprocessing shader
 		postprocessing_shader_.SetAttribLocation( "p", 0 );
-		//postprocessing_shader_.SetAttribLocation( "n", 1 );
-		//postprocessing_shader_.SetAttribLocation( "tc", 2 );
 
 		postprocessing_shader_.Create( mx_Shaders::postprocessing_shader_v, mx_Shaders::postprocessing_shader_f );
 		static const char* const uniforms[]=
@@ -154,7 +160,6 @@ void mx_Renderer::Draw()
 
 
 	{
-		glDisable( GL_DEPTH_TEST );
 		glEnable( GL_BLEND );
 		glBlendFunc( GL_ONE, GL_ONE ); // make light accumulation
 
@@ -165,6 +170,17 @@ void mx_Renderer::Draw()
 		glActiveTexture( GL_TEXTURE2 );
 		glBindTexture( GL_TEXTURE_2D, g_buffer_.depth_tex_id );
 
+		// Fill depth buffer and setup ambient light
+		fullscreen_postprocessing_shader_.Bind();
+		fullscreen_postprocessing_shader_.UniformInt( "atex", 0 );
+		fullscreen_postprocessing_shader_.UniformInt( "dtex", 2 );
+	
+		glDrawArrays( GL_TRIANGLES, 0, 6 );
+
+		glDepthMask( 0 );
+		glEnable( GL_CULL_FACE );
+		glCullFace( GL_BACK );
+		
 		postprocessing_shader_.Bind();
 
 		postprocessing_shader_.UniformInt( "atex", 0 );
@@ -195,7 +211,7 @@ void mx_Renderer::Draw()
 				if( light.light_rgb[i] > max_light ) max_light= light.light_rgb[i];
 			}
 
-			static const float c_min_valuable_light= 1.0f / 64.0f;
+			static const float c_min_valuable_light= 1.0f / 4.0f;
 			float min_light_distance= std::sqrt( max_light / c_min_valuable_light );
 
 			mxMat4Scale( scale_mat, min_light_distance );
@@ -210,8 +226,9 @@ void mx_Renderer::Draw()
 			glDrawElements( GL_TRIANGLES, light_source_vertex_buffer_.IndexDataSize() / sizeof(unsigned short), GL_UNSIGNED_SHORT, NULL );
 		}
 
+		glDepthMask( 1 );
+		glDisable( GL_CULL_FACE );
 		glDisable( GL_BLEND );
-		glEnable( GL_DEPTH_TEST );
 	}
 }
 
