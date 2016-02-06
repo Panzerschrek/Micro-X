@@ -9,6 +9,10 @@ static const unsigned char robot_model[]=
 #include "../models/robot.h"
 ;
 
+const unsigned char icosahedron[]=
+#include "../models/icosahedron.h"
+;
+
 const unsigned char* monsters_models[LastMonster]=
 {
 	robot_model,

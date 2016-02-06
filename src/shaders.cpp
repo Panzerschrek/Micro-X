@@ -27,6 +27,7 @@ common input/output names
 "ftc" - fragment texture coordinates
 "fc" - fragment color
 "c_" - output color of fragment shader
+"n_" - output normal in fragment shader
 */
 
 //text shader
@@ -65,11 +66,11 @@ VERSION_HEADER
 "in vec3 n;"
 "in vec3 tc;"
 "uniform mat4 mat;"
-"out vec4 fc;"
+"out vec3 fn;"
 "out vec3 ftc;"
 "void main()"
 "{"
-	"fc= vec4(n*0.5+vec3(0.5,0.5,0.5),0.5);"
+	"fn=n*0.5+vec3(0.5,0.5,0.5);"
 	"ftc=tc;"
 	"gl_Position=mat*vec4(p,1.0);"
 "}"
@@ -79,11 +80,13 @@ const char world_shader_f[]=
 VERSION_HEADER
 "uniform sampler2D tex;"
 "out vec4 c_;"
-"in vec4 fc;"
+"out vec4 n_;"
+"in vec3 fn;"
 "in vec3 ftc;"
 "void main()"
 "{"
-"c_=texture(tex,ftc.xy)*fc * 0.25 * (step(1.0, mod(ftc.x, 2.0)) + 1.0) * ( step(1.0, mod(ftc.y, 2.0)) + 1.0);"
+	"c_=texture(tex,ftc.xy);"
+	"n_=vec4(fn,1.0);"
 "}"
 ;
 
@@ -108,5 +111,86 @@ VERSION_HEADER
 "c_=vec4(1.0,0.6,0.1,1.0-4.0*dot(r,r));"
 "}"
 ;
+
+const char fullscreen_postprocessing_shader_v[]=
+VERSION_HEADER
+"const vec2 coord[6]=vec2[6]"
+"("
+	"vec2(0.0,0.0),vec2(1.0,1.0),vec2(1.0,0.0),"
+	"vec2(0.0,0.0),vec2(0.0,1.0),vec2(1.0,1.0)"
+");"
+"void main()"
+"{"
+	"gl_Position=vec4(coord[gl_VertexID]*2.0-vec2(1.0,1.0),-1.0,1.0);"
+"}"
+;
+
+const char fullscreen_postprocessing_shader_f[]=
+VERSION_HEADER
+"uniform sampler2D atex;" // albedo buffer
+"uniform sampler2D dtex;" // depth buffer
+"out vec4 c_;"
+"void main()"
+"{"
+	"ivec2 tc=ivec2(gl_FragCoord.xy);"
+	"gl_FragDepth=texelFetch(dtex,tc,0).x;"
+	"c_=0.1*texelFetch(atex,tc,0);"
+"}"
+;
+
+const char postprocessing_shader_v[]=
+VERSION_HEADER
+"in vec3 p;"
+"uniform mat4 mat;"
+"void main()"
+"{"
+	"gl_Position=mat*vec4(p,1.0);"
+"}"
+;
+
+/*
+light = 1 / (distanse * distance ) - lsb
+lsb - min valuable light.
+For RGBA8 color buffer min valuable light is near 1 / 256, but you can make it greater, if you wish more perfomance.
+*/
+const char postprocessing_shader_f[]=
+VERSION_HEADER
+"uniform sampler2D atex;" // albedo buffer
+"uniform sampler2D ntex;" // normals buffer
+"uniform sampler2D dtex;" // depth buffer
+"uniform vec3 lp;" // light position
+"uniform float lsb;" // value, substructed from 1 / dist*dist
+"uniform vec4 lc;" // light color (used only rgb )
+"uniform mat4 imat;" // onverse matrix for transofrmation
+// numbers from raw perspective mat
+"uniform float m10;"
+"uniform float m14;"
+
+"out vec4 c_;"
+
+"vec4 GWP(ivec2 tc)" // GetWorldPosition
+"{"
+	"vec4 p;"
+	"p.xy=2.0*gl_FragCoord.xy/vec2(textureSize(atex,0))-vec2(1.0,1.0);"
+	"p.z=2.0*texelFetch(dtex,tc,0).x-1.0;"
+
+	"p.w=m14/(p.z-m10);"
+	"p.xyz*=p.w;"
+
+	"return imat*p;"
+"}"
+
+"void main()"
+"{"
+	"ivec2 tc=ivec2(gl_FragCoord.xy);"
+	"vec3 vtl=lp-GWP(tc).xyz;" // vector to light source
+
+	"vec3 n=texelFetch(ntex,tc,0).xyz*vec3(2.0,2.0,2.0)-vec3(1.0,1.0,1.0);" // normal
+	"float nk= max(0.0,dot(n,normalize(vtl)));" // light angle cos
+
+	"c_=(nk*max(1.0/dot(vtl,vtl)-lsb,0.0))*lc*texelFetch(atex,tc,0);"
+"}"
+;
+
 
 } // namespace mx_Shaders

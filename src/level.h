@@ -34,7 +34,10 @@ public:
 	const mx_Bullet* GetBullets() const;
 	unsigned int GetBulletCount() const;
 
+	const mx_LevelData& GetLevelData() const;
+
 	const mx_LevelData::Sector* FindSectorForPoint( const float* point ) const;
+
 
 	bool CollideWithSectorTriangles(
 		const float* in_pos, float radius,
@@ -98,4 +101,9 @@ inline const mx_Bullet* mx_Level::GetBullets() const
 inline unsigned int mx_Level::GetBulletCount() const
 {
 	return bullet_count_;
+}
+
+inline const mx_LevelData& mx_Level::GetLevelData() const
+{
+	return level_data_;
 }

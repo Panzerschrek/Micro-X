@@ -18,6 +18,12 @@ struct mx_LevelVertex
 	char normal[3];
 };
 
+struct mx_Light
+{
+	float pos[3];
+	float light_rgb[4]; // 4th component - unused
+};
+
 struct mx_LevelTriangle
 {
 	unsigned vertex_index[3];
@@ -45,6 +51,9 @@ struct mx_LevelData
 
 		mx_Plane planes[16];
 		unsigned int planes_count;
+
+		mx_Light lights[8];
+		unsigned int light_count;
 
 		Sector* connections[MX_MAX_ROOM_CONNECTIONS];
 		unsigned int connections_count;
@@ -131,8 +140,8 @@ private:
 	void ReserveTrianglesAndVertices( unsigned int new_triangle_count, unsigned int new_vertex_count );
 	void AddRoomCube( const Room* room );
 	void AddConnectionCube( const Connection* connection );
-	static void SetupRoomSector( const Room* room, mx_LevelData::Sector* sector );
-	static void SetupConnectionSector( const Connection* connection, mx_LevelData::Sector* sector );
+	void SetupRoomSector( const Room* room, mx_LevelData::Sector* sector );
+	void SetupConnectionSector( const Connection* connection, mx_LevelData::Sector* sector );
 	
 	void CalculateNormals();
 	void ClaculateTextureCoordinates();
