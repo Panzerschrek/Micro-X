@@ -44,6 +44,7 @@ private:
 
 	float perspective_matrix_[16];
 	float view_matrix_[16];
+	float z_near_, z_far_;
 
 	GLuint tex_id_;
 

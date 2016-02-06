@@ -18,6 +18,40 @@ static void SetupFBOTextureParameters()
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 }
 
+static void GenFullscreenQuad( mx_DrawingModel* model )
+{
+	// TODO - optimize?
+
+	mx_DrawingModelVertex* vertices= new mx_DrawingModelVertex[4];
+	unsigned short* indeces= new unsigned short[6];
+
+	vertices[0].pos[0]= -1.0f;
+	vertices[0].pos[1]= -1.0f;
+	vertices[0].pos[2]=  0.0f;
+
+	vertices[1].pos[0]= -1.0f;
+	vertices[1].pos[1]= +1.0f;
+	vertices[1].pos[2]=  0.0f;
+
+	vertices[2].pos[0]= +1.0f;
+	vertices[2].pos[1]= +1.0f;
+	vertices[2].pos[2]=  0.0f;
+
+	vertices[3].pos[0]= +1.0f;
+	vertices[3].pos[1]= -1.0f;
+	vertices[3].pos[2]=  0.0f;
+
+	indeces[0]= 0;
+	indeces[1]= 2;
+	indeces[2]= 1;
+	indeces[3]= 0;
+	indeces[4]= 3;
+	indeces[5]= 2;
+
+	model->SetVertexData( vertices, 4 );
+	model->SetIndexData( indeces, 6 );
+}
+
 mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 	: main_loop_(*mx_MainLoop::Instance())
 	, level_(level)
@@ -119,6 +153,11 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 	{ // light sorce vertex buffer
 		light_source_model_.LoadFromMFMD( mx_Models::icosahedron );
 
+		// HACK. Put in model data fullscreen quad
+		mx_DrawingModel fullscreen_quad_model;
+		GenFullscreenQuad( &fullscreen_quad_model );
+		light_source_model_.Add( &fullscreen_quad_model );
+
 		light_source_vertex_buffer_.VertexData(
 			light_source_model_.GetVertexData(),
 			light_source_model_.GetVertexCount() * sizeof(mx_DrawingModelVertex),
@@ -128,8 +167,6 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 
 		mx_DrawingModelVertex v;
 		light_source_vertex_buffer_.VertexAttrib( 0, 3, GL_FLOAT, false, ((char*)v.pos) - ((char*)&v) );
-		//light_source_vertex_buffer_.VertexAttrib( 1, 3, GL_FLOAT, true, ((char*)v.normal) - ((char*)&v) );
-		//light_source_vertex_buffer_.VertexAttrib( 2, 3, GL_FLOAT, false, ((char*)v.tex_coord) - ((char*)&v) );
 	}
 
 	CreateGBuffer();
@@ -211,19 +248,41 @@ void mx_Renderer::Draw()
 				if( light.light_rgb[i] > max_light ) max_light= light.light_rgb[i];
 			}
 
-			static const float c_min_valuable_light= 1.0f / 4.0f;
+			static const float c_min_valuable_light= 1.0f / 256.0f;
 			float min_light_distance= std::sqrt( max_light / c_min_valuable_light );
-
-			mxMat4Scale( scale_mat, min_light_distance );
-			mxMat4Translate( translate_mat, light.pos );
-			mxMat4Mul( scale_mat, translate_mat, final_mat );
-			mxMat4Mul( final_mat, view_matrix_ );
 
 			postprocessing_shader_.UniformVec3( "lp", light.pos );
 			postprocessing_shader_.UniformVec3( "lc", level_data.sectors[s].lights[l].light_rgb );
-			postprocessing_shader_.UniformMat4( "mat", final_mat );
 			
-			glDrawElements( GL_TRIANGLES, light_source_vertex_buffer_.IndexDataSize() / sizeof(unsigned short), GL_UNSIGNED_SHORT, NULL );
+			if( mxSquareDistance( light.pos, player_.Pos() ) >= min_light_distance * min_light_distance )
+			{
+				mxMat4Scale( scale_mat, min_light_distance );
+				mxMat4Translate( translate_mat, light.pos );
+				mxMat4Mul( scale_mat, translate_mat, final_mat );
+				mxMat4Mul( final_mat, view_matrix_ );
+				postprocessing_shader_.UniformMat4( "mat", final_mat );
+
+				// Dra all model except fullscreen quad
+				glDrawElements(
+					GL_TRIANGLES,
+					light_source_vertex_buffer_.IndexDataSize() / sizeof(unsigned short) - 6,
+					GL_UNSIGNED_SHORT,
+					NULL );
+			}
+			else
+			{
+				float translate_vec[3]= { 0.0f, 0.0f, -0.999f }; // place fullscreen quad at z_near_
+				mxMat4Translate( final_mat, translate_vec );
+
+				postprocessing_shader_.UniformMat4( "mat", final_mat );
+
+				// Draw fullscreen quad, placed in model
+				glDrawElements(
+					GL_TRIANGLES,
+					6,
+					GL_UNSIGNED_SHORT,
+					(void*)( light_source_vertex_buffer_.IndexDataSize() - 6 * sizeof(unsigned short) ) );
+			}
 		}
 
 		glDepthMask( 1 );
@@ -302,10 +361,12 @@ void mx_Renderer::CalculateMatrices()
 		mxMat4Mul( basis_change_mat, tmp_mat );
 	}
 
+	z_near_= 1.0f / 16.0f;
+	z_far_= 128.0f;
 	mxMat4Perspective( perspective_matrix_,
 		float(main_loop_.ViewportWidth())/ float(main_loop_.ViewportHeight()),
 		player_.Fov(),
-		1.0f / 16.0f, 128.0f );
+		z_near_, z_far_ );
 	
 	mxMat4Mul( translate_mat, rotation_mat, view_matrix_ );
 	mxMat4Mul( view_matrix_, basis_change_mat );
