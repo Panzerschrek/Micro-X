@@ -97,22 +97,33 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 		plasma_balls_vertex_buffer_.VertexAttrib( 0, 3, GL_FLOAT, false, 0 );
 	}
 
-	{
+	{ // monsters vbo
 		mx_DrawingModel model;
 		model.LoadFromMFMD( mx_Models::monsters_models[0] );
 		model.Scale( mx_Models::monsters_models_scale[0] );
 
-		model_vertex_buffer_.VertexData(
+		monsters_vertex_buffer_.VertexData(
 			model.GetVertexData(),
 			model.GetVertexCount() * sizeof(mx_DrawingModelVertex),
 			sizeof(mx_DrawingModelVertex) );
 
-		model_vertex_buffer_.IndexData( model.GetIndexData(), model.GetIndexCount() * sizeof(unsigned short) );
+		monsters_vertex_buffer_.IndexData( model.GetIndexData(), model.GetIndexCount() * sizeof(unsigned short) );
 
 		mx_DrawingModelVertex v;
-		model_vertex_buffer_.VertexAttrib( 0, 3, GL_FLOAT, false, ((char*)v.pos) - ((char*)&v) );
-		model_vertex_buffer_.VertexAttrib( 1, 3, GL_FLOAT, true, ((char*)v.normal) - ((char*)&v) );
-		model_vertex_buffer_.VertexAttrib( 2, 3, GL_FLOAT, false, ((char*)v.tex_coord) - ((char*)&v) );
+		monsters_vertex_buffer_.VertexAttrib( 0, 3, GL_FLOAT, false, ((char*)v.pos) - ((char*)&v) );
+		monsters_vertex_buffer_.VertexAttrib( 1, 3, GL_FLOAT, true, ((char*)v.normal) - ((char*)&v) );
+		monsters_vertex_buffer_.VertexAttrib( 2, 3, GL_FLOAT, false, ((char*)v.tex_coord) - ((char*)&v) );
+	}
+	{ // monsters shader
+		monsters_shader_.SetAttribLocation( "p", 0 );
+		monsters_shader_.SetAttribLocation( "n", 1 );
+		monsters_shader_.SetAttribLocation( "tc", 2 );
+		monsters_shader_.SetFragDataLocation( "c_", 0 );
+		monsters_shader_.SetFragDataLocation( "n_", 1 );
+
+		monsters_shader_.Create( mx_Shaders::monster_shader_v, mx_Shaders::monster_shader_f );
+		static const char* const uniforms[]= { "mat", "nmat", "tex", "texn" };
+		monsters_shader_.FindUniforms( uniforms, sizeof(uniforms) / sizeof(char*) );
 	}
 	{
 		mx_Texture texture( 10, 10 );
@@ -128,6 +139,30 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
 		glGenerateMipmap( GL_TEXTURE_2D );
+	}
+	{ // monsters textures
+		mx_Texture tex( 9, 9 );
+		glGenTextures( 1, &monsters_textures_array_id_ );
+		glBindTexture( GL_TEXTURE_2D_ARRAY, monsters_textures_array_id_ );
+
+		glTexImage3D(
+			GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8,
+			tex.SizeX(), tex.SizeY(), LastMonster,
+			0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
+
+		for( unsigned int i= 0; i < LastMonster; i++ )
+		{
+			gen_monsters_textures_func_table[i]( &tex );
+
+			glTexSubImage3D(
+				GL_TEXTURE_2D_ARRAY, 0,
+				0, 0, 0,
+				tex.SizeX(), tex.SizeY(), 1,
+				GL_RGBA, GL_UNSIGNED_BYTE, tex.GetNormalizedData() );
+		}
+		glTexParameteri( GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+		glTexParameteri( GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+		glGenerateMipmap( GL_TEXTURE_2D_ARRAY );
 	}
 	{ // fullscreen postprocessing shader
 		fullscreen_postprocessing_shader_.Create(
@@ -300,17 +335,22 @@ void mx_Renderer::DrawWorld()
 
 void mx_Renderer::DrawMonsters()
 {
-	world_shader_.Bind();
+	glActiveTexture( GL_TEXTURE0 );
+	glBindTexture( GL_TEXTURE_2D_ARRAY, monsters_textures_array_id_ );
+
+	monsters_shader_.Bind();
+	monsters_shader_.UniformInt( "tex", 0 );
 
 	glEnable( GL_CULL_FACE );
 	glCullFace( GL_BACK );
 
-	model_vertex_buffer_.Bind();
+	monsters_vertex_buffer_.Bind();
 
 	const mx_Monster* const* monsters= level_.GetMonsters();
 	for( unsigned int m= 0, m_end= level_.GetMonsterCount(); m < m_end; m++ )
 	{
 		float rotate_mat[16];
+		float normals_mat[16];
 		float translate_mat[16];
 		float result_mat[16];
 
@@ -321,9 +361,14 @@ void mx_Renderer::DrawMonsters()
 		mxMat4Mul( rotate_mat, translate_mat, result_mat );
 		mxMat4Mul( result_mat, view_matrix_ );
 
-		world_shader_.UniformMat4( "mat", result_mat );
+		monsters_shader_.UniformMat4( "mat", result_mat );
 
-		glDrawElements( GL_TRIANGLES, model_vertex_buffer_.IndexDataSize() / sizeof(unsigned short), GL_UNSIGNED_SHORT, NULL );
+		mxMat4ToMat3( rotate_mat, normals_mat );
+		monsters_shader_.UniformMat3( "nmat", normals_mat );
+
+		monsters_shader_.UniformFloat( "texn", float(monster->GetType()) + 0.5f );
+
+		glDrawElements( GL_TRIANGLES, monsters_vertex_buffer_.IndexDataSize() / sizeof(unsigned short), GL_UNSIGNED_SHORT, NULL );
 	}
 
 	glDisable (GL_CULL_FACE );
@@ -427,8 +472,9 @@ void mx_Renderer::DrawLightSource( const mx_Light& light_source )
 		if( light_source.light_rgb[i] > max_light ) max_light= light_source.light_rgb[i];
 	}
 
-	static const float c_min_valuable_light= 1.0f / 64.0f;
+	static const float c_min_valuable_light= 1.0f / 32.0f;
 	float min_light_distance= std::sqrt( max_light / c_min_valuable_light );
+	min_light_distance*= 1.25f; // extend sphere model for compensation of model shape error
 
 	postprocessing_shader_.UniformVec3( "lp", light_source.pos );
 	postprocessing_shader_.UniformVec4( "lc", light_source.light_rgb );

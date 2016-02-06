@@ -90,6 +90,40 @@ VERSION_HEADER
 "}"
 ;
 
+// monster shader
+const char monster_shader_v[]=
+VERSION_HEADER
+"in vec3 p;"
+"in vec3 n;"
+"in vec2 tc;"
+"uniform mat4 mat;"
+"uniform mat3 nmat;"
+"out vec3 fn;"
+"out vec2 ftc;"
+"void main()"
+"{"
+	"fn=(nmat*n)*0.5+vec3(0.5,0.5,0.5);"
+	"ftc=tc;"
+	"gl_Position=mat*vec4(p,1.0);"
+"}"
+;
+
+const char monster_shader_f[]=
+VERSION_HEADER
+"uniform sampler2DArray tex;"
+"uniform float texn;"
+"out vec4 c_;"
+"out vec4 n_;"
+"in vec3 fn;"
+"in vec2 ftc;"
+"void main()"
+"{"
+	"c_=texture(tex,vec3(ftc,texn));"
+	"n_=vec4(fn,1.0);"
+"}"
+;
+
+// plasma ball shader
 const char plasma_ball_shader_v[]=
 VERSION_HEADER
 "in vec3 p;"

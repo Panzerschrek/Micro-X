@@ -1,4 +1,7 @@
+#include "monster.h"
 #include "texture.h"
+
+#include "textures_generation.h"
 
 static const float g_white[4]= { 1.0f, 1.0f, 1.0f, 1.0f };
 static const float g_black[4]= { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -85,3 +88,38 @@ void mxGenSteelPlateTexture( mx_Texture * texture )
 
 	texture->LinearNormalization( g_one );
 }
+
+static void GenOctoRobotTexture( mx_Texture * texture )
+{
+	static const float c_bg_color[4]= { 0.6f, 0.6f, 0.6f, 0.0f };
+	texture->Fill( c_bg_color );
+
+	// Eyes
+	static const float c_dark_gray[4]= { 0.1f, 0.1f, 0.1f, 0.0f };
+	texture->FillRect( 29, 32, 68, 68, c_dark_gray );
+	static const float c_red[4]= { 1.0f, 0.2f, 0.2f, 0.0f };
+	texture->FillEllipse( 62, 67, 12, c_red );
+
+	// Radiator bars
+	for( unsigned int i= 0; i < 4; i++ )
+		texture->FillRect( 332 + 36 * i, 50, 20, 72, c_dark_gray );
+
+	// Rockets battery
+	for( unsigned int i= 0; i < 3; i++ )
+	{
+		texture->FillEllipse( 48 + i * 38, 250, 14, c_dark_gray );
+		texture->FillEllipse( 48 + i * 38, 250, 8, c_red );
+
+		texture->FillEllipse( 208 + i * 38, 256, 14, c_dark_gray );
+	}
+
+	// Antena
+	texture->FillRect( 336, 264, 70, 70, c_red );
+
+	texture->LinearNormalization( g_one );
+}
+
+void (* const gen_monsters_textures_func_table[LastMonster])( mx_Texture * texture )=
+{
+	GenOctoRobotTexture,
+};

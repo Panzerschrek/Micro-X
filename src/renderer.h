@@ -41,7 +41,8 @@ private:
 	mx_GLSLProgram world_shader_;
 	mx_VertexBuffer world_vertex_buffer_;
 
-	mx_VertexBuffer model_vertex_buffer_;
+	mx_GLSLProgram monsters_shader_;
+	mx_VertexBuffer monsters_vertex_buffer_;
 
 	mx_GLSLProgram plasma_ball_shader_;
 	mx_VertexBuffer plasma_balls_vertex_buffer_;
@@ -51,6 +52,7 @@ private:
 	float z_near_, z_far_;
 
 	GLuint tex_id_;
+	GLuint monsters_textures_array_id_;
 
 	struct
 	{
