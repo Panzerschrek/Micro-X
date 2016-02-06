@@ -1,5 +1,6 @@
 #pragma once
 
+#include "drawing_model.h"
 #include "glsl_program.h"
 #include "vertex_buffer.h"
 
@@ -12,6 +13,8 @@ class mx_Renderer
 public:
 	mx_Renderer( const mx_Level& level, const mx_Player& player );
 	~mx_Renderer();
+
+	void OnFramebufferResize();
 
 	void Draw();
 
@@ -54,5 +57,7 @@ private:
 	} g_buffer_;
 
 	mx_GLSLProgram postprocessing_shader_;
+
+	mx_DrawingModel light_source_model_;
 	mx_VertexBuffer light_source_vertex_buffer_;
 };

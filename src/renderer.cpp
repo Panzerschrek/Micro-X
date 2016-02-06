@@ -1,4 +1,3 @@
-#include "drawing_model.h"
 #include "level.h"
 #include "main_loop.h"
 #include "models.h"
@@ -24,6 +23,8 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 	, level_(level)
 	, player_(player)
 {
+	g_buffer_.fbo_id= 0;
+
 	{ // World geometry
 		world_vertex_buffer_.VertexData(
 			level_.GetVertices(),
@@ -105,20 +106,19 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 			/*vertex*/
 			"mat",
 			/*fragment*/
-			"atex", "ntex", "dtex", "lp", "l", "imat", "m10", "m14"
+			"atex", "ntex", "dtex", "lp", "lc", "imat", "m10", "m14"
 		};
 		postprocessing_shader_.FindUniforms( uniforms, sizeof(uniforms) / sizeof(char*) );
 	}
 	{ // light sorce vertex buffer
-		mx_DrawingModel model;
-		model.LoadFromMFMD( mx_Models::icosahedron );
+		light_source_model_.LoadFromMFMD( mx_Models::icosahedron );
 
 		light_source_vertex_buffer_.VertexData(
-			model.GetVertexData(),
-			model.GetVertexCount() * sizeof(mx_DrawingModelVertex),
+			light_source_model_.GetVertexData(),
+			light_source_model_.GetVertexCount() * sizeof(mx_DrawingModelVertex),
 			sizeof(mx_DrawingModelVertex) );
 
-		light_source_vertex_buffer_.IndexData( model.GetIndexData(), model.GetIndexCount() * sizeof(unsigned short) );
+		light_source_vertex_buffer_.IndexData( light_source_model_.GetIndexData(), light_source_model_.GetIndexCount() * sizeof(unsigned short) );
 
 		mx_DrawingModelVertex v;
 		light_source_vertex_buffer_.VertexAttrib( 0, 3, GL_FLOAT, false, ((char*)v.pos) - ((char*)&v) );
@@ -133,12 +133,17 @@ mx_Renderer::~mx_Renderer()
 {
 }
 
+void mx_Renderer::OnFramebufferResize()
+{
+	CreateGBuffer();
+}
+
 void mx_Renderer::Draw()
 {
 	CalculateMatrices();
 
 	glBindFramebuffer( GL_FRAMEBUFFER, g_buffer_.fbo_id );
-	glClearColor( 0.1f, 0.1f, 0.1f, 0.0f );
+	glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
 	DrawWorld();
@@ -147,33 +152,24 @@ void mx_Renderer::Draw()
 
 	glBindFramebuffer( GL_FRAMEBUFFER, 0 );
 
-	glActiveTexture( GL_TEXTURE0 );
-	glBindTexture( GL_TEXTURE_2D, g_buffer_.albedo_tex_id );
-	glActiveTexture( GL_TEXTURE1 );
-	glBindTexture( GL_TEXTURE_2D, g_buffer_.normals_tex_id );
-	glActiveTexture( GL_TEXTURE2 );
-	glBindTexture( GL_TEXTURE_2D, g_buffer_.depth_tex_id );
-
-	postprocessing_shader_.Bind();
 
 	{
-		float light_pos[3]= { 8.0f, 7.0f, 12.0f };
-		VEC3_CPY( light_pos, level_.GetMonsters()[0]->Pos() );
-		float scale_mat[16];
-		float translate_mat[16];
-		float final_mat[16];
+		glDisable( GL_DEPTH_TEST );
+		glEnable( GL_BLEND );
+		glBlendFunc( GL_ONE, GL_ONE ); // make light accumulation
 
-		mxMat4Scale( scale_mat, 4.0f );
-		mxMat4Translate( translate_mat, light_pos );
-		mxMat4Mul( scale_mat, translate_mat, final_mat );
-		mxMat4Mul( final_mat, view_matrix_ );
+		glActiveTexture( GL_TEXTURE0 );
+		glBindTexture( GL_TEXTURE_2D, g_buffer_.albedo_tex_id );
+		glActiveTexture( GL_TEXTURE1 );
+		glBindTexture( GL_TEXTURE_2D, g_buffer_.normals_tex_id );
+		glActiveTexture( GL_TEXTURE2 );
+		glBindTexture( GL_TEXTURE_2D, g_buffer_.depth_tex_id );
+
+		postprocessing_shader_.Bind();
 
 		postprocessing_shader_.UniformInt( "atex", 0 );
 		postprocessing_shader_.UniformInt( "ntex", 1 );
 		postprocessing_shader_.UniformInt( "dtex", 2 );
-		postprocessing_shader_.UniformMat4( "mat", final_mat );
-
-		postprocessing_shader_.UniformVec3( "lp", light_pos );
 
 		float invert_view_mtrix[16];
 		mxMat4Invert( view_matrix_, invert_view_mtrix );
@@ -183,9 +179,40 @@ void mx_Renderer::Draw()
 		postprocessing_shader_.UniformFloat( "m14", perspective_matrix_[14] );
 
 		light_source_vertex_buffer_.Bind();
-		glDrawElements( GL_TRIANGLES, light_source_vertex_buffer_.IndexDataSize() / sizeof(unsigned short), GL_UNSIGNED_SHORT, NULL );
-	}
 
+		const mx_LevelData& level_data= level_.GetLevelData();
+		for( unsigned int s= 0; s < level_data.sector_count; s++ )
+		for( unsigned int l= 0; l < level_data.sectors[s].light_count; l++ )
+		{
+			const mx_Light& light= level_data.sectors[s].lights[l];
+			float scale_mat[16];
+			float translate_mat[16];
+			float final_mat[16];
+
+			float max_light= 0.0f;
+			for( unsigned int i= 0; i < 3; i++ )
+			{
+				if( light.light_rgb[i] > max_light ) max_light= light.light_rgb[i];
+			}
+
+			static const float c_min_valuable_light= 1.0f / 64.0f;
+			float min_light_distance= std::sqrt( max_light / c_min_valuable_light );
+
+			mxMat4Scale( scale_mat, min_light_distance );
+			mxMat4Translate( translate_mat, light.pos );
+			mxMat4Mul( scale_mat, translate_mat, final_mat );
+			mxMat4Mul( final_mat, view_matrix_ );
+
+			postprocessing_shader_.UniformVec3( "lp", light.pos );
+			postprocessing_shader_.UniformVec3( "lc", level_data.sectors[s].lights[l].light_rgb );
+			postprocessing_shader_.UniformMat4( "mat", final_mat );
+			
+			glDrawElements( GL_TRIANGLES, light_source_vertex_buffer_.IndexDataSize() / sizeof(unsigned short), GL_UNSIGNED_SHORT, NULL );
+		}
+
+		glDisable( GL_BLEND );
+		glEnable( GL_DEPTH_TEST );
+	}
 }
 
 void mx_Renderer::CreateGBuffer()
@@ -193,6 +220,14 @@ void mx_Renderer::CreateGBuffer()
 	mx_MainLoop* main_loop = mx_MainLoop::Instance();
 	unsigned int width = main_loop->ViewportWidth ();
 	unsigned int height= main_loop->ViewportHeight();
+
+	if( g_buffer_.fbo_id != 0 )
+	{
+		glDeleteFramebuffers( 1, &g_buffer_.fbo_id );
+		glDeleteTextures( 1, &g_buffer_.albedo_tex_id );
+		glDeleteTextures( 1, &g_buffer_.normals_tex_id );
+		glDeleteTextures( 1, &g_buffer_.depth_tex_id );
+	}
 
 	// albedo and normals textures texture
 	for( unsigned int i= 0; i < 2; i++ )

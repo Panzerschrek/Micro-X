@@ -267,7 +267,7 @@ void mx_MainLoop::Loop()
 				mx_SoundEngine::Instance()->Tick();
 		}
 
-		glClearColor( 0.1f, 0.1f, 0.1f, 0.0f );
+		glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
 		renderer_->Draw();
@@ -484,6 +484,7 @@ void mx_MainLoop::Resize()
 			viewport_height_= new_height;
 		}
 		glViewport( 0, 0, viewport_width_, viewport_height_ );
+		renderer_->OnFramebufferResize();
 	}
 }
 

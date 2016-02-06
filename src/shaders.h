@@ -12,6 +12,9 @@ extern const char world_shader_f[];
 extern const char plasma_ball_shader_v[];
 extern const char plasma_ball_shader_f[];
 
+extern const char fullscreen_postprocessing_shader_v[];
+extern const char fullscreen_postprocessing_shader_f[];
+
 extern const char postprocessing_shader_v[];
 extern const char postprocessing_shader_f[];
 
