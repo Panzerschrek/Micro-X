@@ -58,13 +58,6 @@ void mx_MainLoop::DeleteInstance()
 {
 	MX_ASSERT( instance_ );
 
-	mx_SoundEngine::DeleteInstance();
-
-	delete instance_->text_;
-	delete instance_->renderer_;
-	delete instance_->player_;
-	delete instance_->level_;
-
 	delete instance_;
 	instance_= NULL;
 }
@@ -210,6 +203,13 @@ mx_MainLoop::mx_MainLoop(
 
 mx_MainLoop::~mx_MainLoop()
 {
+	mx_SoundEngine::DeleteInstance();
+
+	delete instance_->text_;
+	delete instance_->renderer_;
+	delete instance_->player_;
+	delete instance_->level_;
+
 	wglMakeCurrent( NULL, NULL );
 	wglDeleteContext( hrc_ );
 
