@@ -148,46 +148,47 @@ VERSION_HEADER
 "}"
 ;
 
+/*
+light = 1 / (distanse * distance ) - lsb
+lsb - min valuable light.
+For RGBA8 color buffer min valuable light is near 1 / 256, but you can make it greater, if you wish more perfomance.
+*/
 const char postprocessing_shader_f[]=
 VERSION_HEADER
 "uniform sampler2D atex;" // albedo buffer
 "uniform sampler2D ntex;" // normals buffer
 "uniform sampler2D dtex;" // depth buffer
 "uniform vec3 lp;" // light position
-"uniform vec3 lc;" // light color
+"uniform float lsb;" // value, substructed from 1 / dist*dist
+"uniform vec4 lc;" // light color (used only rgb )
 "uniform mat4 imat;" // onverse matrix for transofrmation
 // numbers from raw perspective mat
-"uniform  float m10;"
-"uniform  float m14;"
-//"in vec2 ftc;"
+"uniform float m10;"
+"uniform float m14;"
+
 "out vec4 c_;"
 
-"vec4 GetWorldPosition()"
+"vec4 GWP(ivec2 tc)" // GetWorldPosition
 "{"
-	"vec4 screen_space_pos;"
-	"screen_space_pos.xy= 2.0 * gl_FragCoord.xy / vec2(textureSize(atex, 0)) - vec2(1.0, 1.0);"
-	"screen_space_pos.z= 2.0 * texelFetch(dtex, ivec2(gl_FragCoord.xy), 0).x - 1.0;"
+	"vec4 p;"
+	"p.xy=2.0*gl_FragCoord.xy/vec2(textureSize(atex,0))-vec2(1.0,1.0);"
+	"p.z=2.0*texelFetch(dtex,tc,0).x-1.0;"
 
-	"screen_space_pos.w= m14 / ( screen_space_pos.z - m10 );"
-	"screen_space_pos.xyz*= screen_space_pos.w;"
+	"p.w=m14/(p.z-m10);"
+	"p.xyz*=p.w;"
 
-	"return imat*screen_space_pos;"
+	"return imat*p;"
 "}"
 
 "void main()"
 "{"
-	"c_=texelFetch(atex, ivec2(gl_FragCoord.xy), 0);"
+	"ivec2 tc=ivec2(gl_FragCoord.xy);"
+	"vec3 vtl=lp-GWP(tc).xyz;" // vector to light source
 
-	"vec3 vec_to_light= lp - GetWorldPosition().xyz;"
-	"vec3 vec_to_light_normalized= normalize(vec_to_light);"
+	"vec3 n=texelFetch(ntex,tc,0).xyz*vec3(2.0,2.0,2.0)-vec3(1.0,1.0,1.0);" // normal
+	"float nk= max(0.0,dot(n,normalize(vtl)));" // light angle cos
 
-	"vec3 normal= texelFetch(ntex, ivec2(gl_FragCoord.xy), 0).xyz * vec3(2.0,2.0,2.0) - vec3(1.0,1.0,1.0);"
-	"float normal_k= max( 0.0, dot(normal, vec_to_light_normalized) );"
-
-	//"normal_k= 1.0;"
-	//"vec_to_light= vec3(4.0,0.0,0.0);"
-
-	"c_.xyz*= lc * (normal_k / dot(vec_to_light,vec_to_light));"
+	"c_=(nk*max(1.0/dot(vtl,vtl)-lsb,0.0))*lc*texelFetch(atex,tc,0);"
 "}"
 ;
 

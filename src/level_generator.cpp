@@ -759,12 +759,13 @@ void mx_LevelGenerator::SetupRoomSector( const Room* room, mx_LevelData::Sector*
 		sector->bb_max[i]= float(room->coord_max[i]);
 	}
 
-	sector->light_count= 1;
-	for( unsigned int i= 0; i < 3; i++ )
-	{
-		sector->lights[0].pos[i]= rand_.RandF( sector->bb_min[i] + 1.0f, sector->bb_max[i] - 1.0f );
-		sector->lights[0].light_rgb[i]= rand_.RandF( 0.5f, 2.0f );
-	}
+	sector->light_count= rand_.RandI( 1, 4 );
+	for( unsigned int l= 0; l < sector->light_count; l++ )
+		for( unsigned int i= 0; i < 3; i++ )
+		{
+			sector->lights[l].pos[i]= rand_.RandF( sector->bb_min[i] + 1.0f, sector->bb_max[i] - 1.0f );
+			sector->lights[l].light_rgb[i]= rand_.RandF( 0.5f, 2.0f );
+		}
 }
 
 void mx_LevelGenerator::SetupConnectionSector( const Connection* connection, mx_LevelData::Sector* sector )

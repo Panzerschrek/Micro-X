@@ -21,7 +21,7 @@ struct mx_LevelVertex
 struct mx_Light
 {
 	float pos[3];
-	float light_rgb[3];
+	float light_rgb[4]; // 4th component - unused
 };
 
 struct mx_LevelTriangle

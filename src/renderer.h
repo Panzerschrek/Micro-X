@@ -2,6 +2,7 @@
 
 #include "drawing_model.h"
 #include "glsl_program.h"
+#include "level_generator.h"
 #include "vertex_buffer.h"
 
 class mx_Level;
@@ -28,6 +29,9 @@ private:
 	void DrawWorld();
 	void DrawMonsters();
 	void DrawBullets();
+
+	void MakeLighting();
+	void DrawLightSource( const mx_Light& light_source );
 
 private:
 	const mx_MainLoop& main_loop_;

@@ -146,14 +146,14 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 			/*vertex*/
 			"mat",
 			/*fragment*/
-			"atex", "ntex", "dtex", "lp", "lc", "imat", "m10", "m14"
+			"atex", "ntex", "dtex", "lp", "lsb", "lc", "imat", "m10", "m14"
 		};
 		postprocessing_shader_.FindUniforms( uniforms, sizeof(uniforms) / sizeof(char*) );
 	}
 	{ // light sorce vertex buffer
 		light_source_model_.LoadFromMFMD( mx_Models::icosahedron );
 
-		// HACK. Put in model data fullscreen quad
+		// HACK. Put to model data fullscreen quad
 		mx_DrawingModel fullscreen_quad_model;
 		GenFullscreenQuad( &fullscreen_quad_model );
 		light_source_model_.Add( &fullscreen_quad_model );
@@ -191,104 +191,12 @@ void mx_Renderer::Draw()
 
 	DrawWorld();
 	DrawMonsters();
-	DrawBullets();
 
 	glBindFramebuffer( GL_FRAMEBUFFER, 0 );
 
+	MakeLighting();
 
-	{
-		glEnable( GL_BLEND );
-		glBlendFunc( GL_ONE, GL_ONE ); // make light accumulation
-
-		glActiveTexture( GL_TEXTURE0 );
-		glBindTexture( GL_TEXTURE_2D, g_buffer_.albedo_tex_id );
-		glActiveTexture( GL_TEXTURE1 );
-		glBindTexture( GL_TEXTURE_2D, g_buffer_.normals_tex_id );
-		glActiveTexture( GL_TEXTURE2 );
-		glBindTexture( GL_TEXTURE_2D, g_buffer_.depth_tex_id );
-
-		// Fill depth buffer and setup ambient light
-		fullscreen_postprocessing_shader_.Bind();
-		fullscreen_postprocessing_shader_.UniformInt( "atex", 0 );
-		fullscreen_postprocessing_shader_.UniformInt( "dtex", 2 );
-	
-		glDrawArrays( GL_TRIANGLES, 0, 6 );
-
-		glDepthMask( 0 );
-		glEnable( GL_CULL_FACE );
-		glCullFace( GL_BACK );
-		
-		postprocessing_shader_.Bind();
-
-		postprocessing_shader_.UniformInt( "atex", 0 );
-		postprocessing_shader_.UniformInt( "ntex", 1 );
-		postprocessing_shader_.UniformInt( "dtex", 2 );
-
-		float invert_view_mtrix[16];
-		mxMat4Invert( view_matrix_, invert_view_mtrix );
-		postprocessing_shader_.UniformMat4( "imat", invert_view_mtrix );
-
-		postprocessing_shader_.UniformFloat( "m10", perspective_matrix_[10] );
-		postprocessing_shader_.UniformFloat( "m14", perspective_matrix_[14] );
-
-		light_source_vertex_buffer_.Bind();
-
-		const mx_LevelData& level_data= level_.GetLevelData();
-		for( unsigned int s= 0; s < level_data.sector_count; s++ )
-		for( unsigned int l= 0; l < level_data.sectors[s].light_count; l++ )
-		{
-			const mx_Light& light= level_data.sectors[s].lights[l];
-			float scale_mat[16];
-			float translate_mat[16];
-			float final_mat[16];
-
-			float max_light= 0.0f;
-			for( unsigned int i= 0; i < 3; i++ )
-			{
-				if( light.light_rgb[i] > max_light ) max_light= light.light_rgb[i];
-			}
-
-			static const float c_min_valuable_light= 1.0f / 256.0f;
-			float min_light_distance= std::sqrt( max_light / c_min_valuable_light );
-
-			postprocessing_shader_.UniformVec3( "lp", light.pos );
-			postprocessing_shader_.UniformVec3( "lc", level_data.sectors[s].lights[l].light_rgb );
-			
-			if( mxSquareDistance( light.pos, player_.Pos() ) >= min_light_distance * min_light_distance )
-			{
-				mxMat4Scale( scale_mat, min_light_distance );
-				mxMat4Translate( translate_mat, light.pos );
-				mxMat4Mul( scale_mat, translate_mat, final_mat );
-				mxMat4Mul( final_mat, view_matrix_ );
-				postprocessing_shader_.UniformMat4( "mat", final_mat );
-
-				// Dra all model except fullscreen quad
-				glDrawElements(
-					GL_TRIANGLES,
-					light_source_vertex_buffer_.IndexDataSize() / sizeof(unsigned short) - 6,
-					GL_UNSIGNED_SHORT,
-					NULL );
-			}
-			else
-			{
-				float translate_vec[3]= { 0.0f, 0.0f, -0.999f }; // place fullscreen quad at z_near_
-				mxMat4Translate( final_mat, translate_vec );
-
-				postprocessing_shader_.UniformMat4( "mat", final_mat );
-
-				// Draw fullscreen quad, placed in model
-				glDrawElements(
-					GL_TRIANGLES,
-					6,
-					GL_UNSIGNED_SHORT,
-					(void*)( light_source_vertex_buffer_.IndexDataSize() - 6 * sizeof(unsigned short) ) );
-			}
-		}
-
-		glDepthMask( 1 );
-		glDisable( GL_CULL_FACE );
-		glDisable( GL_BLEND );
-	}
+	DrawBullets();
 }
 
 void mx_Renderer::CreateGBuffer()
@@ -317,7 +225,6 @@ void mx_Renderer::CreateGBuffer()
 			width, height,
 			0, GL_RGBA, GL_FLOAT, NULL );
 		SetupFBOTextureParameters();
-		
 	}
 
 	// depth texture
@@ -446,4 +353,114 @@ void mx_Renderer::DrawBullets()
 
 	glDisable( GL_BLEND );
 	glDisable( GL_PROGRAM_POINT_SIZE );
+}
+
+void mx_Renderer::MakeLighting()
+{
+	glEnable( GL_BLEND );
+	glBlendFunc( GL_ONE, GL_ONE ); // make light accumulation
+
+	glActiveTexture( GL_TEXTURE0 );
+	glBindTexture( GL_TEXTURE_2D, g_buffer_.albedo_tex_id );
+	glActiveTexture( GL_TEXTURE1 );
+	glBindTexture( GL_TEXTURE_2D, g_buffer_.normals_tex_id );
+	glActiveTexture( GL_TEXTURE2 );
+	glBindTexture( GL_TEXTURE_2D, g_buffer_.depth_tex_id );
+
+	// Fill depth buffer and setup ambient light
+	fullscreen_postprocessing_shader_.Bind();
+	fullscreen_postprocessing_shader_.UniformInt( "atex", 0 );
+	fullscreen_postprocessing_shader_.UniformInt( "dtex", 2 );
+
+	glDrawArrays( GL_TRIANGLES, 0, 6 );
+
+	glDepthMask( 0 );
+	glEnable( GL_CULL_FACE );
+	glCullFace( GL_BACK );
+	
+	postprocessing_shader_.Bind();
+
+	postprocessing_shader_.UniformInt( "atex", 0 );
+	postprocessing_shader_.UniformInt( "ntex", 1 );
+	postprocessing_shader_.UniformInt( "dtex", 2 );
+
+	float invert_view_mtrix[16];
+	mxMat4Invert( view_matrix_, invert_view_mtrix );
+	postprocessing_shader_.UniformMat4( "imat", invert_view_mtrix );
+
+	postprocessing_shader_.UniformFloat( "m10", perspective_matrix_[10] );
+	postprocessing_shader_.UniformFloat( "m14", perspective_matrix_[14] );
+
+	light_source_vertex_buffer_.Bind();
+
+	const mx_LevelData& level_data= level_.GetLevelData();
+	for( unsigned int s= 0; s < level_data.sector_count; s++ )
+		for( unsigned int l= 0; l < level_data.sectors[s].light_count; l++ )
+			DrawLightSource( level_data.sectors[s].lights[l] );
+
+	const mx_Bullet* bullets= level_.GetBullets();
+	unsigned int bullet_count= level_.GetBulletCount();
+	for( unsigned int b= 0; b < bullet_count; b++ )
+	{
+		mx_Light light_source;
+		VEC3_CPY( light_source.pos, bullets[b].pos );
+		light_source.light_rgb[0]= 0.4f;
+		light_source.light_rgb[1]= 0.3f;
+		light_source.light_rgb[2]= 0.1f;
+		DrawLightSource( light_source );
+	}
+
+	glDepthMask( 1 );
+	glDisable( GL_CULL_FACE );
+	glDisable( GL_BLEND );
+}
+
+void mx_Renderer::DrawLightSource( const mx_Light& light_source )
+{
+	float scale_mat[16];
+	float translate_mat[16];
+	float final_mat[16];
+
+	float max_light= 0.0f;
+	for( unsigned int i= 0; i < 3; i++ )
+	{
+		if( light_source.light_rgb[i] > max_light ) max_light= light_source.light_rgb[i];
+	}
+
+	static const float c_min_valuable_light= 1.0f / 64.0f;
+	float min_light_distance= std::sqrt( max_light / c_min_valuable_light );
+
+	postprocessing_shader_.UniformVec3( "lp", light_source.pos );
+	postprocessing_shader_.UniformVec4( "lc", light_source.light_rgb );
+	postprocessing_shader_.UniformFloat( "lsb", c_min_valuable_light );
+	
+	if( mxSquareDistance( light_source.pos, player_.Pos() ) >= min_light_distance * min_light_distance )
+	{
+		mxMat4Scale( scale_mat, min_light_distance );
+		mxMat4Translate( translate_mat, light_source.pos );
+		mxMat4Mul( scale_mat, translate_mat, final_mat );
+		mxMat4Mul( final_mat, view_matrix_ );
+		postprocessing_shader_.UniformMat4( "mat", final_mat );
+
+		// Draw all model except fullscreen quad
+		glDrawElements(
+			GL_TRIANGLES,
+			light_source_vertex_buffer_.IndexDataSize() / sizeof(unsigned short) - 6,
+			GL_UNSIGNED_SHORT,
+			NULL );
+	}
+	else
+	{
+		float translate_vec[3]= { 0.0f, 0.0f, -0.999f }; // place fullscreen quad at z_near_
+		mxMat4Translate( final_mat, translate_vec );
+
+		postprocessing_shader_.UniformMat4( "mat", final_mat );
+
+		// Draw fullscreen quad, placed in model
+		glDrawElements(
+			GL_TRIANGLES,
+			6,
+			GL_UNSIGNED_SHORT,
+			(void*)( light_source_vertex_buffer_.IndexDataSize() - 6 * sizeof(unsigned short) ) );
+	}
 }
