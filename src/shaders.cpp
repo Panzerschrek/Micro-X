@@ -133,13 +133,40 @@ VERSION_HEADER
 
 const char postprocessing_shader_f[]=
 VERSION_HEADER
-"uniform sampler2D tex;"
+"uniform sampler2D atex;" // albedo buffer
+"uniform sampler2D ntex;" // normals buffer
+"uniform sampler2D dtex;" // depth buffer
+"uniform vec3 lp;" // light position
+"uniform vec3 l;" // light intensity
+"uniform mat4 imat;" // onverse matrix for transofrmation
+// numbers from raw perspective mat
+"uniform  float m10;"
+"uniform  float m14;"
 //"in vec2 ftc;"
 "out vec4 c_;"
+
+"vec4 GetWorldPosition()"
+"{"
+	"vec4 screen_space_pos;"
+	"screen_space_pos.xy= 2.0 * gl_FragCoord.xy / vec2(1024.0,768.0) - vec2(1.0, 1.0);"
+	"screen_space_pos.z= 2.0 * texelFetch(dtex, ivec2(gl_FragCoord.xy), 0).x - 1.0;"
+
+	"screen_space_pos.w= m14 / ( screen_space_pos.z - m10 );"
+	"screen_space_pos.xyz*= screen_space_pos.w;"
+
+	"return imat*screen_space_pos;"
+"}"
+
 "void main()"
 "{"
-	//"c_=texture(tex,ftc);"
-	"c_=vec4(1.0,0.0,1.0,0.5);"
+	"c_=texelFetch(atex, ivec2(gl_FragCoord.xy), 0);"
+	//"c_.r*=1.0/texelFetch(dtex, ivec2(gl_FragCoord.xy), 0).x;"
+	"vec3 vec_to_light= lp - GetWorldPosition().xyz;"
+	"vec3 vec_to_light_normalized= normalize(vec_to_light);"
+
+	"vec3 normal= texelFetch(ntex, ivec2(gl_FragCoord.xy), 0).xyz * vec3(2.0,2.0,2.0) - vec3(1.0,1.0,1.0);"
+	"float normal_k= max( 0.0, dot(normal, vec_to_light_normalized) );"
+	"c_.xyz*= normal_k / dot(vec_to_light,vec_to_light);"
 "}"
 ;
 

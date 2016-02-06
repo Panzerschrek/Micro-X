@@ -100,7 +100,13 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 		//postprocessing_shader_.SetAttribLocation( "tc", 2 );
 
 		postprocessing_shader_.Create( mx_Shaders::postprocessing_shader_v, mx_Shaders::postprocessing_shader_f );
-		static const char* const uniforms[]= { "mat", "tex" };
+		static const char* const uniforms[]=
+		{
+			/*vertex*/
+			"mat",
+			/*fragment*/
+			"atex", "ntex", "dtex", "lp", "l", "imat", "m10", "m14"
+		};
 		postprocessing_shader_.FindUniforms( uniforms, sizeof(uniforms) / sizeof(char*) );
 	}
 	{ // light sorce vertex buffer
@@ -143,13 +149,42 @@ void mx_Renderer::Draw()
 
 	glActiveTexture( GL_TEXTURE0 );
 	glBindTexture( GL_TEXTURE_2D, g_buffer_.albedo_tex_id );
+	glActiveTexture( GL_TEXTURE1 );
+	glBindTexture( GL_TEXTURE_2D, g_buffer_.normals_tex_id );
+	glActiveTexture( GL_TEXTURE2 );
+	glBindTexture( GL_TEXTURE_2D, g_buffer_.depth_tex_id );
 
 	postprocessing_shader_.Bind();
-	postprocessing_shader_.UniformInt( "tex", 0 );
-	postprocessing_shader_.UniformMat4( "mat", view_matrix_ );
 
-	light_source_vertex_buffer_.Bind();
-	glDrawElements( GL_TRIANGLES, light_source_vertex_buffer_.IndexDataSize() / sizeof(unsigned short), GL_UNSIGNED_SHORT, NULL );
+	{
+		float light_pos[3]= { 8.0f, 7.0f, 12.0f };
+		VEC3_CPY( light_pos, level_.GetMonsters()[0]->Pos() );
+		float scale_mat[16];
+		float translate_mat[16];
+		float final_mat[16];
+
+		mxMat4Scale( scale_mat, 4.0f );
+		mxMat4Translate( translate_mat, light_pos );
+		mxMat4Mul( scale_mat, translate_mat, final_mat );
+		mxMat4Mul( final_mat, view_matrix_ );
+
+		postprocessing_shader_.UniformInt( "atex", 0 );
+		postprocessing_shader_.UniformInt( "ntex", 1 );
+		postprocessing_shader_.UniformInt( "dtex", 2 );
+		postprocessing_shader_.UniformMat4( "mat", final_mat );
+
+		postprocessing_shader_.UniformVec3( "lp", light_pos );
+
+		float invert_view_mtrix[16];
+		mxMat4Invert( view_matrix_, invert_view_mtrix );
+		postprocessing_shader_.UniformMat4( "imat", invert_view_mtrix );
+
+		postprocessing_shader_.UniformFloat( "m10", perspective_matrix_[10] );
+		postprocessing_shader_.UniformFloat( "m14", perspective_matrix_[14] );
+
+		light_source_vertex_buffer_.Bind();
+		glDrawElements( GL_TRIANGLES, light_source_vertex_buffer_.IndexDataSize() / sizeof(unsigned short), GL_UNSIGNED_SHORT, NULL );
+	}
 
 }
 
@@ -189,7 +224,7 @@ void mx_Renderer::CreateGBuffer()
 	glFramebufferTexture( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, g_buffer_.normals_tex_id, 0 );
 	glFramebufferTexture( GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, g_buffer_.depth_tex_id, 0 );
 
-	GLenum bufs[2]= { g_buffer_.albedo_tex_id, g_buffer_.normals_tex_id };
+	static const GLenum bufs[2]= { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
 	glDrawBuffers( 2, bufs );
 
 	glBindFramebuffer( GL_FRAMEBUFFER, 0 );
@@ -200,7 +235,6 @@ void mx_Renderer::CalculateMatrices()
 	float translate_mat[16];
 	float rotation_mat[16];
 	float basis_change_mat[16];
-	float perspective_mat[16];
 
 	float translate_vec[3];
 	mxVec3Mul( player_.Pos(), -1.0f, translate_vec );
@@ -216,14 +250,14 @@ void mx_Renderer::CalculateMatrices()
 		mxMat4Mul( basis_change_mat, tmp_mat );
 	}
 
-	mxMat4Perspective( perspective_mat,
+	mxMat4Perspective( perspective_matrix_,
 		float(main_loop_.ViewportWidth())/ float(main_loop_.ViewportHeight()),
 		player_.Fov(),
 		1.0f / 16.0f, 128.0f );
 	
 	mxMat4Mul( translate_mat, rotation_mat, view_matrix_ );
 	mxMat4Mul( view_matrix_, basis_change_mat );
-	mxMat4Mul( view_matrix_, perspective_mat );
+	mxMat4Mul( view_matrix_, perspective_matrix_ );
 }
 
 void mx_Renderer::DrawWorld()
