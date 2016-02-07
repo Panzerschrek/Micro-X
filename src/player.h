@@ -79,6 +79,7 @@ private:
 
 	bool shot_button_pressed_;
 	float last_shot_time_s_;
+	unsigned int shot_side_; // 0 or 1, left or right turret
 
 	bool forward_pressed_, backward_pressed_, left_pressed_, right_pressed_;
 	bool up_pressed_, down_pressed_;

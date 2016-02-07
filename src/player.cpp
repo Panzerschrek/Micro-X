@@ -18,6 +18,7 @@ mx_Player::mx_Player()
 	, aspect_(1.0f), fov_(MX_INITIAL_FOV), target_fov_(MX_INITIAL_FOV)
 	, shot_button_pressed_(false)
 	, last_shot_time_s_(0.0f)
+	, shot_side_(0)
 	, forward_pressed_(false), backward_pressed_(false), left_pressed_(false), right_pressed_(false)
 	, up_pressed_(false), down_pressed_(false)
 	, rotate_up_pressed_(false), rotate_down_pressed_(false), rotate_left_pressed_(false), rotate_right_pressed_(false)
@@ -163,8 +164,27 @@ void mx_Player::Tick()
 	// Shot
 	if( shot_button_pressed_ && total_time - last_shot_time_s_ > 1.0f / 8.0f )
 	{
+		shot_side_^= 1;
+
+		float shot_pos[3];
+		float d_pos[3];
+		float dir[2][3];
+		float result_dir[3];
+
+		static const float c_shot_pos_shift= 0.125f;
+		static const float c_focus_distance= 20.0f;
+		float angle= std::atanf( c_focus_distance / c_shot_pos_shift );
+
+		float shift= (shot_side_ == 0) ? c_shot_pos_shift : -c_shot_pos_shift;
+		mxVec3Mul( axis_[0], shift, d_pos );
+		mxVec3Add( pos_, d_pos, shot_pos );
+
+		mxVec3Mul( axis_[0], -mxSign(shift) * std::cosf(angle), dir[0] );
+		mxVec3Mul( axis_[1], std::sinf(angle), dir[1] );
+		mxVec3Add( dir[0], dir[1], result_dir );
+
 		last_shot_time_s_= total_time;
-		level_->Shot( pos_, axis_[1] );
+		level_->Shot( shot_pos, result_dir );
 	}
 }
 
