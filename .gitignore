@@ -13,6 +13,8 @@ Debug/*
 Release/*
 
 #generated data
+models/*.png
+models/*.mtl
 models/*.mxmd
 models/*.h
 models/*.obj

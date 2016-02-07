@@ -11,6 +11,8 @@ mx_Level::mx_Level( const mx_LevelData& level_data )
 	, monster_count_(0)
 	, bullet_count_(0)
 {
+	mx_Rand rand;
+
 	for( unsigned int i= 0; i < level_data_.sector_count && monster_count_ < MX_MAX_MONSTERS; i++ )
 	{
 		const mx_LevelData::Sector& sector= level_data_.sectors[i];
@@ -40,7 +42,10 @@ mx_Level::mx_Level( const mx_LevelData& level_data )
 		path.points[1][longest_coord]= sector.bb_max[ longest_coord ] - 0.5f;
 		path.path_plane= longest_coord;
 
-		monsters_[ monster_count_ ]= new mx_Monster( pos, &path );
+		monsters_[ monster_count_ ]= new mx_Monster(
+			MonsterType(rand.Rand() % LastMonster),
+			pos,
+			&path );
 		monster_count_++;
 	}
 

@@ -7,6 +7,12 @@ static const float g_white[4]= { 1.0f, 1.0f, 1.0f, 1.0f };
 static const float g_black[4]= { 0.0f, 0.0f, 0.0f, 0.0f };
 static const float g_one= 1.0f;
 
+static const float g_monsters_body_color[4]= { 0.6f, 0.6f, 0.6f, 0.0f };
+static const float g_monsters_eyes_bg_color[4]= { 0.1f, 0.1f, 0.1f, 0.0f };
+static const float g_monsters_eyes_color[4]= { 1.0f, 0.2f, 0.2f, 0.0f };
+static const float g_monsters_antenna_color[4]= { 1.0f, 0.2f, 0.2f, 0.0f };
+static const float g_monsters_dark_color[4]= { 0.08f, 0.08f, 0.08f, 0.0f };
+
 static void GenNoisedColorMix(
 	mx_Texture * texture,
 	const float* bg_color,
@@ -91,30 +97,49 @@ void mxGenSteelPlateTexture( mx_Texture * texture )
 
 static void GenOctoRobotTexture( mx_Texture * texture )
 {
-	static const float c_bg_color[4]= { 0.6f, 0.6f, 0.6f, 0.0f };
-	texture->Fill( c_bg_color );
+	texture->Fill( g_monsters_body_color );
 
 	// Eyes
-	static const float c_dark_gray[4]= { 0.1f, 0.1f, 0.1f, 0.0f };
-	texture->FillRect( 29, 32, 68, 68, c_dark_gray );
-	static const float c_red[4]= { 1.0f, 0.2f, 0.2f, 0.0f };
-	texture->FillEllipse( 62, 67, 12, c_red );
+	texture->FillRect( 29, 32, 68, 68, g_monsters_eyes_bg_color );
+	texture->FillEllipse( 62, 67, 12, g_monsters_eyes_color );
 
 	// Radiator bars
 	for( unsigned int i= 0; i < 4; i++ )
-		texture->FillRect( 332 + 36 * i, 50, 20, 72, c_dark_gray );
+		texture->FillRect( 332 + 36 * i, 50, 20, 72, g_monsters_dark_color );
 
 	// Rockets battery
 	for( unsigned int i= 0; i < 3; i++ )
 	{
-		texture->FillEllipse( 48 + i * 38, 250, 14, c_dark_gray );
-		texture->FillEllipse( 48 + i * 38, 250, 8, c_red );
+		texture->FillEllipse( 48 + i * 38, 250, 14, g_monsters_dark_color );
+		texture->FillEllipse( 48 + i * 38, 250, 8, g_monsters_eyes_color );
 
-		texture->FillEllipse( 208 + i * 38, 256, 14, c_dark_gray );
+		texture->FillEllipse( 208 + i * 38, 256, 14, g_monsters_dark_color );
 	}
 
 	// Antena
-	texture->FillRect( 336, 264, 70, 70, c_red );
+	texture->FillRect( 336, 264, 70, 70, g_monsters_antenna_color );
+
+	texture->LinearNormalization( g_one );
+}
+
+static void GenPyramidRobotTexture( mx_Texture * texture )
+{
+	static const float c_dark_gray[4]= { 0.5f, 0.5f, 0.5f, 0.0f };
+	texture->Fill( g_monsters_body_color );
+
+	// Antenna
+	texture->FillRect( 436, 24, 48, 48, g_monsters_antenna_color );
+
+	// Eyes
+	texture->FillRect( 116, 32, 52, 52, g_monsters_dark_color );
+	texture->FillEllipse( 140, 58, 8, g_monsters_eyes_color );
+
+	// Engine
+	static const float c_engine_color[4]= {0.1f, 0.05f, 0.4f, 0.0f };
+	texture->FillRect( 15, 16, 98, 92, c_engine_color );
+
+	// Machinegun
+	texture->FillRect( 180, 64, 40, 40, g_monsters_dark_color );
 
 	texture->LinearNormalization( g_one );
 }
@@ -122,4 +147,5 @@ static void GenOctoRobotTexture( mx_Texture * texture )
 void (* const gen_monsters_textures_func_table[LastMonster])( mx_Texture * texture )=
 {
 	GenOctoRobotTexture,
+	GenPyramidRobotTexture,
 };

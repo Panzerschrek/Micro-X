@@ -8,6 +8,7 @@
 enum MonsterType
 {
 	MonsterOctoRobot,
+	PyramidRobot,
 	LastMonster
 };
 
@@ -23,7 +24,7 @@ struct mx_PatrolPath
 class mx_Monster : public mx_Pawn, public mx_Coroutine
 {
 public:
-	mx_Monster( const float* pos, const mx_PatrolPath* patrol_path= NULL );
+	mx_Monster( MonsterType type, const float* pos, const mx_PatrolPath* patrol_path= NULL );
 	~mx_Monster();
 
 	MonsterType GetType() const;

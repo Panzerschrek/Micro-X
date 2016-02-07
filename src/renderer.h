@@ -43,6 +43,8 @@ private:
 
 	mx_GLSLProgram monsters_shader_;
 	mx_VertexBuffer monsters_vertex_buffer_;
+	unsigned int monsters_models_first_index_[ LastMonster ];
+	unsigned int monsters_models_index_count_[ LastMonster ];
 
 	mx_GLSLProgram plasma_ball_shader_;
 	mx_VertexBuffer plasma_balls_vertex_buffer_;

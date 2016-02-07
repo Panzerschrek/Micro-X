@@ -98,16 +98,26 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 	}
 
 	{ // monsters vbo
-		mx_DrawingModel model;
-		model.LoadFromMFMD( mx_Models::monsters_models[0] );
-		model.Scale( mx_Models::monsters_models_scale[0] );
+		mx_DrawingModel combined_model;
+
+		for( unsigned int i= 0; i < LastMonster; i++ )
+		{
+			mx_DrawingModel model;
+			model.LoadFromMFMD( mx_Models::monsters_models[i] );
+			model.Scale( mx_Models::monsters_models_scale[i] );
+
+			monsters_models_first_index_[i]= combined_model.GetIndexCount();
+			monsters_models_index_count_[i]= model.GetIndexCount();
+
+			combined_model.Add( &model );
+		}
 
 		monsters_vertex_buffer_.VertexData(
-			model.GetVertexData(),
-			model.GetVertexCount() * sizeof(mx_DrawingModelVertex),
+			combined_model.GetVertexData(),
+			combined_model.GetVertexCount() * sizeof(mx_DrawingModelVertex),
 			sizeof(mx_DrawingModelVertex) );
 
-		monsters_vertex_buffer_.IndexData( model.GetIndexData(), model.GetIndexCount() * sizeof(unsigned short) );
+		monsters_vertex_buffer_.IndexData( combined_model.GetIndexData(), combined_model.GetIndexCount() * sizeof(unsigned short) );
 
 		mx_DrawingModelVertex v;
 		monsters_vertex_buffer_.VertexAttrib( 0, 3, GL_FLOAT, false, ((char*)v.pos) - ((char*)&v) );
@@ -156,7 +166,7 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 
 			glTexSubImage3D(
 				GL_TEXTURE_2D_ARRAY, 0,
-				0, 0, 0,
+				0, 0, i,
 				tex.SizeX(), tex.SizeY(), 1,
 				GL_RGBA, GL_UNSIGNED_BYTE, tex.GetNormalizedData() );
 		}
@@ -368,7 +378,11 @@ void mx_Renderer::DrawMonsters()
 
 		monsters_shader_.UniformFloat( "texn", float(monster->GetType()) + 0.5f );
 
-		glDrawElements( GL_TRIANGLES, monsters_vertex_buffer_.IndexDataSize() / sizeof(unsigned short), GL_UNSIGNED_SHORT, NULL );
+		glDrawElements(
+			GL_TRIANGLES,
+			monsters_models_index_count_[monster->GetType()],
+			GL_UNSIGNED_SHORT,
+			(void*)( monsters_models_first_index_[monster->GetType()] * sizeof(unsigned short) ) );
 	}
 
 	glDisable (GL_CULL_FACE );
