@@ -286,6 +286,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\fwd.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\glsl_program.h"
 				>
 			</File>

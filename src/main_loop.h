@@ -2,13 +2,10 @@
 
 #include <windows.h>
 
+#include "fwd.h"
+
 #define MX_MIN_VIEWPORT_WIDTH  800
 #define MX_MIN_VIEWPORT_HEIGHT 600
-
-class mx_Level;
-class mx_Player;
-class mx_Renderer;
-class mx_Text;
 
 class mx_MainLoop
 {

@@ -1,8 +1,7 @@
 ﻿#pragma once
 
+#include "fwd.h"
 #include "pawn.h"
-
-class mx_Level;
 
 class mx_Player : public mx_Pawn
 {

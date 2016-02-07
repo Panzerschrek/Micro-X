@@ -1,13 +1,10 @@
 #pragma once
 
 #include "drawing_model.h"
+#include "fwd.h"
 #include "glsl_program.h"
 #include "level_generator.h"
 #include "vertex_buffer.h"
-
-class mx_Level;
-class mx_MainLoop;
-class mx_Player;
 
 class mx_Renderer
 {

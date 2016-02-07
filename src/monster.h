@@ -5,6 +5,9 @@
 #include "coroutine.h"
 #include "pawn.h"
 
+class mx_Player;
+class mx_Level;
+
 enum MonsterType
 {
 	MonsterOctoRobot,

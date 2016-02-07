@@ -7,8 +7,6 @@
 #define MX_MAX_MONSTERS 256
 #define MX_MAX_BULLETS 512
 
-class mx_Monster;
-
 struct mx_Bullet
 {
 	float pos[3];
