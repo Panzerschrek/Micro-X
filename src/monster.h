@@ -3,10 +3,9 @@
 #include <cstdlib>
 
 #include "coroutine.h"
+#include "fwd.h"
+#include "mx_math.h"
 #include "pawn.h"
-
-class mx_Player;
-class mx_Level;
 
 enum MonsterType
 {
@@ -27,7 +26,14 @@ struct mx_PatrolPath
 class mx_Monster : public mx_Pawn, public mx_Coroutine
 {
 public:
-	mx_Monster( MonsterType type, const float* pos, const mx_PatrolPath* patrol_path= NULL );
+	mx_Monster(
+		MonsterType type,
+		const mx_LevelSector& home_sector,
+		mx_Level& level,
+		const mx_Player& player,
+		const float* pos,
+		const mx_PatrolPath* patrol_path= NULL );
+
 	~mx_Monster();
 
 	MonsterType GetType() const;
@@ -42,13 +48,25 @@ private:
 	mx_Monster(const mx_Monster&);
 	mx_Monster& operator=(const mx_Monster&);
 
+	bool CanAttack();
+	bool NeedStopAttack();
+	void Attack();
+
+	bool SelectTargetPosition( float* out_pos );
+
 private:
 	const MonsterType type_;
+
+	const mx_LevelSector& home_sector_;
+	mx_Level& level_;
+	const mx_Player& player_;
 
 	int health_;
 
 	mx_PatrolPath patrol_path_;
 	const bool have_patrol_path_;
+
+	mx_Rand rand_;
 
 	bool destroy_;
 };

@@ -384,12 +384,12 @@ void mx_LevelGenerator::GenerateMeshes()
 	out_level_data_.triangles= new mx_LevelTriangle[ out_level_data_.triangles_capacity ];
 
 	out_level_data_.sector_count= 0;
-	out_level_data_.sectors= new mx_LevelData::Sector[ room_count_ + connection_count_ ];
+	out_level_data_.sectors= new mx_LevelSector[ room_count_ + connection_count_ ];
 
 	unsigned int* room_to_sector_index= new unsigned int[ room_count_ ];
 	unsigned int* connection_to_sector_index= new unsigned int[ connection_count_ ];
 
-	mx_LevelData::Sector* sector= out_level_data_.sectors;
+	mx_LevelSector* sector= out_level_data_.sectors;
 	for( unsigned int i= 0; i < room_count_; i++ )
 	{
 		// Discard unlinked level parts
@@ -397,7 +397,7 @@ void mx_LevelGenerator::GenerateMeshes()
 		{
 			SetupRoomSector( rooms_ + i, sector );
 
-			sector->type= mx_LevelData::Sector::ROOM;
+			sector->type= mx_LevelSector::ROOM;
 			sector->first_triangle= out_level_data_.triangle_count;
 			AddRoomCube( rooms_ + i );
 			sector->triangles_count= out_level_data_.triangle_count - sector->first_triangle;
@@ -416,7 +416,7 @@ void mx_LevelGenerator::GenerateMeshes()
 		{
 			SetupConnectionSector( connections_ + i, sector );
 
-			sector->type= mx_LevelData::Sector::CONNECTION;
+			sector->type= mx_LevelSector::CONNECTION;
 			sector->first_triangle= out_level_data_.triangle_count;
 			AddConnectionCube( connections_ + i );
 			sector->triangles_count= out_level_data_.triangle_count - sector->first_triangle;
@@ -741,7 +741,7 @@ void mx_LevelGenerator::AddConnectionCube( const Connection* connection )
 	out_level_data_.triangle_count+= c_side_count * 2;
 }
 
-void mx_LevelGenerator::SetupRoomSector( const Room* room, mx_LevelData::Sector* sector )
+void mx_LevelGenerator::SetupRoomSector( const Room* room, mx_LevelSector* sector )
 {
 	sector->planes_count= 6;
 	for( unsigned int i= 0; i < 6; i++ )
@@ -768,7 +768,7 @@ void mx_LevelGenerator::SetupRoomSector( const Room* room, mx_LevelData::Sector*
 		}
 }
 
-void mx_LevelGenerator::SetupConnectionSector( const Connection* connection, mx_LevelData::Sector* sector )
+void mx_LevelGenerator::SetupConnectionSector( const Connection* connection, mx_LevelSector* sector )
 {
 	for( unsigned int i= 0; i < 3; i++ )
 	{

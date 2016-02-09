@@ -35,34 +35,33 @@ struct mx_Plane
 	float dist;
 };
 
+struct mx_LevelSector
+{
+	enum
+	{
+		ROOM,
+		CONNECTION,
+	} type;
+
+	float bb_min[3];
+	float bb_max[3];
+
+	mx_Plane planes[16];
+	unsigned int planes_count;
+
+	mx_Light lights[8];
+	unsigned int light_count;
+
+	mx_LevelSector* connections[MX_MAX_ROOM_CONNECTIONS];
+	unsigned int connections_count;
+
+	unsigned int first_triangle;
+	unsigned int triangles_count;
+};
+
 struct mx_LevelData
 {
-
-	struct Sector
-	{
-		enum
-		{
-			ROOM,
-			CONNECTION,
-		} type;
-
-		float bb_min[3];
-		float bb_max[3];
-
-		mx_Plane planes[16];
-		unsigned int planes_count;
-
-		mx_Light lights[8];
-		unsigned int light_count;
-
-		Sector* connections[MX_MAX_ROOM_CONNECTIONS];
-		unsigned int connections_count;
-
-		unsigned int first_triangle;
-		unsigned int triangles_count;
-	};
-
-	Sector* sectors;
+	mx_LevelSector* sectors;
 	unsigned int sector_count;
 
 	mx_LevelVertex* vertices;
@@ -140,8 +139,8 @@ private:
 	void ReserveTrianglesAndVertices( unsigned int new_triangle_count, unsigned int new_vertex_count );
 	void AddRoomCube( const Room* room );
 	void AddConnectionCube( const Connection* connection );
-	void SetupRoomSector( const Room* room, mx_LevelData::Sector* sector );
-	void SetupConnectionSector( const Connection* connection, mx_LevelData::Sector* sector );
+	void SetupRoomSector( const Room* room, mx_LevelSector* sector );
+	void SetupConnectionSector( const Connection* connection, mx_LevelSector* sector );
 	
 	void CalculateNormals();
 	void ClaculateTextureCoordinates();

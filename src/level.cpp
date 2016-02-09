@@ -6,8 +6,9 @@
 
 #include "level.h"
 
-mx_Level::mx_Level( const mx_LevelData& level_data )
-	: level_data_(level_data)
+mx_Level::mx_Level( const mx_LevelData& level_data, mx_Player& player )
+	: player_(player)
+	, level_data_(level_data)
 	, monster_count_(0)
 	, bullet_count_(0)
 {
@@ -15,8 +16,8 @@ mx_Level::mx_Level( const mx_LevelData& level_data )
 
 	for( unsigned int i= 0; i < level_data_.sector_count && monster_count_ < MX_MAX_MONSTERS; i++ )
 	{
-		const mx_LevelData::Sector& sector= level_data_.sectors[i];
-		if( sector.type != mx_LevelData::Sector::ROOM )
+		const mx_LevelSector& sector= level_data_.sectors[i];
+		if( sector.type != mx_LevelSector::ROOM )
 			continue;
 		
 		float pos[3];
@@ -44,6 +45,9 @@ mx_Level::mx_Level( const mx_LevelData& level_data )
 
 		monsters_[ monster_count_ ]= new mx_Monster(
 			MonsterType(rand.Rand() % LastMonster),
+			sector,
+			*this,
+			player_,
 			pos,
 			&path );
 		monster_count_++;
@@ -60,9 +64,9 @@ mx_Level::~mx_Level()
 {
 }
 
-const mx_LevelData::Sector* mx_Level::FindSectorForPoint( const float* point ) const
+const mx_LevelSector* mx_Level::FindSectorForPoint( const float* point ) const
 {
-	for(const  mx_LevelData::Sector* s= level_data_.sectors, *s_end= level_data_.sectors + level_data_.sector_count;
+	for(const mx_LevelSector* s= level_data_.sectors, *s_end= level_data_.sectors + level_data_.sector_count;
 		s < s_end;
 		s++ )
 	{
@@ -81,7 +85,7 @@ const mx_LevelData::Sector* mx_Level::FindSectorForPoint( const float* point ) c
 	return NULL;
 }
 
-bool mx_Level::CollideWithSectorTriangles( const float* in_pos, float radius, const mx_LevelData::Sector* sector, float* out_pos ) const
+bool mx_Level::CollideWithSectorTriangles( const float* in_pos, float radius, const mx_LevelSector* sector, float* out_pos ) const
 {
 	VEC3_CPY( out_pos, in_pos );
 
@@ -178,6 +182,8 @@ void mx_Level::Tick()
 		for( unsigned int j= 0; j < monster_count_; j++ )
 		{
 			mx_Monster* monster= monsters_[j];
+			if( bullet.owner == monster )
+				continue;
 
 			float monster_space_pos[3];
 			float monster_space_dir[3];
@@ -210,7 +216,7 @@ void mx_Level::Tick()
 		if( hited_monster )
 			hited_monster->Hit( 20 );
 
-		const mx_LevelData::Sector* sector= FindSectorForPoint( bullet.pos );
+		const mx_LevelSector* sector= FindSectorForPoint( bullet.pos );
 		if( sector )
 		{
 			for( unsigned int i= sector->first_triangle , i_end= sector->first_triangle + sector->triangles_count;
@@ -262,12 +268,13 @@ kill:
 	}
 }
 
-void mx_Level::Shot( const float* pos, const float* normalized_dir )
+void mx_Level::Shot( mx_Pawn* shooter, const float* pos, const float* normalized_dir )
 {
 	MX_ASSERT( bullet_count_ <= MX_MAX_BULLETS );
 
 	mx_Bullet& bullet= bullets_[bullet_count_];
 
+	bullet.owner= shooter;
 	bullet.birth_time= mx_MainLoop::Instance()->GetTime();
 
 	VEC3_CPY( bullet.pos, pos );

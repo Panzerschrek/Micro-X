@@ -16,6 +16,7 @@
 mx_Player::mx_Player()
 	: level_(NULL)
 	, aspect_(1.0f), fov_(MX_INITIAL_FOV), target_fov_(MX_INITIAL_FOV)
+	, sector_(NULL)
 	, shot_button_pressed_(false)
 	, last_shot_time_s_(0.0f)
 	, shot_side_(0)
@@ -152,12 +153,12 @@ void mx_Player::Tick()
 	if( !debug_noclip_ )
 #endif
 	{
-		const mx_LevelData::Sector* sector= level_->FindSectorForPoint( pos_ );
-		if( sector )
+		sector_= level_->FindSectorForPoint( pos_ );
+		if( sector_ )
 		{
-			CollideWithSector(sector);
-			for( unsigned int i= 0; i < sector->connections_count; i++ )
-				CollideWithSector( sector->connections[i] );
+			CollideWithSector(sector_);
+			for( unsigned int i= 0; i < sector_->connections_count; i++ )
+				CollideWithSector( sector_->connections[i] );
 		}
 	}
 
@@ -184,7 +185,7 @@ void mx_Player::Tick()
 		mxVec3Add( dir[0], dir[1], result_dir );
 
 		last_shot_time_s_= total_time;
-		level_->Shot( shot_pos, result_dir );
+		level_->Shot( this, shot_pos, result_dir );
 	}
 }
 
@@ -207,7 +208,7 @@ void mx_Player::ZoomOut()
 	if( target_fov_ > MX_MAX_FOV ) target_fov_= MX_MAX_FOV;
 }
 
-void mx_Player::CollideWithSector( const mx_LevelData::Sector* sector )
+void mx_Player::CollideWithSector( const mx_LevelSector* sector )
 {
 	float new_pos[3];
 	if( level_->CollideWithSectorTriangles( pos_, 0.3f, sector, new_pos ) )

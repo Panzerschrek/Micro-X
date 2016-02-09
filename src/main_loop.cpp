@@ -175,7 +175,7 @@ mx_MainLoop::mx_MainLoop(
 
 	mx_LevelGenerator* generator= new mx_LevelGenerator();
 	generator->Generate();
-	level_= new mx_Level( generator->GetLevelData() );
+	level_= new mx_Level( generator->GetLevelData(), *player_ );
 	delete generator;
 
 	player_->SetLevel(level_);

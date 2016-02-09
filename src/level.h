@@ -9,6 +9,7 @@
 
 struct mx_Bullet
 {
+	mx_Pawn* owner;
 	float pos[3];
 	float speed[3];
 	float birth_time;
@@ -17,7 +18,7 @@ struct mx_Bullet
 class mx_Level
 {
 public:
-	mx_Level( const mx_LevelData& level_data );
+	mx_Level( const mx_LevelData& level_data, mx_Player& player );
 	~mx_Level();
 
 	const mx_LevelVertex* GetVertices() const;
@@ -34,22 +35,22 @@ public:
 
 	const mx_LevelData& GetLevelData() const;
 
-	const mx_LevelData::Sector* FindSectorForPoint( const float* point ) const;
-
+	const mx_LevelSector* FindSectorForPoint( const float* point ) const;
 
 	bool CollideWithSectorTriangles(
 		const float* in_pos, float radius,
-		const mx_LevelData::Sector* sector,
+		const mx_LevelSector* sector,
 		float* out_pos ) const;
 
 	void Tick();
-	void Shot( const float* pos, const float* normalized_dir );
+	void Shot( mx_Pawn* shooter, const float* pos, const float* normalized_dir );
 
 private:
 	mx_Level(const mx_Level&);
 	mx_Level& operator=(const mx_Level&);
 
 private:
+	mx_Player& player_;
 	const mx_LevelData level_data_;
 
 	mx_DrawingModel monsters_models_[ LastMonster ];

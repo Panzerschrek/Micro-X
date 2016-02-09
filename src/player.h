@@ -13,6 +13,8 @@ public:
 
 	const float Fov() const;
 
+	const mx_LevelSector* GetSector() const;
+
 	void Tick();
 	void Rotate( float pixel_delta_x, float pixel_delta_y );
 
@@ -56,7 +58,7 @@ public:
 #endif
 
 private:
-	void CollideWithSector( const mx_LevelData::Sector* sector );
+	void CollideWithSector( const mx_LevelSector* sector );
 
 private:
 	// 0 - pitch / tangaž
@@ -75,6 +77,8 @@ private:
 
 	float controller_rotation_[3];
 	float controller_rotation_accumulated_[3];
+
+	const mx_LevelSector* sector_;
 
 	bool shot_button_pressed_;
 	float last_shot_time_s_;
@@ -104,6 +108,11 @@ inline const float* mx_Player::Angle() const
 inline const float mx_Player::Fov() const
 {
 	return fov_;
+}
+
+inline const mx_LevelSector* mx_Player::GetSector() const
+{
+	return sector_;
 }
 
 inline void mx_Player::ShotButtonPressed()
