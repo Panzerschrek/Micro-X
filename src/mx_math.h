@@ -1,6 +1,5 @@
 #pragma once
 #include <cmath>
-#include <cstring>
 
 #define MX_PI   3.141592653589793238462643383279f
 #define MX_2PI  6.283185307179586476925286766559f
@@ -16,27 +15,10 @@
 #define MX_SQRT_2 1.4142135623730950488016887242097f
 #define MX_INV_SQRT_2 0.70710678118654752440084436210485f
 
-inline float mxInf()
-{
-	float f;
-	unsigned int ui= 0x7F800000;
-	std::memcpy( &f, &ui, sizeof(f) );
-	return f;
-}
-
-inline float mxClamp( float min, float max, float x )
-{
-	if( x < min ) return min;
-	if( x > max ) return max;
-	return x;
-}
-
-inline float mxSign( float x )
-{
-	if( x > 0.0f ) return +1.0f;
-	if( x < 0.0f ) return -1.0f;
-	return 0.0f;
-}
+float mxInf();
+float mxClamp( float min, float max, float x );
+float mxSign( float x );
+float mxAcosClamped( float x );
 
 inline float mxRound( float x )
 {

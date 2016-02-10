@@ -1,3 +1,5 @@
+#include <cstring>
+
 #include "level.h"
 #include "main_loop.h"
 #include "mx_math.h"
@@ -12,10 +14,15 @@ static const float g_axises[3][3][3]=
 	{ {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, -1.0f, 0.0f} },
 };
 
+static const float g_max_attack_moving_time_s= 1.0f;
+
 static const float g_speed_in_patrol= 0.8f;
 static const float g_speed_in_attack= 2.0f;
 
 static const float g_rotation_speed_in_patrol= 1.0f;
+
+static const float g_angle_sin_eps= 0.001f;
+static const float g_almost_one= 0.9999f;
 
 mx_Monster::mx_Monster(
 	MonsterType type,
@@ -92,34 +99,35 @@ rotate_to_target:
 	{
 		Attack();
 
+		bool rotation_finished= false;
+
 		float vec_to_target[3];
 		mxVec3Sub( patrol_path_.points[ target_path_point ], pos_, vec_to_target );
 		mxVec3Normalize( vec_to_target );
 
-		float cross[3];
+		float rotation_axis[3];
+		mxVec3Cross( axis_[1], vec_to_target, rotation_axis );
 		float dot= mxVec3Dot( vec_to_target, axis_[1] );
-		mxVec3Cross( axis_[1], vec_to_target, cross );
-		float projection_to_axis2= mxVec3Dot( cross, axis_[2] );
-		float angle= std::asinf( mxClamp( -0.99f, 0.99f, mxVec3Len(cross) * mxSign(projection_to_axis2) ) );
 
-		// Hack for 180deg angle
-		if( dot < 0.0f && angle < 0.001f )
-			angle= 0.001f;
-
-		float da= g_rotation_speed_in_patrol * main_loop.GetTickTime();
-
-		bool rotation_finished= false;
-		if( dot > 0.0f && da >= std::fabsf(angle) )
+		if( mxVec3SquareLen( rotation_axis ) < g_angle_sin_eps )
 		{
-			da= std::fabsf(angle);
-			rotation_finished= true;
+			VEC3_CPY( rotation_axis, axis_[2] );
 		}
+		{
+			float angle= mxAcosClamped( dot );
+			float d_angle= g_rotation_speed_in_patrol * main_loop.GetTickTime();
+			if( d_angle >= angle )
+			{
+				d_angle= angle;
+				rotation_finished= true;
+			}
 
-		float mat[16];
-		mxMat4RotateAroundVector( mat, axis_[2], da );
-		mxVec3Mat4Mul( axis_[0], mat );
-		mxVec3Mat4Mul( axis_[1], mat );
-		CorrectAxis();
+			float rot_mat[16];
+			mxMat4RotateAroundVector( rot_mat, rotation_axis, d_angle );
+			for( unsigned int i= 0; i < 3; i++ )
+				mxVec3Mat4Mul( axis_[i], rot_mat );
+			CorrectAxis();
+		}
 
 		if( rotation_finished )
 			goto move_to_target;
@@ -183,29 +191,22 @@ void mx_Monster::Attack()
 			mxVec3Normalize( vec_to_player );
 			mxVec3Cross( axis_[1], vec_to_player, rotation_axis );
 			float dot= mxVec3Dot( vec_to_player, axis_[1] );
-			float rotation_axis_length= mxVec3Len( rotation_axis );
 
-			static const float c_angle_sin_eps= 0.001f;
-			if( dot < 0.0f && rotation_axis_length < c_angle_sin_eps )
+			if( mxVec3SquareLen( rotation_axis ) < g_angle_sin_eps )
 			{
-				// if opposite to needed direction, select random turn direction
 				for( unsigned int i= 0; i < 3; i++ )
 					rotation_axis[i]= rand_.RandF( -0.1f, 0.1f );
-				rotation_axis_length= mxVec3Len( rotation_axis );
 			}
-			if( rotation_axis_length >= c_angle_sin_eps )
-			{
-				float time_left= vec_to_target_length / g_speed_in_attack;
-				float angle= std::asin( rotation_axis_length );
-				float rot_speed= angle / time_left;
-				float d_angle= rot_speed * main_loop.GetTickTime();
+			float time_left= vec_to_target_length / g_speed_in_attack;
+			float angle= mxAcosClamped( dot );
+			float rot_speed= angle / time_left;
+			float d_angle= rot_speed * main_loop.GetTickTime();
 
-				float rot_mat[16];
-				mxMat4RotateAroundVector( rot_mat, rotation_axis, d_angle );
-				for( unsigned int i= 0; i < 3; i++ )
-					mxVec3Mat4Mul( axis_[i], rot_mat );
-				CorrectAxis();
-			}
+			float rot_mat[16];
+			mxMat4RotateAroundVector( rot_mat, rotation_axis, d_angle );
+			for( unsigned int i= 0; i < 3; i++ )
+				mxVec3Mat4Mul( axis_[i], rot_mat );
+			CorrectAxis();
 
 			// Move
 			float d_pos[3];
@@ -242,7 +243,7 @@ void mx_Monster::Attack()
 
 bool mx_Monster::SelectTargetPosition( float* out_pos )
 {
-	for( unsigned int p= 0; p < 128; p++ )
+	for( unsigned int p= 0; p < 256; p++ )
 	{
 		static const float c_min_distance= 1.0f;
 		static const float c_max_distance= 6.0f;
@@ -256,7 +257,7 @@ bool mx_Monster::SelectTargetPosition( float* out_pos )
 			square_lengh+= vec[i] * vec[i];
 		}
 		if( square_lengh > c_max_distance * c_max_distance ) continue; // reject points outside identity sphere
-		if( square_lengh < c_min_distance * c_min_distance ) continue;
+		if( square_lengh < c_min_distance * c_min_distance ) continue; // too close
 
 		mxVec3Add( player_.Pos(), vec, out_pos );
 
@@ -264,6 +265,15 @@ bool mx_Monster::SelectTargetPosition( float* out_pos )
 			if( out_pos[i] < home_sector_.bb_min[i] + c_radius ||
 				out_pos[i] > home_sector_.bb_max[i] - c_radius )
 				goto next;
+
+		float movemend_square_dist= mxSquareDistance( out_pos, pos_ );
+		if( movemend_square_dist >
+			g_speed_in_attack * g_speed_in_attack *
+			g_max_attack_moving_time_s * g_max_attack_moving_time_s )
+			continue; // too long movement
+
+		if( movemend_square_dist > square_lengh * 2.0f ) // movement segment is to close to center point
+			continue;
 
 		return true;
 	next:;

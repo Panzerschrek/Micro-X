@@ -1,3 +1,5 @@
+#include <cstring>
+
 #include "mx_math.h"
 
 namespace Mat4InvertData
@@ -32,6 +34,33 @@ namespace Mat4InvertData
 		0, 1, 2, 4, 5, 6, 8,  9, 10
 	};
 };
+
+float mxInf()
+{
+	float f;
+	unsigned int ui= 0x7F800000;
+	std::memcpy( &f, &ui, sizeof(f) );
+	return f;
+}
+
+float mxClamp( float min, float max, float x )
+{
+	if( x < min ) return min;
+	if( x > max ) return max;
+	return x;
+}
+
+float mxSign( float x )
+{
+	if( x > 0.0f ) return +1.0f;
+	if( x < 0.0f ) return -1.0f;
+	return 0.0f;
+}
+
+float mxAcosClamped( float x )
+{
+	return std::acosf( mxClamp( -1.0f, 1.0f, x ) );
+}
 
 void mxVec3Mul( const float* v, float s, float* v_out )
 {
