@@ -51,8 +51,8 @@ private:
 	float view_matrix_[16];
 	float z_near_, z_far_;
 
-	GLuint tex_id_;
-	GLuint normal_tex_id_;
+	GLuint world_texture_array_;
+	GLuint world_normal_maps_array_;
 	GLuint monsters_textures_array_id_;
 
 	bool screen_buffers_initialized_;

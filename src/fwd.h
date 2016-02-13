@@ -11,3 +11,4 @@ class mx_Pawn;
 class mx_Player;
 class mx_Renderer;
 class mx_Text;
+class mx_Texture;

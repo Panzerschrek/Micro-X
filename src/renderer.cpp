@@ -84,6 +84,7 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 		world_vertex_buffer_.VertexAttrib( 2, 3, GL_BYTE, true, ((char*)v.tangent) - ((char*)&v) );
 		world_vertex_buffer_.VertexAttrib( 3, 3, GL_BYTE, true, ((char*)v.normal) - ((char*)&v) );
 		world_vertex_buffer_.VertexAttrib( 4, 2, GL_FLOAT, false, ((char*)v.tex_coord) - ((char*)&v) );
+		world_vertex_buffer_.VertexAttrib( 5, 1, GL_UNSIGNED_BYTE, false, ((char*)&v.tex_id) - ((char*)&v) );
 	}
 	{ // World shader
 		world_shader_.SetAttribLocation( "p", 0 );
@@ -91,6 +92,7 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 		world_shader_.SetAttribLocation( "t", 2 );
 		world_shader_.SetAttribLocation( "n", 3 );
 		world_shader_.SetAttribLocation( "tc", 4 );
+		world_shader_.SetAttribLocation( "texn", 5 );
 		world_shader_.SetFragDataLocation( "c_", 0 );
 		world_shader_.SetFragDataLocation( "n_", 1 );
 
@@ -150,46 +152,46 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 		monsters_shader_.FindUniforms( uniforms, sizeof(uniforms) / sizeof(char*) );
 	}
 	{
-		mx_Texture texture( 10, 10 );
-		mxGenGraniteTexture( &texture );
-		mxGenSteelPlateTexture( &texture );
+		mx_Texture tex( 10, 10 );
 
-		glGenTextures( 1, &tex_id_ );
-		glBindTexture( GL_TEXTURE_2D, tex_id_ );
-
-		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8,
-			texture.SizeX(), texture.SizeY(), 0,
-			GL_RGBA, GL_UNSIGNED_BYTE, texture.GetNormalizedData() );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
-		glGenerateMipmap( GL_TEXTURE_2D );
-
+		for( unsigned int t= 0; t < 2; t++ )
 		{
-			static const float c_low[4]= { 0.0f, 0.0f, 0.0f, 0.0f };
-			static const float c_height[4]= { 1.0f, 1.0f, 1.0f, 1.0f };
-			texture.Fill( c_low );
+			GLuint& tex_id= t == 0 ? world_texture_array_ : world_normal_maps_array_;
 
-			for( unsigned int y= 0; y < 16; y++ )
-			for( unsigned int x= 0; x < 16; x++ )
-				texture.FillEllipse( x * 64 + 32, y * 64 + 32, 20, c_height );
+			glGenTextures( 1, &tex_id );
+			glBindTexture( GL_TEXTURE_2D_ARRAY, tex_id );
 
-			texture.GenNormalMap();
-			// Map [-1;1] to [0;1]
-			static const float k[4]= { 0.5f, 0.5f, 0.5f, 0.5f };
-			texture.Mul(k);
-			texture.Add(k);
-			texture.LinearNormalization(1.0f);
-		}
+			glTexImage3D(
+				GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8,
+				tex.SizeX(), tex.SizeY(), LastLevelTexture,
+				0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
 
-		glGenTextures( 1, &normal_tex_id_ );
-		glBindTexture( GL_TEXTURE_2D, normal_tex_id_ );
+			for( unsigned int i= 0; i < LastLevelTexture; i++ )
+			{
+				if( t == 0 )
+					gen_level_textures_func_table[i]( &tex );
+				else
+				{
+					gen_level_textures_height_map_func_table[i]( &tex );
+					tex.GenNormalMap();
 
-		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8,
-			texture.SizeX(), texture.SizeY(), 0,
-			GL_RGBA, GL_UNSIGNED_BYTE, texture.GetNormalizedData() );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
-		glGenerateMipmap( GL_TEXTURE_2D );
+					// map from range [-1; 1] to range [0; 1]
+					static const float k[4]= { 0.5f, 0.5f, 0.5f, 0.5f };
+					tex.Mul(k);
+					tex.Add(k);
+					tex.LinearNormalization(1.0f);
+				}
+
+				glTexSubImage3D(
+				GL_TEXTURE_2D_ARRAY, 0,
+				0, 0, i,
+				tex.SizeX(), tex.SizeY(), 1,
+				GL_RGBA, GL_UNSIGNED_BYTE, tex.GetNormalizedData() );
+			}
+			glTexParameteri( GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+			glTexParameteri( GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+			glGenerateMipmap( GL_TEXTURE_2D_ARRAY );
+		} // for diffuse and normal
 	}
 	{ // monsters textures
 		mx_Texture tex( 9, 9 );
@@ -401,10 +403,10 @@ void mx_Renderer::CalculateMatrices()
 void mx_Renderer::DrawWorld()
 {
 	glActiveTexture( GL_TEXTURE0 );
-	glBindTexture( GL_TEXTURE_2D, tex_id_ );
+	glBindTexture( GL_TEXTURE_2D_ARRAY, world_texture_array_ );
 
 	glActiveTexture( GL_TEXTURE1 );
-	glBindTexture( GL_TEXTURE_2D, normal_tex_id_ );
+	glBindTexture( GL_TEXTURE_2D_ARRAY, world_normal_maps_array_ );
 
 	world_shader_.Bind();
 	world_shader_.UniformMat4( "mat", view_matrix_ );

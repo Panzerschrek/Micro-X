@@ -150,7 +150,8 @@ private:
 	void SetupConnectionSector( const Connection* connection, mx_LevelSector* sector );
 	
 	void CalculateNormals();
-	void ClaculateTextureCoordinates();
+	void CalculateTextureCoordinates();
+	void SetupTextures();
 
 private:
 	Element* element_map_[ MX_MAX_LEVEL_SIZE_CELLS * MX_MAX_LEVEL_SIZE_CELLS * MX_MAX_LEVEL_SIZE_CELLS ];

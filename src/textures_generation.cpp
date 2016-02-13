@@ -1,4 +1,3 @@
-#include "monster.h"
 #include "texture.h"
 
 #include "textures_generation.h"
@@ -41,7 +40,7 @@ static void GenNoisedColorMix(
 	}
 }
 
-void mxGenGraniteTexture( mx_Texture * texture )
+static void GenGraniteTexture( mx_Texture * texture )
 {
 	static const float c_bg_color[4]= { 162.0f / 255.0f, 154.0f / 255.0f, 167.0f / 255.0f, 0.0f };
 	static const float c_colors[6][4]=
@@ -59,7 +58,15 @@ void mxGenGraniteTexture( mx_Texture * texture )
 	texture->LinearNormalization( g_one );
 }
 
-void mxGenSteelPlateTexture( mx_Texture * texture )
+static void GenGraniteTextureHeightMap( mx_Texture * height_map )
+{
+	static const float g_mul[4]= { 4.0f, 4.0f, 4.0f, 4.0f };
+	height_map->Noise( 1567489, 5 );
+
+	height_map->Mul( g_mul );
+}
+
+static void GenSteelPlateTexture( mx_Texture * texture )
 {
 	static const float c_bg_color[4]= { 149.0f / 255.0f, 157.0f / 255.0f, 160.0f / 255.0f, 0 };
 	static const float c_colors[8][4]=
@@ -76,23 +83,34 @@ void mxGenSteelPlateTexture( mx_Texture * texture )
 
 	GenNoisedColorMix( texture, c_bg_color, c_colors[0], 8, 3 );
 
-	{
-		mx_Texture tex2( texture->SizeXLog2(), texture->SizeYLog2() );
-		tex2.Fill( g_white );
-
-		static const float c_gray[4]= { 0.8f, 0.8f, 0.8f, 0.8f };
-		const unsigned int c_shift= 7;
-
-		tex2.FillRect( 0, 0, tex2.SizeX() >> c_shift, tex2.SizeY(), c_gray );
-		tex2.FillRect( tex2.SizeX() - (tex2.SizeX() >> c_shift), 0, tex2.SizeX() >> c_shift, tex2.SizeY(), c_gray );
-
-		tex2.FillRect( 0, 0, tex2.SizeX(), tex2.SizeY() >> c_shift, c_gray );
-		tex2.FillRect( 0, tex2.SizeY() - (tex2.SizeY() >> c_shift), tex2.SizeX(), tex2.SizeY() >> c_shift, c_gray );
-
-		texture->Mul( &tex2 );
-	}
-
 	texture->LinearNormalization( g_one );
+}
+
+static void GenSteelPlateTextureHeightMap( mx_Texture* height_map )
+{
+	static const unsigned int c_border_width= 32;
+	static const float c_slope= 0.333f;
+	static const float c_up_color[4]= { 0.0f, 0.0f, 0.0f, c_slope * float(c_border_width) };
+
+	height_map->Fill( c_up_color );
+
+	float* d= height_map->GetData();
+	for( unsigned int r= 0; r < c_border_width; r++ )
+	{
+		float h= c_slope * float(r);
+		for( unsigned int y= r; y < height_map->SizeY() - r; y++ )
+		{
+			unsigned int y_shift= y << height_map->SizeXLog2();
+			d[ ( r + y_shift ) * 4 + 3 ]= h;
+			d[ ( height_map->SizeX() - 1 - r + y_shift ) * 4 + 3 ]= h;
+		}
+
+		for( unsigned int x= r; x < height_map->SizeX() - r; x++ )
+		{
+			d[ ( x + (r<<height_map->SizeXLog2()) ) * 4 + 3 ]= h;
+			d[ ( x + ( (height_map->SizeY()-1-r) << height_map->SizeXLog2() ) ) * 4 + 3 ]= h;
+		}
+	}
 }
 
 static void GenOctoRobotTexture( mx_Texture * texture )
@@ -148,4 +166,16 @@ void (* const gen_monsters_textures_func_table[LastMonster])( mx_Texture * textu
 {
 	GenOctoRobotTexture,
 	GenPyramidRobotTexture,
+};
+
+void (* const gen_level_textures_func_table[LastLevelTexture])( mx_Texture* texture )=
+{
+	GenGraniteTexture,
+	GenSteelPlateTexture,
+};
+
+void (* const gen_level_textures_height_map_func_table[LastLevelTexture])( mx_Texture* height_map )=
+{
+	GenGraniteTextureHeightMap,
+	GenSteelPlateTextureHeightMap,
 };

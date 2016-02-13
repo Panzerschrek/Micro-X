@@ -2,6 +2,7 @@
 #include <cstdlib>
 
 #include "mx_assert.h"
+#include "textures_generation.h"
 
 #include "level_generator.h"
 
@@ -85,7 +86,8 @@ void mx_LevelGenerator::Generate()
 
 	GenerateMeshes();
 	CalculateNormals();
-	ClaculateTextureCoordinates();
+	CalculateTextureCoordinates();
+	SetupTextures();
 }
 
 const mx_LevelData& mx_LevelGenerator::GetLevelData()
@@ -817,7 +819,7 @@ void mx_LevelGenerator::CalculateNormals()
 	}
 }
 
-void mx_LevelGenerator::ClaculateTextureCoordinates()
+void mx_LevelGenerator::CalculateTextureCoordinates()
 {
 	mx_LevelVertex* vertex= out_level_data_.vertices;
 	for( unsigned int i= 0; i < out_level_data_.vertex_count; i++, vertex++ )
@@ -864,4 +866,21 @@ void mx_LevelGenerator::ClaculateTextureCoordinates()
 		vertex->tex_coord[0] *= 0.5f;
 		vertex->tex_coord[1] *= 0.5f;
 	} // for vertices
+}
+
+void mx_LevelGenerator::SetupTextures()
+{
+	for( unsigned int s= 0; s < out_level_data_.sector_count; s++ )
+	{
+		unsigned char tex_id= rand_.Rand() % LastLevelTexture;
+
+		mx_LevelSector& sector= out_level_data_.sectors[s];
+		
+		for( unsigned int t= sector.first_triangle; t < sector.first_triangle + sector.triangles_count; t++ )
+		{
+			mx_LevelTriangle& triangle= out_level_data_.triangles[t];
+			for( unsigned int v= 0; v < 3; v++ )
+				out_level_data_.vertices[ triangle.vertex_index[v] ].tex_id= tex_id;
+		}
+	}
 }
