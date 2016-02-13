@@ -3,6 +3,7 @@
 #include "monster.h"
 #include "mx_assert.h"
 #include "mx_math.h"
+#include "player.h"
 #include "sound_engine.h"
 
 #include "level.h"
@@ -216,6 +217,21 @@ void mx_Level::Tick()
 
 		if( hited_monster )
 			hited_monster->Hit( mx_GameConstants::bullets_damage[bullet.type] );
+
+		if( bullet.owner != &player_ )
+		{
+			float new_bullet_pos[3];
+			mxVec3Mul( bullet.speed, dt, new_bullet_pos );
+			mxVec3Add( new_bullet_pos, bullet.pos );
+
+			if( mxSquareDistance( new_bullet_pos, player_.Pos() )
+				<= mx_GameConstants::player_radius * mx_GameConstants::player_radius )
+			{
+				player_.Hit( mx_GameConstants::bullets_damage[bullet.type] );
+				dead= true;
+				goto kill;
+			}
+		}
 
 		const mx_LevelSector* sector= FindSectorForPoint( bullet.pos );
 		if( sector )

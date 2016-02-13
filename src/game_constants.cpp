@@ -23,4 +23,6 @@ const float bullets_speed[LastBullet]=
 	 6.0f,
 };
 
+const float player_radius= 0.3f;
+
 } // namespace mx_GameConstants

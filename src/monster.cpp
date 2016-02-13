@@ -31,11 +31,11 @@ mx_Monster::mx_Monster(
 	const mx_Player& player,
 	const float* pos,
 	const mx_PatrolPath* patrol_path )
-	: type_(type)
+	: mx_Pawn( mx_GameConstants::initial_monsters_health[type] )
+	, type_(type)
 	, home_sector_(home_sector)
 	, level_(level)
 	, player_(player)
-	, health_(100)
 	, patrol_path_( patrol_path ? *patrol_path : mx_PatrolPath() )
 	, have_patrol_path_( patrol_path != NULL )
 	, destroy_(false)

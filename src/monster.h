@@ -31,9 +31,6 @@ public:
 	~mx_Monster();
 
 	MonsterType GetType() const;
-	int GetHealth() const;
-
-	void Hit( int damage );
 
 protected:
 	virtual void ExecFunc();
@@ -55,8 +52,6 @@ private:
 	mx_Level& level_;
 	const mx_Player& player_;
 
-	int health_;
-
 	mx_PatrolPath patrol_path_;
 	const bool have_patrol_path_;
 
@@ -68,14 +63,4 @@ private:
 inline MonsterType mx_Monster::GetType() const
 {
 	return type_;
-}
-
-inline int mx_Monster::GetHealth() const
-{
-	return health_;
-}
-
-inline void mx_Monster::Hit( int damage )
-{
-	health_-= damage;
 }

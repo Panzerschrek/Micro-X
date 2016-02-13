@@ -14,7 +14,8 @@
 #define MF_START_ROCKET_COUNT 3
 
 mx_Player::mx_Player()
-	: level_(NULL)
+	: mx_Pawn(mx_GameConstants::initial_player_health)
+	, level_(NULL)
 	, aspect_(1.0f), fov_(MX_INITIAL_FOV), target_fov_(MX_INITIAL_FOV)
 	, sector_(NULL)
 	, shot_button_pressed_(false)
@@ -211,7 +212,7 @@ void mx_Player::ZoomOut()
 void mx_Player::CollideWithSector( const mx_LevelSector* sector )
 {
 	float new_pos[3];
-	if( level_->CollideWithSectorTriangles( pos_, 0.3f, sector, new_pos ) )
+	if( level_->CollideWithSectorTriangles( pos_, mx_GameConstants::player_radius, sector, new_pos ) )
 	{
 		VEC3_CPY( pos_, new_pos );
 	}

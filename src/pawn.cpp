@@ -2,7 +2,8 @@
 
 #include "pawn.h"
 
-mx_Pawn::mx_Pawn()
+mx_Pawn::mx_Pawn( int health )
+	: health_(health)
 {
 }
 

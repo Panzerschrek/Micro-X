@@ -25,4 +25,6 @@ extern const int bullets_damage[LastBullet];
 // units per second
 extern const float bullets_speed[LastBullet];
 
+extern const float player_radius;
+
 } // namespace mx_GameConstants
