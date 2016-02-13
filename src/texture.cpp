@@ -266,8 +266,8 @@ void mx_Texture::GenNormalMap()
 			val[7]= data_[ 3+ ( (   x             + ys ) << 2 ) ];
 			val[8]= data_[ 3+ ( ( ((x+1)&size_x1) + ys ) << 2 ) ];
 
-			float dx= ( val[2] + val[5] + val[8] - val[0] - val[3] - val[6] ) * 0.3333333f;
-			float dy= ( val[6] + val[7] + val[8] - val[0] - val[1] - val[2] ) * 0.3333333f;
+			float dx= ( val[0] + val[3] + val[6] - val[2] - val[5] - val[8] ) * 0.3333333f;
+			float dy= ( val[0] + val[1] + val[2] - val[6] - val[7] - val[8] ) * 0.3333333f;
 
 			d[0]= dx;
 			d[1]= dy;

@@ -829,16 +829,37 @@ void mx_LevelGenerator::ClaculateTextureCoordinates()
 		{
 			vertex->tex_coord[0]= vertex->xyz[1];
 			vertex->tex_coord[1]= vertex->xyz[2];
+
+			vertex->binormal[0]= 0;
+			vertex->binormal[1]= 127;
+			vertex->binormal[2]= 0;
+			vertex->tangent[0]= 0;
+			vertex->tangent[1]= 0;
+			vertex->tangent[2]= 127;
 		}
 		else if( abs_normal[1] >= abs_normal[2] )
 		{
 			vertex->tex_coord[0]= vertex->xyz[0];
 			vertex->tex_coord[1]= vertex->xyz[2];
+
+			vertex->binormal[0]= 127;
+			vertex->binormal[1]= 0;
+			vertex->binormal[2]= 0;
+			vertex->tangent[0]= 0;
+			vertex->tangent[1]= 0;
+			vertex->tangent[2]= 127;
 		}
 		else
 		{
 			vertex->tex_coord[0]= vertex->xyz[0];
 			vertex->tex_coord[1]= vertex->xyz[1];
+
+			vertex->binormal[0]= 127;
+			vertex->binormal[1]= 0;
+			vertex->binormal[2]= 0;
+			vertex->tangent[0]= 0;
+			vertex->tangent[1]= 127;
+			vertex->tangent[2]= 0;
 		}
 		vertex->tex_coord[0] *= 0.5f;
 		vertex->tex_coord[1] *= 0.5f;

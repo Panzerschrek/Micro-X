@@ -52,6 +52,7 @@ private:
 	float z_near_, z_far_;
 
 	GLuint tex_id_;
+	GLuint normal_tex_id_;
 	GLuint monsters_textures_array_id_;
 
 	bool screen_buffers_initialized_;

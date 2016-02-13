@@ -62,15 +62,17 @@ VERSION_HEADER
 // world shader
 const char world_shader_v[]=
 VERSION_HEADER
-"in vec3 p;"
-"in vec3 n;"
+"in vec3 p;" // position
+"in vec3 b;" // binormal
+"in vec3 t;" // tangent
+"in vec3 n;" // normal
 "in vec3 tc;"
 "uniform mat4 mat;"
-"out vec3 fn;"
+"out mat3 fbtn;"
 "out vec3 ftc;"
 "void main()"
 "{"
-	"fn=n*0.5+vec3(0.5,0.5,0.5);"
+	"fbtn=mat3(b,t,n);"
 	"ftc=tc;"
 	"gl_Position=mat*vec4(p,1.0);"
 "}"
@@ -79,14 +81,16 @@ VERSION_HEADER
 const char world_shader_f[]=
 VERSION_HEADER
 "uniform sampler2D tex;"
+"uniform sampler2D nmap;" // normal map
 "out vec4 c_;"
 "out vec4 n_;"
-"in vec3 fn;"
+"in mat3 fbtn;"
 "in vec3 ftc;"
 "void main()"
 "{"
 	"c_=texture(tex,ftc.xy);"
-	"n_=vec4(fn,1.0);"
+	"vec3 n=texture(nmap, ftc.xy).xyz*2.0-vec3(1.0,1.0,1.0);"
+	"n_=vec4((fbtn*n)*0.5+vec3(0.5,0.5,0.5),0.0);"
 "}"
 ;
 

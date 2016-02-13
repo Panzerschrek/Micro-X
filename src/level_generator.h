@@ -11,12 +11,19 @@
 
 #define MX_MIN_ROOM_DISTANCE 3
 
+// 32bit struct
+#pragma pack(push, 1)
 struct mx_LevelVertex
 {
 	float xyz[3];
-	float tex_coord[3];
-	char normal[3];
+	float tex_coord[2];
+	char binormal[3]; // x texture axis
+	char tangent [3]; // y textur eaxis
+	char normal  [3];
+	unsigned char tex_id;
+	unsigned char pad[2];
 };
+#pragma pack(pop)
 
 struct mx_Light
 {
