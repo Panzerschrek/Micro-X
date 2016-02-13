@@ -257,7 +257,8 @@ void mx_Level::Tick()
 kill:
 		if( dead )
 		{
-			mx_SoundEngine::Instance()->AddSingleSound( SoundBlast, 1.0f, 1.0f, bullet.pos );
+			if( bullet.type == Rocket )
+				mx_SoundEngine::Instance()->AddSingleSound( SoundBlast, 1.0f, 1.0f, bullet.pos );
 
 			if( b != bullet_count_ - 1u )
 				bullets_[b]= bullets_[ bullet_count_ - 1u ];
@@ -299,7 +300,12 @@ void mx_Level::Shot( mx_Pawn* shooter, BulletType bullet_type, const float* pos,
 
 	mxVec3Mul( normalized_dir, mx_GameConstants::bullets_speed[bullet_type], bullet.speed );
 
-	mx_SoundEngine::Instance()->AddSingleSound( SoundPlasmagunShot, 1.0f, 1.0f, bullet.pos );
+	// TODO - remove if, place table
+	mx_SoundType sound_type;
+	if( bullet_type == MachinegunBullet ) sound_type= SoundMachinegunShot;
+	else if( bullet_type == Rocket ) sound_type= SoundAutomaticCannonShot;
+	else sound_type= SoundPlasmagunShot;
+	mx_SoundEngine::Instance()->AddSingleSound( sound_type, 1.0f, 1.0f, bullet.pos );
 
 	bullet_count_++;
 }

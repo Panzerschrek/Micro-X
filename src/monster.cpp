@@ -2,6 +2,7 @@
 
 #include "level.h"
 #include "main_loop.h"
+#include "mx_assert.h"
 #include "mx_math.h"
 #include "player.h"
 
@@ -226,14 +227,40 @@ void mx_Monster::Attack()
 
 	attack_target:
 	float shot_time= main_loop.GetTime();
-	for( unsigned int i= 0; i < 2; )
+
+	unsigned int shot_count;
+	float shot_interval;
+	BulletType bullet;
+
+	switch( type_ )
+	{
+	case MonsterOctoRobot:
+		shot_count= 2;
+		shot_interval= mx_GameConstants::rocket_launcher_shot_interval;
+		bullet= Rocket;
+		break;
+
+	case PyramidRobot:
+		shot_count= 8;
+		shot_interval= mx_GameConstants::machinegun_shot_interval;
+		bullet= MachinegunBullet;
+		break;
+
+	default:
+		// TODO - remove
+		shot_count= 8;
+		shot_interval= mx_GameConstants::machinegun_shot_interval;
+		bullet= MachinegunBullet;
+		MX_ASSERT(false);
+		break;
+	};
+	for( unsigned int i= 0; i < shot_count; )
 	{
 		float t= main_loop.GetTime();
-		static const float c_shot_interval= 1.0f / 4.0f;
-		if( t - shot_time >= c_shot_interval )
+		if( t - shot_time >= shot_interval )
 		{
-			level_.Shot( this, MachinegunBullet, pos_, axis_[1] );
-			shot_time+= c_shot_interval;
+			level_.Shot( this, bullet, pos_, axis_[1] );
+			shot_time= t;
 			i++;
 		}
 		Resume();

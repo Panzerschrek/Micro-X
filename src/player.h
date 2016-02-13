@@ -20,6 +20,8 @@ public:
 
 	void ShotButtonPressed();
 	void ShotButtonReleased();
+	void NextWeapon();
+	void PrevWeapon();
 
 	void ForwardPressed();
 	void BackwardPressed();
@@ -84,6 +86,8 @@ private:
 	float last_shot_time_s_;
 	unsigned int shot_side_; // 0 or 1, left or right turret
 
+	BulletType current_weapon_;
+
 	bool forward_pressed_, backward_pressed_, left_pressed_, right_pressed_;
 	bool up_pressed_, down_pressed_;
 	bool rotate_up_pressed_, rotate_down_pressed_, rotate_left_pressed_, rotate_right_pressed_;
@@ -123,6 +127,16 @@ inline void mx_Player::ShotButtonPressed()
 inline void mx_Player::ShotButtonReleased()
 {
 	shot_button_pressed_= false;
+}
+
+inline void mx_Player::NextWeapon()
+{
+	current_weapon_= BulletType( (current_weapon_+1) % LastBullet );
+}
+
+inline void mx_Player::PrevWeapon()
+{
+	current_weapon_= BulletType( (current_weapon_ + (LastBullet - 1) ) % LastBullet );
 }
 
 inline void mx_Player::ForwardPressed()

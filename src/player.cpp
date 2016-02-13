@@ -21,6 +21,7 @@ mx_Player::mx_Player()
 	, shot_button_pressed_(false)
 	, last_shot_time_s_(0.0f)
 	, shot_side_(0)
+	, current_weapon_(MachinegunBullet)
 	, forward_pressed_(false), backward_pressed_(false), left_pressed_(false), right_pressed_(false)
 	, up_pressed_(false), down_pressed_(false)
 	, rotate_up_pressed_(false), rotate_down_pressed_(false), rotate_left_pressed_(false), rotate_right_pressed_(false)
@@ -164,7 +165,9 @@ void mx_Player::Tick()
 	}
 
 	// Shot
-	if( shot_button_pressed_ && total_time - last_shot_time_s_ > 1.0f / 8.0f )
+	float weapon_shot_interval= current_weapon_ == MachinegunBullet ? mx_GameConstants::machinegun_shot_interval : mx_GameConstants::rocket_launcher_shot_interval;
+
+	if( shot_button_pressed_ && total_time - last_shot_time_s_ > weapon_shot_interval )
 	{
 		shot_side_^= 1;
 
@@ -186,7 +189,7 @@ void mx_Player::Tick()
 		mxVec3Add( dir[0], dir[1], result_dir );
 
 		last_shot_time_s_= total_time;
-		level_->Shot( this, Rocket, shot_pos, result_dir );
+		level_->Shot( this, current_weapon_, shot_pos, result_dir );
 	}
 }
 

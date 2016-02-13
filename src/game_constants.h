@@ -4,14 +4,14 @@ enum MonsterType
 {
 	MonsterOctoRobot,
 	PyramidRobot,
-	LastMonster
+	LastMonster,
 };
 
 enum BulletType
 {
 	MachinegunBullet,
 	Rocket,
-	LastBullet
+	LastBullet,
 };
 
 namespace mx_GameConstants
@@ -26,5 +26,8 @@ extern const int bullets_damage[LastBullet];
 extern const float bullets_speed[LastBullet];
 
 extern const float player_radius;
+
+extern const float machinegun_shot_interval;
+extern const float rocket_launcher_shot_interval;
 
 } // namespace mx_GameConstants

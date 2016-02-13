@@ -337,7 +337,8 @@ LRESULT CALLBACK mx_MainLoop::WindowProc( HWND hwnd, UINT uMsg, WPARAM wParam, L
 	case WM_MOUSEWHEEL:
 		{
 			int step= GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA;
-			(void) step;
+			if( step == 1 ) player->NextWeapon();
+			else player->PrevWeapon();
 		}
 		break;
 

@@ -25,4 +25,7 @@ const float bullets_speed[LastBullet]=
 
 const float player_radius= 0.3f;
 
+const float machinegun_shot_interval= 1.0f / 8.0f;
+const float rocket_launcher_shot_interval= 1.0f / 2.0f;
+
 } // namespace mx_GameConstants
