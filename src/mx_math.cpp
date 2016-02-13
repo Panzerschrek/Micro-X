@@ -456,7 +456,7 @@ void mxDoubleMat4Invert( const double* m, double* out_m )
 	mxDoubleMat4Transpose(out_m);
 }
 
-float mxDistanceFromLineToPoint(const float* line_point, const float* line_dir, const float* point )
+float mxDistanceFromLineToPoint( const float* line_point, const float* line_dir, const float* point )
 {
 	float vec_from_pomt_to_point[3];
 	mxVec3Sub( point, line_point, vec_from_pomt_to_point );
