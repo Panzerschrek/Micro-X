@@ -18,6 +18,17 @@ static void SetupFBOTextureParameters()
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 }
 
+static void CreateDeptTexture( unsigned int width, unsigned int height, GLuint& tex )
+{
+	glGenTextures( 1, &tex );
+	glBindTexture( GL_TEXTURE_2D, tex );
+	glTexImage2D(
+		GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8,
+		width, height,
+		0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL );
+	SetupFBOTextureParameters();
+}
+
 static void GenFullscreenQuad( mx_DrawingModel* model )
 {
 	// TODO - optimize?
@@ -56,9 +67,8 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 	: main_loop_(*mx_MainLoop::Instance())
 	, level_(level)
 	, player_(player)
+	, screen_buffers_initialized_(false)
 {
-	g_buffer_.fbo_id= 0;
-
 	{ // World geometry
 		world_vertex_buffer_.VertexData(
 			level_.GetVertices(),
@@ -214,7 +224,15 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 		light_source_vertex_buffer_.VertexAttrib( 0, 3, GL_FLOAT, false, ((char*)v.pos) - ((char*)&v) );
 	}
 
-	CreateGBuffer();
+	{ // tonemapping shader
+		tonemapping_shader_.Create(
+			mx_Shaders::tonemapping_shader_v,
+			mx_Shaders::tonemapping_shader_f );
+
+		tonemapping_shader_.FindUniform( "tex" );
+	}
+
+	CreateScreenBuffers();
 }
 
 mx_Renderer::~mx_Renderer()
@@ -223,39 +241,50 @@ mx_Renderer::~mx_Renderer()
 
 void mx_Renderer::OnFramebufferResize()
 {
-	CreateGBuffer();
+	CreateScreenBuffers();
 }
 
 void mx_Renderer::Draw()
 {
 	CalculateMatrices();
 
+	// Bind GBuffer. We do not need clear color
 	glBindFramebuffer( GL_FRAMEBUFFER, g_buffer_.fbo_id );
-	glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
-	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+	glClear( GL_DEPTH_BUFFER_BIT );
 
 	DrawWorld();
 	DrawMonsters();
 
-	glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+	// Bind HDR screen buffer. Clear cboth buffers.
+	glBindFramebuffer( GL_FRAMEBUFFER, hdr_buffer_.fbo_id );
+	glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
 	MakeLighting();
-
 	DrawBullets();
+
+	// Bind screen framebuffer. We do non need clear it.
+	glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+
+	MakeTonemapping();
 }
 
-void mx_Renderer::CreateGBuffer()
+void mx_Renderer::CreateScreenBuffers()
 {
 	mx_MainLoop* main_loop = mx_MainLoop::Instance();
 	unsigned int width = main_loop->ViewportWidth ();
 	unsigned int height= main_loop->ViewportHeight();
 
-	if( g_buffer_.fbo_id != 0 )
+	if( screen_buffers_initialized_ )
 	{
 		glDeleteFramebuffers( 1, &g_buffer_.fbo_id );
 		glDeleteTextures( 1, &g_buffer_.albedo_tex_id );
 		glDeleteTextures( 1, &g_buffer_.normals_tex_id );
 		glDeleteTextures( 1, &g_buffer_.depth_tex_id );
+
+		glDeleteFramebuffers( 1, &hdr_buffer_.fbo_id );
+		glDeleteTextures( 1, &hdr_buffer_.color_texture_id );
+		glDeleteTextures( 1, &hdr_buffer_.depth_tex_id );
 	}
 
 	// albedo and normals textures texture
@@ -272,14 +301,7 @@ void mx_Renderer::CreateGBuffer()
 		SetupFBOTextureParameters();
 	}
 
-	// depth texture
-	glGenTextures( 1, &g_buffer_.depth_tex_id );
-	glBindTexture( GL_TEXTURE_2D, g_buffer_.depth_tex_id );
-	glTexImage2D(
-		GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8,
-		width, height,
-		0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL );
-	SetupFBOTextureParameters();
+	CreateDeptTexture( width, height, g_buffer_.depth_tex_id );
 
 	glGenFramebuffers( 1, &g_buffer_.fbo_id );
 	glBindFramebuffer( GL_FRAMEBUFFER, g_buffer_.fbo_id );
@@ -287,8 +309,28 @@ void mx_Renderer::CreateGBuffer()
 	glFramebufferTexture( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, g_buffer_.normals_tex_id, 0 );
 	glFramebufferTexture( GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, g_buffer_.depth_tex_id, 0 );
 
-	static const GLenum bufs[2]= { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
-	glDrawBuffers( 2, bufs );
+	static const GLenum g_bufs[2]= { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+	glDrawBuffers( 2, g_bufs );
+
+	// HDR screen buffer
+
+	glGenTextures( 1, &hdr_buffer_.color_texture_id );
+	glBindTexture( GL_TEXTURE_2D, hdr_buffer_.color_texture_id );
+	glTexImage2D(
+		GL_TEXTURE_2D, 0, GL_RGBA16F,
+		width, height,
+		0, GL_RGBA, GL_FLOAT, NULL );
+	SetupFBOTextureParameters();
+
+	CreateDeptTexture( width, height, hdr_buffer_.depth_tex_id );
+
+	glGenFramebuffers( 1, &hdr_buffer_.fbo_id );
+	glBindFramebuffer( GL_FRAMEBUFFER, hdr_buffer_.fbo_id );
+	glFramebufferTexture( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, hdr_buffer_.color_texture_id, 0 );
+	glFramebufferTexture( GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, hdr_buffer_.depth_tex_id, 0 );
+
+	GLenum hdr_buf= GL_COLOR_ATTACHMENT0;
+	glDrawBuffers( 1, &hdr_buf );
 
 	glBindFramebuffer( GL_FRAMEBUFFER, 0 );
 }
@@ -431,6 +473,7 @@ void mx_Renderer::MakeLighting()
 	fullscreen_postprocessing_shader_.UniformInt( "atex", 0 );
 	fullscreen_postprocessing_shader_.UniformInt( "dtex", 2 );
 
+	//Draw fullscreen quad
 	glDrawArrays( GL_TRIANGLES, 0, 6 );
 
 	glDepthMask( 0 );
@@ -488,7 +531,7 @@ void mx_Renderer::DrawLightSource( const mx_Light& light_source )
 
 	static const float c_min_valuable_light= 1.0f / 32.0f;
 	float min_light_distance= std::sqrt( max_light / c_min_valuable_light );
-	min_light_distance*= 1.25f; // extend sphere model for compensation of model shape error
+	min_light_distance*= 1.333f; // extend sphere model for compensation of model shape error
 
 	postprocessing_shader_.UniformVec3( "lp", light_source.pos );
 	postprocessing_shader_.UniformVec4( "lc", light_source.light_rgb );
@@ -523,4 +566,20 @@ void mx_Renderer::DrawLightSource( const mx_Light& light_source )
 			GL_UNSIGNED_SHORT,
 			(void*)( light_source_vertex_buffer_.IndexDataSize() - 6 * sizeof(unsigned short) ) );
 	}
+}
+
+void mx_Renderer::MakeTonemapping()
+{
+	glActiveTexture( GL_TEXTURE0 );
+	glBindTexture( GL_TEXTURE_2D, hdr_buffer_.color_texture_id );
+
+	tonemapping_shader_.Bind();
+	tonemapping_shader_.UniformInt( "tex", 0 );
+
+	glDisable( GL_DEPTH_TEST );
+
+	//Draw fullscreen quad
+	glDrawArrays( GL_TRIANGLES, 0, 6 );
+
+	glEnable( GL_DEPTH_TEST );
 }

@@ -141,8 +141,8 @@ VERSION_HEADER
 "out vec4 c_;"
 "void main()"
 "{"
-"vec2 r=gl_PointCoord.xy-vec2(0.5,0.5);"
-"c_=vec4(1.0,0.6,0.1,1.0-4.0*dot(r,r));"
+	"vec2 r=gl_PointCoord.xy-vec2(0.5,0.5);"
+	"c_=vec4(1.0,0.6,0.1,max(1.0-4.0*dot(r,r),0.0));"
 "}"
 ;
 
@@ -226,5 +226,20 @@ VERSION_HEADER
 "}"
 ;
 
+extern const char* const tonemapping_shader_v= fullscreen_postprocessing_shader_v;
+extern const char tonemapping_shader_f[]=
+VERSION_HEADER
+"uniform sampler2D tex;"
+"out vec4 c_;"
+"void main()"
+"{"
+	"vec4 c=vec4(1.0,1.0,1.0,1.0)-exp(-texelFetch(tex,ivec2(gl_FragCoord.xy),0)*1.0);" // tonemapping
+
+	// color correction - mix between color and grayscale color.
+	// 0 - full grayscale, 1 - full color, 1.5 - much more colors
+	"float g=(c.x+c.y+c.z)*0.333;"
+	"c_=mix(vec4(g,g,g,g),c,1.5);"
+"}"
+;
 
 } // namespace mx_Shaders

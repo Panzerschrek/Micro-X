@@ -20,7 +20,7 @@ private:
 	mx_Renderer(const mx_Renderer&);
 	mx_Renderer& operator=(const mx_Renderer&);
 
-	void CreateGBuffer();
+	void CreateScreenBuffers();
 
 	void CalculateMatrices();
 	void DrawWorld();
@@ -29,6 +29,7 @@ private:
 
 	void MakeLighting();
 	void DrawLightSource( const mx_Light& light_source );
+	void MakeTonemapping();
 
 private:
 	const mx_MainLoop& main_loop_;
@@ -53,6 +54,7 @@ private:
 	GLuint tex_id_;
 	GLuint monsters_textures_array_id_;
 
+	bool screen_buffers_initialized_;
 	struct
 	{
 		GLuint fbo_id;
@@ -62,8 +64,18 @@ private:
 		GLuint depth_tex_id;
 	} g_buffer_;
 
+	struct
+	{
+		GLuint fbo_id;
+		GLuint color_texture_id;
+		GLuint depth_tex_id;
+	} hdr_buffer_;
+
+
 	mx_GLSLProgram fullscreen_postprocessing_shader_;
 	mx_GLSLProgram postprocessing_shader_;
+
+	mx_GLSLProgram tonemapping_shader_;
 
 	mx_DrawingModel light_source_model_;
 	mx_VertexBuffer light_source_vertex_buffer_;

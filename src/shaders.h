@@ -21,4 +21,7 @@ extern const char fullscreen_postprocessing_shader_f[];
 extern const char postprocessing_shader_v[];
 extern const char postprocessing_shader_f[];
 
+extern const char* const tonemapping_shader_v;
+extern const char tonemapping_shader_f[];
+
 } // namespace mx_Shaders
