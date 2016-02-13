@@ -1,14 +1,17 @@
 #pragma once
 
 #include "drawing_model.h"
+#include "fwd.h"
+#include "game_constants.h"
 #include "level_generator.h"
-#include "monster.h"
+#include "pawn.h"
 
 #define MX_MAX_MONSTERS 256
 #define MX_MAX_BULLETS 512
 
 struct mx_Bullet
 {
+	BulletType type;
 	mx_Pawn* owner;
 	float pos[3];
 	float speed[3];
@@ -43,7 +46,7 @@ public:
 		float* out_pos ) const;
 
 	void Tick();
-	void Shot( mx_Pawn* shooter, const float* pos, const float* normalized_dir );
+	void Shot( mx_Pawn* shooter, BulletType bullet_type, const float* pos, const float* normalized_dir );
 
 private:
 	mx_Level(const mx_Level&);

@@ -192,6 +192,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\game_constants.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\glsl_program.cpp"
 				>
 			</File>
@@ -287,6 +291,10 @@
 			</File>
 			<File
 				RelativePath=".\src\fwd.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\game_constants.h"
 				>
 			</File>
 			<File

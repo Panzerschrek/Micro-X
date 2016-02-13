@@ -4,15 +4,9 @@
 
 #include "coroutine.h"
 #include "fwd.h"
+#include "game_constants.h"
 #include "mx_math.h"
 #include "pawn.h"
-
-enum MonsterType
-{
-	MonsterOctoRobot,
-	PyramidRobot,
-	LastMonster
-};
 
 struct mx_PatrolPath
 {

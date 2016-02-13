@@ -1,5 +1,6 @@
 #include "main_loop.h"
 #include "models.h"
+#include "monster.h"
 #include "mx_assert.h"
 #include "mx_math.h"
 #include "sound_engine.h"
@@ -214,7 +215,7 @@ void mx_Level::Tick()
 		} // for monsters
 
 		if( hited_monster )
-			hited_monster->Hit( 20 );
+			hited_monster->Hit( mx_GameConstants::bullets_damage[bullet.type] );
 
 		const mx_LevelSector* sector= FindSectorForPoint( bullet.pos );
 		if( sector )
@@ -268,19 +269,19 @@ kill:
 	}
 }
 
-void mx_Level::Shot( mx_Pawn* shooter, const float* pos, const float* normalized_dir )
+void mx_Level::Shot( mx_Pawn* shooter, BulletType bullet_type, const float* pos, const float* normalized_dir )
 {
 	MX_ASSERT( bullet_count_ <= MX_MAX_BULLETS );
 
 	mx_Bullet& bullet= bullets_[bullet_count_];
 
 	bullet.owner= shooter;
+	bullet.type= bullet_type;
 	bullet.birth_time= mx_MainLoop::Instance()->GetTime();
 
 	VEC3_CPY( bullet.pos, pos );
 
-	const float c_speed= 5.0f;
-	mxVec3Mul( normalized_dir, c_speed, bullet.speed );
+	mxVec3Mul( normalized_dir, mx_GameConstants::bullets_speed[bullet_type], bullet.speed );
 
 	mx_SoundEngine::Instance()->AddSingleSound( SoundPlasmagunShot, 1.0f, 1.0f, bullet.pos );
 

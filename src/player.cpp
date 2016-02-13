@@ -185,7 +185,7 @@ void mx_Player::Tick()
 		mxVec3Add( dir[0], dir[1], result_dir );
 
 		last_shot_time_s_= total_time;
-		level_->Shot( this, shot_pos, result_dir );
+		level_->Shot( this, Rocket, shot_pos, result_dir );
 	}
 }
 

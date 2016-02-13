@@ -1,4 +1,4 @@
-#include "monster.h"
+#include "game_constants.h"
 
 #include "models.h"
 

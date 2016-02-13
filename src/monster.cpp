@@ -232,7 +232,7 @@ void mx_Monster::Attack()
 		static const float c_shot_interval= 1.0f / 4.0f;
 		if( t - shot_time >= c_shot_interval )
 		{
-			level_.Shot( this, pos_, axis_[1] );
+			level_.Shot( this, MachinegunBullet, pos_, axis_[1] );
 			shot_time+= c_shot_interval;
 			i++;
 		}
