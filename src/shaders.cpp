@@ -132,22 +132,26 @@ VERSION_HEADER
 const char plasma_ball_shader_v[]=
 VERSION_HEADER
 "in vec3 p;"
+"in vec3 c;"
 "uniform mat4 mat;"
+"out vec3 fc;"
 "void main()"
 "{"
-"vec4 v=mat*vec4(p,1.0);"
-"gl_Position=v;"
-"gl_PointSize=64.0/v.w;"
+	"fc=c;"
+	"vec4 v=mat*vec4(p,1.0);"
+	"gl_Position=v;"
+	"gl_PointSize=64.0/v.w;"
 "}"
 ;
 
 const char plasma_ball_shader_f[]=
 VERSION_HEADER
+"in vec3 fc;"
 "out vec4 c_;"
 "void main()"
 "{"
 	"vec2 r=gl_PointCoord.xy-vec2(0.5,0.5);"
-	"c_=vec4(1.0,0.6,0.1,max(1.0-4.0*dot(r,r),0.0));"
+	"c_=vec4(fc,max(1.0-4.0*dot(r,r),0.0));"
 "}"
 ;
 

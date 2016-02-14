@@ -165,7 +165,13 @@ void mx_Player::Tick()
 	}
 
 	// Shot
-	float weapon_shot_interval= current_weapon_ == MachinegunBullet ? mx_GameConstants::machinegun_shot_interval : mx_GameConstants::rocket_launcher_shot_interval;
+	float weapon_shot_interval;
+	if( current_weapon_ == MachinegunBullet )
+		weapon_shot_interval= mx_GameConstants::machinegun_shot_interval;
+	else if( current_weapon_ == Rocket )
+		weapon_shot_interval= mx_GameConstants::rocket_launcher_shot_interval;
+	else//  if( current_weapon_ == PlasmaBall )
+		weapon_shot_interval= mx_GameConstants::plasmagun_shot_interval;
 
 	if( shot_button_pressed_ && total_time - last_shot_time_s_ > weapon_shot_interval )
 	{

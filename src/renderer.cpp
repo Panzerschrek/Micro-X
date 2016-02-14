@@ -10,6 +10,19 @@
 
 #include "renderer.h"
 
+struct BulletVertex
+{
+	float pos[3];
+	float color[3];
+};
+
+static const float g_bullets_light_color[LastBullet][3]=
+{
+	{ 0.1f, 0.1f, 0.1f },
+	{ 0.4f, 0.3f, 0.1f },
+	{ 0.08f, 0.2f, 0.08f },
+};
+
 static void MarkSectors_r( mx_LevelSector* sector, unsigned int tag, unsigned int depth )
 {
 	sector->traverse_id= tag;
@@ -117,14 +130,19 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 
 	{ // plasma ball shader
 		plasma_ball_shader_.SetAttribLocation( "p", 0 );
+		plasma_ball_shader_.SetAttribLocation( "c", 1 );
 		plasma_ball_shader_.Create( mx_Shaders::plasma_ball_shader_v, mx_Shaders::plasma_ball_shader_f );
 		static const char* const uniforms[]= { "mat" };
 		plasma_ball_shader_.FindUniforms( uniforms, sizeof(uniforms) / sizeof(char*) );
 	}
 
 	{ // plasma ball vbo
-		plasma_balls_vertex_buffer_.VertexData( NULL, MX_MAX_BULLETS * sizeof(float) * 3, sizeof(float) * 3 );
-		plasma_balls_vertex_buffer_.VertexAttrib( 0, 3, GL_FLOAT, false, 0 );
+
+		plasma_balls_vertex_buffer_.VertexData( NULL, MX_MAX_BULLETS * sizeof(BulletVertex), sizeof(BulletVertex) );
+
+		BulletVertex v;
+		plasma_balls_vertex_buffer_.VertexAttrib( 0, 3, GL_FLOAT, false, ((char*)v.pos) - ((char*)&v) );
+		plasma_balls_vertex_buffer_.VertexAttrib( 1, 3, GL_FLOAT, false, ((char*)v.color) - ((char*)&v) );
 	}
 
 	{ // monsters vbo
@@ -497,20 +515,23 @@ void mx_Renderer::DrawMonsters()
 
 void mx_Renderer::DrawBullets()
 {
-	float bullets_pos[ MX_MAX_BULLETS * 3 ];
+	BulletVertex bullets_vertices[ MX_MAX_BULLETS ];
 
 	const mx_Bullet* bullets= level_.GetBullets();
 	unsigned int bullet_count= level_.GetBulletCount();
 	for( unsigned int b= 0; b < bullet_count; b++ )
 	{
-		VEC3_CPY( bullets_pos + b * 3, bullets[b].pos );
+		VEC3_CPY( bullets_vertices[b].pos, bullets[b].pos );
+		VEC3_CPY( bullets_vertices[b].color, g_bullets_light_color[bullets[b].type] );
+		mxVec3Normalize( bullets_vertices[b].color );
 	}
 
-	plasma_balls_vertex_buffer_.VertexSubData( bullets_pos, bullet_count * 3 * sizeof(float), 0 );
+	plasma_balls_vertex_buffer_.VertexSubData( bullets_vertices, bullet_count * sizeof(BulletVertex), 0 );
 
 	plasma_ball_shader_.Bind();
 	plasma_ball_shader_.UniformMat4( "mat", view_matrix_ );
 
+	glDepthMask( 0 );
 	glEnable( GL_PROGRAM_POINT_SIZE );
 	glEnable( GL_BLEND );
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
@@ -519,6 +540,7 @@ void mx_Renderer::DrawBullets()
 
 	glDisable( GL_BLEND );
 	glDisable( GL_PROGRAM_POINT_SIZE );
+	glDepthMask( 1 );
 }
 
 void mx_Renderer::MakeLighting()
@@ -575,9 +597,7 @@ void mx_Renderer::MakeLighting()
 	{
 		mx_Light light_source;
 		VEC3_CPY( light_source.pos, bullets[b].pos );
-		light_source.light_rgb[0]= 0.4f;
-		light_source.light_rgb[1]= 0.3f;
-		light_source.light_rgb[2]= 0.1f;
+		VEC3_CPY( light_source.light_rgb, g_bullets_light_color[bullets[b].type] );
 		DrawLightSource( light_source );
 	}
 

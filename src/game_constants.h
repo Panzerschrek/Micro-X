@@ -11,6 +11,7 @@ enum BulletType
 {
 	MachinegunBullet,
 	Rocket,
+	PlasmaBall,
 	LastBullet,
 };
 
@@ -29,5 +30,6 @@ extern const float player_radius;
 
 extern const float machinegun_shot_interval;
 extern const float rocket_launcher_shot_interval;
+extern const float plasmagun_shot_interval;
 
 } // namespace mx_GameConstants
