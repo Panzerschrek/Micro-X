@@ -192,7 +192,7 @@ VERSION_HEADER
 ;
 
 /*
-light = 1 / (distanse * distance ) - lsb
+light = light_intensity / (distanse * distance ) - lsb
 lsb - min valuable light.
 For RGBA8 color buffer min valuable light is near 1 / 256, but you can make it greater, if you wish more perfomance.
 */
@@ -202,7 +202,7 @@ VERSION_HEADER
 "uniform sampler2D ntex;" // normals buffer
 "uniform sampler2D dtex;" // depth buffer
 "uniform vec3 lp;" // light position
-"uniform float lsb;" // value, substructed from 1 / dist*dist
+"uniform vec4 lsb;" // value, substructed from 1 / dist*dist
 "uniform vec4 lc;" // light color (used only rgb )
 "uniform mat4 imat;" // onverse matrix for transofrmation
 // numbers from raw perspective mat
@@ -231,7 +231,7 @@ VERSION_HEADER
 	"vec3 n=texelFetch(ntex,tc,0).xyz*vec3(2.0,2.0,2.0)-vec3(1.0,1.0,1.0);" // normal
 	"float nk= max(0.0,dot(n,normalize(vtl)));" // light angle cos
 
-	"c_=(nk*max(1.0/dot(vtl,vtl)-lsb,0.0))*lc*texelFetch(atex,tc,0);"
+	"c_=max(lc/dot(vtl,vtl)-lsb,vec4(0.0,0.0,0.0,0.0))*texelFetch(atex,tc,0)*nk;"
 "}"
 ;
 

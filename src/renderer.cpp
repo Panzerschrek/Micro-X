@@ -624,7 +624,8 @@ void mx_Renderer::DrawLightSource( const mx_Light& light_source )
 
 	postprocessing_shader_.UniformVec3( "lp", light_source.pos );
 	postprocessing_shader_.UniformVec4( "lc", light_source.light_rgb );
-	postprocessing_shader_.UniformFloat( "lsb", c_min_valuable_light );
+	static const float c_lsb_vec[4]= { c_min_valuable_light, c_min_valuable_light, c_min_valuable_light, c_min_valuable_light };
+	postprocessing_shader_.UniformVec4( "lsb", c_lsb_vec );
 	
 	if( mxSquareDistance( light_source.pos, player_.Pos() ) >= min_light_distance * min_light_distance )
 	{
