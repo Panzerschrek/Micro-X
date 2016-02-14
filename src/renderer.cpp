@@ -10,6 +10,20 @@
 
 #include "renderer.h"
 
+static void MarkSectors_r( mx_LevelSector* sector, unsigned int tag, unsigned int depth )
+{
+	sector->traverse_id= tag;
+
+	if( depth == 0 )
+		return;
+
+	for( unsigned int i= 0; i < sector->connections_count; i++ )
+	{
+		if( sector->connections[i]->traverse_id != tag )
+			MarkSectors_r( sector->connections[i], tag, depth - 1 );
+	}
+}
+
 static void SetupFBOTextureParameters()
 {
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
@@ -279,6 +293,7 @@ void mx_Renderer::OnFramebufferResize()
 
 void mx_Renderer::Draw()
 {
+	MarkPotentialyVisibleSectors();
 	CalculateMatrices();
 
 	// Bind GBuffer. We do not need clear color
@@ -366,6 +381,19 @@ void mx_Renderer::CreateScreenBuffers()
 	glDrawBuffers( 1, &hdr_buf );
 
 	glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+}
+
+void mx_Renderer::MarkPotentialyVisibleSectors()
+{
+	visible_sectors_tag_= mxGenSectorGraphTraverseId();
+
+	mx_LevelSector* player_sector= const_cast<mx_LevelSector*>(player_.GetSector());
+	if( player_sector )
+	{
+		// We assume, that player can not see through mor tnan "depth" sectors
+		const unsigned int depth= 4;
+		MarkSectors_r( player_sector, visible_sectors_tag_, depth );
+	}
 }
 
 void mx_Renderer::CalculateMatrices()
@@ -534,8 +562,12 @@ void mx_Renderer::MakeLighting()
 
 	const mx_LevelData& level_data= level_.GetLevelData();
 	for( unsigned int s= 0; s < level_data.sector_count; s++ )
+	{
+		if( level_data.sectors[s].traverse_id != visible_sectors_tag_ )
+			continue;
 		for( unsigned int l= 0; l < level_data.sectors[s].light_count; l++ )
 			DrawLightSource( level_data.sectors[s].lights[l] );
+	}
 
 	const mx_Bullet* bullets= level_.GetBullets();
 	unsigned int bullet_count= level_.GetBulletCount();

@@ -11,6 +11,9 @@
 
 #define MX_MIN_ROOM_DISTANCE 3
 
+#define MX_MAX_SECTOR_PLANES 8
+#define MX_MAX_SECTOR_LIGHTS 16
+
 // 32bit struct
 #pragma pack(push, 1)
 struct mx_LevelVertex
@@ -53,10 +56,10 @@ struct mx_LevelSector
 	float bb_min[3];
 	float bb_max[3];
 
-	mx_Plane planes[16];
+	mx_Plane planes[MX_MAX_SECTOR_PLANES];
 	unsigned int planes_count;
 
-	mx_Light lights[8];
+	mx_Light lights[MX_MAX_SECTOR_LIGHTS];
 	unsigned int light_count;
 
 	mx_LevelSector* connections[MX_MAX_ROOM_CONNECTIONS];
@@ -64,6 +67,9 @@ struct mx_LevelSector
 
 	unsigned int first_triangle;
 	unsigned int triangles_count;
+
+	// Unique number for each sector-graph based algorithms.
+	unsigned int traverse_id;
 };
 
 struct mx_LevelData
@@ -87,6 +93,8 @@ struct mx_LevelMesh
 	unsigned int vertex_count;
 	unsigned int triangle_count;
 };
+
+unsigned int mxGenSectorGraphTraverseId();
 
 class mx_LevelGenerator
 {

@@ -22,6 +22,8 @@ private:
 
 	void CreateScreenBuffers();
 
+	void MarkPotentialyVisibleSectors();
+
 	void CalculateMatrices();
 	void DrawWorld();
 	void DrawMonsters();
@@ -80,4 +82,6 @@ private:
 
 	mx_DrawingModel light_source_model_;
 	mx_VertexBuffer light_source_vertex_buffer_;
+
+	unsigned int visible_sectors_tag_;
 };

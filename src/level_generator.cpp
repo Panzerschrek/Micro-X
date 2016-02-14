@@ -28,6 +28,13 @@ static const int c_cube_normals[6][3]=
 	{  0,  0, +1 },
 };
 
+unsigned int mxGenSectorGraphTraverseId()
+{
+	static unsigned int id= 0;
+	id++;
+	return id;
+}
+
 static bool IsPointOutsideMap( int* coord )
 {
 	return
@@ -458,6 +465,9 @@ void mx_LevelGenerator::GenerateMeshes()
 		}
 	}
 
+	for( unsigned int s= 0; s < out_level_data_.sector_count; s++ )
+		out_level_data_.sectors[s].traverse_id= 0;
+
 	delete[] room_to_sector_index;
 	delete[] connection_to_sector_index;
 }
@@ -796,7 +806,42 @@ void mx_LevelGenerator::SetupConnectionSector( const Connection* connection, mx_
 		sector->planes[i].dist= sector->planes[i].normal[c] * float((i&1) ? sector->bb_min[c] : sector->bb_max[c]);
 	}
 
+	// Place lights
+
 	sector->light_count= 0;
+
+	// Select direction of ligts chain
+	unsigned int connection_axis= 0;
+	for( unsigned int i= 1; i < 3; i++ )
+		if( connection->coord_begin[i] != connection->coord_end[i] )
+			connection_axis= i;
+
+	// Calculate lights count and step in chain
+	float connection_length= sector->bb_max[connection_axis] - sector->bb_min[connection_axis];
+	unsigned int light_count= (unsigned int) mxRound( connection_length / 1.5f );
+	if( light_count > MX_MAX_SECTOR_LIGHTS ) light_count= MX_MAX_SECTOR_LIGHTS;
+	float step= connection_length / float( light_count );
+
+	float coord[3];
+	for( unsigned int i= 0; i < 3; i++ )
+		coord[i]= sector->bb_min[i] + 0.5f;
+	coord[connection_axis]= sector->bb_min[connection_axis] + 0.5f * step;
+
+	while( coord[connection_axis] < sector->bb_max[connection_axis] )
+	{
+		mx_Light& l= sector->lights[sector->light_count];
+		sector->light_count++;
+		
+		static const float c_light[3]= { 0.125f, 0.12f, 0.1f };
+		for( unsigned int i= 0; i < 3; i++ )
+		{
+			l.pos[i]= coord[i];
+			l.light_rgb[i]= c_light[i];
+		}
+		coord[connection_axis]+= step;
+	}
+
+	MX_ASSERT( sector->light_count == light_count );
 }
 
 void mx_LevelGenerator::CalculateNormals()
