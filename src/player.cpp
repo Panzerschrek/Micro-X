@@ -161,6 +161,8 @@ void mx_Player::Tick()
 			CollideWithSector(sector_);
 			for( unsigned int i= 0; i < sector_->connections_count; i++ )
 				CollideWithSector( sector_->connections[i] );
+
+			level_->CollideWithMonsters( pos_, mx_GameConstants::player_radius );
 		}
 	}
 
@@ -220,9 +222,5 @@ void mx_Player::ZoomOut()
 
 void mx_Player::CollideWithSector( const mx_LevelSector* sector )
 {
-	float new_pos[3];
-	if( level_->CollideWithSectorTriangles( pos_, mx_GameConstants::player_radius, sector, new_pos ) )
-	{
-		VEC3_CPY( pos_, new_pos );
-	}
+	level_->CollideWithSectorTriangles( pos_, mx_GameConstants::player_radius, sector );
 }

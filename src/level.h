@@ -41,9 +41,10 @@ public:
 	const mx_LevelSector* FindSectorForPoint( const float* point ) const;
 
 	bool CollideWithSectorTriangles(
-		const float* in_pos, float radius,
-		const mx_LevelSector* sector,
-		float* out_pos ) const;
+		float* in_out_pos, float radius,
+		const mx_LevelSector* sector ) const;
+
+	bool CollideWithMonsters( float* in_out_pos, float radius ) const;
 
 	void Tick();
 	void Shot( mx_Pawn* shooter, BulletType bullet_type, const float* pos, const float* normalized_dir );

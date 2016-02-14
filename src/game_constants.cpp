@@ -11,6 +11,12 @@ const int initial_monsters_health[LastMonster]=
 	20,
 };
 
+const float monsters_radius[LastMonster]=
+{
+	0.7f,
+	0.5f,
+};
+
 const int rocket_blast_max_damage= 16;
 const float rocket_blast_damage_on_distance_1= 8.0f;
 const float rocket_blast_max_damage_distance= 3.0f;

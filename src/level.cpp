@@ -87,10 +87,8 @@ const mx_LevelSector* mx_Level::FindSectorForPoint( const float* point ) const
 	return NULL;
 }
 
-bool mx_Level::CollideWithSectorTriangles( const float* in_pos, float radius, const mx_LevelSector* sector, float* out_pos ) const
+bool mx_Level::CollideWithSectorTriangles( float* in_out_pos, float radius, const mx_LevelSector* sector ) const
 {
-	VEC3_CPY( out_pos, in_pos );
-
 	bool collided= false;
 
 	for( unsigned int t= sector->first_triangle; t < sector->triangles_count + sector->first_triangle; t++ )
@@ -105,7 +103,7 @@ bool mx_Level::CollideWithSectorTriangles( const float* in_pos, float radius, co
 		mxVec3Normalize( normal );
 
 		float vec_from_triangle_to_pos[3];
-		mxVec3Sub( out_pos, vertex.xyz, vec_from_triangle_to_pos );
+		mxVec3Sub( in_out_pos, vertex.xyz, vec_from_triangle_to_pos );
 
 		float projection_to_normal= mxVec3Dot( vec_from_triangle_to_pos, normal );
 		if( projection_to_normal > radius )
@@ -115,7 +113,7 @@ bool mx_Level::CollideWithSectorTriangles( const float* in_pos, float radius, co
 		mxVec3Mul( normal, projection_to_normal, vect_from_plane_to_pos );
 
 		float point_on_plane[3];
-		mxVec3Sub( out_pos, vect_from_plane_to_pos, point_on_plane );
+		mxVec3Sub( in_out_pos, vect_from_plane_to_pos, point_on_plane );
 
 		for( unsigned int j= 0; j < 3; j++ )
 		{
@@ -141,9 +139,31 @@ bool mx_Level::CollideWithSectorTriangles( const float* in_pos, float radius, co
 
 		float pos_delta[3];
 		mxVec3Mul( normal, radius, pos_delta );
-		mxVec3Add( point_on_plane, pos_delta, out_pos );
+		mxVec3Add( point_on_plane, pos_delta, in_out_pos );
 
 outside_triangle:;
+	}
+
+	return collided;
+}
+
+bool mx_Level::CollideWithMonsters( float* in_out_pos, float radius ) const
+{
+	bool collided= false;
+
+	for( unsigned int m= 0; m < monster_count_; m++ )
+	{
+		const mx_Monster* monster= monsters_[m];
+
+		float min_allowed_dist= radius + mx_GameConstants::monsters_radius[monster->GetType()];
+		if( mxDistance( monster->Pos(), in_out_pos ) < min_allowed_dist )
+		{
+			float dir[3];
+			mxVec3Sub( in_out_pos, monster->Pos(), dir );
+			mxVec3Mul( dir, min_allowed_dist / mxVec3Len(dir) );
+			mxVec3Add( monster->Pos(), dir, in_out_pos );
+			collided= true;
+		}
 	}
 
 	return collided;
