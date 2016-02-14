@@ -1,3 +1,6 @@
+#include <algorithm>
+
+#include "mx_math.h"
 #include "texture.h"
 
 #include "textures_generation.h"
@@ -11,6 +14,32 @@ static const float g_monsters_eyes_bg_color[4]= { 0.1f, 0.1f, 0.1f, 0.0f };
 static const float g_monsters_eyes_color[4]= { 1.0f, 0.2f, 0.2f, 0.0f };
 static const float g_monsters_antenna_color[4]= { 1.0f, 0.2f, 0.2f, 0.0f };
 static const float g_monsters_dark_color[4]= { 0.08f, 0.08f, 0.08f, 0.0f };
+
+static void AddHemisphereToHeightmap(
+	mx_Texture* height_map,
+	unsigned int center_x, unsigned int center_y,
+	unsigned int radius, float depth )
+{
+	int r2= int(radius) * int(radius);
+
+	float* d= height_map->GetData();
+	for( unsigned int y= center_y - radius; y<= center_y + radius; y++ )
+	{
+		int dy2= int(y) - center_y;
+		dy2= dy2 * dy2;
+		int r2_minus_dy2= r2 - dy2;
+
+		unsigned int y_shift= y << height_map->SizeXLog2();
+
+		for( unsigned int x= center_x - radius; x<= center_x + radius; x++ )
+		{
+			int dx= int(x) - center_x;
+			float h= std::sqrtf( float( std::max( r2_minus_dy2 - dx * dx, 0 ) ) ) - depth;
+			if( h >= 0.0f )
+				d[ ( x + y_shift ) * 4u + 3u ]+= h;
+		}
+	}
+}
 
 static void GenNoisedColorMix(
 	mx_Texture * texture,
@@ -111,6 +140,8 @@ static void GenSteelPlateTextureHeightMap( mx_Texture* height_map )
 			d[ ( x + ( (height_map->SizeY()-1-r) << height_map->SizeXLog2() ) ) * 4 + 3 ]= h;
 		}
 	}
+
+	// AddHemisphereToHeightmap( height_map, 512, 512, 128, 128 - 8 );
 }
 
 static void GenOctoRobotTexture( mx_Texture * texture )
