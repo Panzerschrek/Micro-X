@@ -258,7 +258,12 @@ kill:
 		if( dead )
 		{
 			if( bullet.type == Rocket )
-				mx_SoundEngine::Instance()->AddSingleSound( SoundBlast, 1.0f, 1.0f, bullet.pos );
+			{
+				float new_pos[3];
+				mxVec3Mul( bullet.speed, dt, new_pos );
+				mxVec3Add( new_pos, bullet.pos );
+				RocketBlast( new_pos );
+			}
 
 			if( b != bullet_count_ - 1u )
 				bullets_[b]= bullets_[ bullet_count_ - 1u ];
@@ -308,4 +313,29 @@ void mx_Level::Shot( mx_Pawn* shooter, BulletType bullet_type, const float* pos,
 	mx_SoundEngine::Instance()->AddSingleSound( sound_type, 1.0f, 1.0f, bullet.pos );
 
 	bullet_count_++;
+}
+
+void mx_Level::RocketBlast( const float* pos )
+{
+	mx_SoundEngine::Instance()->AddSingleSound( SoundBlast, 1.0f, 1.0f, pos );
+
+	for( unsigned int m= 0; m < monster_count_ + 1; m++ )
+	{
+		mx_Pawn* pawn;
+		if( m == monster_count_ )
+			pawn= &player_;
+		else
+			pawn= monsters_[m];
+
+		float dist= mxDistance( pos, pawn->Pos() );
+		if( dist < mx_GameConstants::rocket_blast_max_damage_distance )
+		{
+			int damage=
+				min(
+					int( mx_GameConstants::rocket_blast_damage_on_distance_1 / dist ),
+					mx_GameConstants::rocket_blast_max_damage );
+			if( damage != 0 )
+				pawn->Hit( damage );
+		}
+	}
 }

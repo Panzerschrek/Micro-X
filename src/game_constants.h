@@ -22,6 +22,10 @@ extern const int initial_player_health;
 
 extern const int initial_monsters_health[LastMonster];
 
+extern const int rocket_blast_max_damage;
+extern const float rocket_blast_damage_on_distance_1;
+extern const float rocket_blast_max_damage_distance;
+
 extern const int bullets_damage[LastBullet];
 // units per second
 extern const float bullets_speed[LastBullet];
