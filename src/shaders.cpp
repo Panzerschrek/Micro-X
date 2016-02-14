@@ -91,7 +91,7 @@ VERSION_HEADER
 "{"
 	"c_=texture(tex,ftc);"
 	"vec3 n=texture(nmap, ftc).xyz*2.0-vec3(1.0,1.0,1.0);"
-	"n_=vec4((fbtn*n)*0.5+vec3(0.5,0.5,0.5),0.0);"
+	"n_=vec4(normalize(fbtn*n)*0.5+vec3(0.5,0.5,0.5),0.0);"
 "}"
 ;
 
