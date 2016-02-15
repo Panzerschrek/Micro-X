@@ -177,7 +177,10 @@ VERSION_HEADER
 "{"
 	"ivec2 tc=ivec2(gl_FragCoord.xy);"
 	"gl_FragDepth=texelFetch(dtex,tc,0).x;"
-	"c_=0.1*texelFetch(atex,tc,0);"
+	"vec4 t=texelFetch(atex,tc,0);"
+	// alpha = 1.0 - material is diffuse
+	// alpha = 0.0 - material is emissive
+	"c_=(0.1+(1.0-t.a))*t;"
 "}"
 ;
 
@@ -231,7 +234,10 @@ VERSION_HEADER
 	"vec3 n=texelFetch(ntex,tc,0).xyz*vec3(2.0,2.0,2.0)-vec3(1.0,1.0,1.0);" // normal
 	"float nk= max(0.0,dot(n,normalize(vtl)));" // light angle cos
 
-	"c_=max(lc/dot(vtl,vtl)-lsb,vec4(0.0,0.0,0.0,0.0))*texelFetch(atex,tc,0)*nk;"
+	// alpha = 1.0 - material is diffuse
+	// alpha = 0.0 - material is emissive
+	"vec4 t=texelFetch(atex,tc,0);"
+	"c_=max(lc/dot(vtl,vtl)-lsb,vec4(0.0,0.0,0.0,0.0))*t*(t.a*nk);"
 "}"
 ;
 

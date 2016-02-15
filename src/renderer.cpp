@@ -183,7 +183,7 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 		static const char* const uniforms[]= { "mat", "nmat", "tex", "texn" };
 		monsters_shader_.FindUniforms( uniforms, sizeof(uniforms) / sizeof(char*) );
 	}
-	{
+	{ // level textures
 		mx_Texture tex( 10, 10 );
 
 		for( unsigned int t= 0; t < 2; t++ )
@@ -201,7 +201,16 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 			for( unsigned int i= 0; i < LastLevelTexture; i++ )
 			{
 				if( t == 0 )
+				{
 					gen_level_textures_func_table[i]( &tex );
+
+					static const float c_zero_alpha[4]= { 1.0f, 1.0f, 1.0f, 0.0f };
+					static const float c_one_alpha[4]= { 0.0f, 0.0f, 0.0f, 1.0f };
+					tex.Mul( c_zero_alpha );
+					tex.Add( c_one_alpha );
+
+					tex.LinearNormalization( 1.0f );
+				}
 				else
 				{
 					gen_level_textures_height_map_func_table[i]( &tex );
@@ -215,10 +224,10 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 				}
 
 				glTexSubImage3D(
-				GL_TEXTURE_2D_ARRAY, 0,
-				0, 0, i,
-				tex.SizeX(), tex.SizeY(), 1,
-				GL_RGBA, GL_UNSIGNED_BYTE, tex.GetNormalizedData() );
+					GL_TEXTURE_2D_ARRAY, 0,
+					0, 0, i,
+					tex.SizeX(), tex.SizeY(), 1,
+					GL_RGBA, GL_UNSIGNED_BYTE, tex.GetNormalizedData() );
 			}
 			glTexParameteri( GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 			glTexParameteri( GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
@@ -238,6 +247,7 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 		for( unsigned int i= 0; i < LastMonster; i++ )
 		{
 			gen_monsters_textures_func_table[i]( &tex );
+			tex.LinearNormalization( 1.0f );
 
 			glTexSubImage3D(
 				GL_TEXTURE_2D_ARRAY, 0,

@@ -9,11 +9,11 @@ static const float g_white[4]= { 1.0f, 1.0f, 1.0f, 1.0f };
 static const float g_black[4]= { 0.0f, 0.0f, 0.0f, 0.0f };
 static const float g_one= 1.0f;
 
-static const float g_monsters_body_color[4]= { 0.6f, 0.6f, 0.6f, 0.0f };
-static const float g_monsters_eyes_bg_color[4]= { 0.1f, 0.1f, 0.1f, 0.0f };
+static const float g_monsters_body_color[4]= { 0.6f, 0.6f, 0.6f, 1.0f };
+static const float g_monsters_eyes_bg_color[4]= { 0.1f, 0.1f, 0.1f, 1.0f };
 static const float g_monsters_eyes_color[4]= { 1.0f, 0.2f, 0.2f, 0.0f };
-static const float g_monsters_antenna_color[4]= { 1.0f, 0.2f, 0.2f, 0.0f };
-static const float g_monsters_dark_color[4]= { 0.08f, 0.08f, 0.08f, 0.0f };
+static const float g_monsters_antenna_color[4]= { 1.0f, 0.2f, 0.2f, 1.0f };
+static const float g_monsters_dark_color[4]= { 0.08f, 0.08f, 0.08f, 1.0f };
 
 static void AddHemisphereToHeightmap(
 	mx_Texture* height_map,
@@ -83,8 +83,6 @@ static void GenGraniteTexture( mx_Texture * texture )
 	};
 
 	GenNoisedColorMix( texture, c_bg_color, c_colors[0], 6, 4 );
-
-	texture->LinearNormalization( g_one );
 }
 
 static void GenGraniteTextureHeightMap( mx_Texture * height_map )
@@ -111,8 +109,6 @@ static void GenSteelPlateTexture( mx_Texture * texture )
 	};
 
 	GenNoisedColorMix( texture, c_bg_color, c_colors[0], 8, 3 );
-
-	texture->LinearNormalization( g_one );
 }
 
 static void GenSteelPlateTextureHeightMap( mx_Texture* height_map )
@@ -167,8 +163,6 @@ static void GenOctoRobotTexture( mx_Texture * texture )
 
 	// Antena
 	texture->FillRect( 336, 264, 70, 70, g_monsters_antenna_color );
-
-	texture->LinearNormalization( g_one );
 }
 
 static void GenPyramidRobotTexture( mx_Texture * texture )
@@ -189,8 +183,6 @@ static void GenPyramidRobotTexture( mx_Texture * texture )
 
 	// Machinegun
 	texture->FillRect( 180, 64, 40, 40, g_monsters_dark_color );
-
-	texture->LinearNormalization( g_one );
 }
 
 void (* const gen_monsters_textures_func_table[LastMonster])( mx_Texture * texture )=
