@@ -35,6 +35,13 @@ const float bullets_speed[LastBullet]=
 	 6.0f,
 };
 
+const unsigned int player_initial_ammo[LastBullet]=
+{
+	100,
+	 10,
+	 30,
+};
+
 const float player_radius= 0.3f;
 
 const float machinegun_shot_interval= 1.0f / 8.0f;

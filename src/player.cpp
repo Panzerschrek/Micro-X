@@ -49,6 +49,9 @@ mx_Player::mx_Player()
 
 	angular_speed_[0]= angular_speed_[1]= angular_speed_[2]= 0.0f;
 	speed_[0]= speed_[1]= speed_[2]= 0.0f;
+
+	for( unsigned int i= 0; i < LastBullet; i++ )
+		ammo_[i]= mx_GameConstants::player_initial_ammo[i];
 }
 
 mx_Player::~mx_Player()
@@ -175,7 +178,8 @@ void mx_Player::Tick()
 	else//  if( current_weapon_ == PlasmaBall )
 		weapon_shot_interval= mx_GameConstants::plasmagun_shot_interval;
 
-	if( shot_button_pressed_ && total_time - last_shot_time_s_ > weapon_shot_interval )
+	if( ammo_[current_weapon_] > 0 &&
+		shot_button_pressed_ && total_time - last_shot_time_s_ > weapon_shot_interval )
 	{
 		shot_side_^= 1;
 
@@ -198,6 +202,8 @@ void mx_Player::Tick()
 
 		last_shot_time_s_= total_time;
 		level_->Shot( this, current_weapon_, shot_pos, result_dir );
+
+		ammo_[current_weapon_]--;
 	}
 }
 

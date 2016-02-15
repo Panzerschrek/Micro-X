@@ -82,6 +82,7 @@ private:
 
 	const mx_LevelSector* sector_;
 
+	unsigned int ammo_[LastBullet];
 	bool shot_button_pressed_;
 	float last_shot_time_s_;
 	unsigned int shot_side_; // 0 or 1, left or right turret
