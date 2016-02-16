@@ -2,6 +2,7 @@
 #include "main_loop.h"
 #include "models.h"
 #include "monster.h"
+#include "mx_assert.h"
 #include "mx_math.h"
 #include "player.h"
 #include "shaders.h"
@@ -10,10 +11,18 @@
 
 #include "renderer.h"
 
+#define MX_MAX_GUI_VERTICES 4096
+
 struct BulletVertex
 {
 	float pos[3];
 	float color[3];
+};
+
+struct GuiVertex
+{
+	short pos[2];
+	unsigned char color[4];
 };
 
 static const float g_bullets_light_color[LastBullet][3]=
@@ -35,6 +44,28 @@ static void MarkSectors_r( mx_LevelSector* sector, unsigned int tag, unsigned in
 		if( sector->connections[i]->traverse_id != tag )
 			MarkSectors_r( sector->connections[i], tag, depth - 1 );
 	}
+}
+
+static GuiVertex* AddGuiQuad( GuiVertex* v, int x, int y, int width, int height, const unsigned char* color )
+{
+	v[0].pos[0]= short(x);
+	v[0].pos[1]= short(y);
+	v[1].pos[0]= short(x);
+	v[1].pos[1]= short(y + height);
+	v[2].pos[0]= short(x + width );
+	v[2].pos[1]= short(y + height);
+	v[3].pos[0]= short(x + width );
+	v[3].pos[1]= short(y);
+
+	for( unsigned int i= 0; i < 4; i++ )
+	for( unsigned int j= 0; j < 4; j++ )
+		v[i].color[j]= color[j];
+
+	v[4]= v[0];
+	v[5]= v[2];
+
+	return v + 6;
+
 }
 
 static void SetupFBOTextureParameters()
@@ -144,7 +175,20 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 		plasma_balls_vertex_buffer_.VertexAttrib( 0, 3, GL_FLOAT, false, ((char*)v.pos) - ((char*)&v) );
 		plasma_balls_vertex_buffer_.VertexAttrib( 1, 3, GL_FLOAT, false, ((char*)v.color) - ((char*)&v) );
 	}
+	{ // gui shader
+		gui_shader_.SetAttribLocation( "p", 0 );
+		gui_shader_.SetAttribLocation( "c", 1 );
 
+		gui_shader_.Create( mx_Shaders::gui_shader_v, mx_Shaders::gui_shader_f );
+		gui_shader_.FindUniform( "isz" );
+	}
+	{ // gui vbo
+		gui_vertex_buffer_.VertexData( NULL, MX_MAX_GUI_VERTICES * sizeof(GuiVertex), sizeof(GuiVertex) );
+
+		GuiVertex v;
+		gui_vertex_buffer_.VertexAttrib( 0, 2, GL_SHORT, false, ((char*)v.pos) - ((char*)&v) );
+		gui_vertex_buffer_.VertexAttrib( 1, 4, GL_UNSIGNED_BYTE, true, ((char*)v.color) - ((char*)&v) );
+	}
 	{ // monsters vbo
 		mx_DrawingModel combined_model;
 
@@ -343,6 +387,8 @@ void mx_Renderer::Draw()
 	glBindFramebuffer( GL_FRAMEBUFFER, 0 );
 
 	MakeTonemapping();
+
+	DrawGui();
 }
 
 void mx_Renderer::CreateScreenBuffers()
@@ -681,5 +727,107 @@ void mx_Renderer::MakeTonemapping()
 	//Draw fullscreen quad
 	glDrawArrays( GL_TRIANGLES, 0, 6 );
 
+	glEnable( GL_DEPTH_TEST );
+}
+
+void mx_Renderer::DrawGui()
+{
+	GuiVertex vertices[ MX_MAX_GUI_VERTICES ];
+	GuiVertex* v= vertices;
+
+	{ // health
+		static const unsigned char c_health_color[4]= { 64, 240, 64, 128 };
+		static const unsigned char c_health_bg_color[4]= { 255, 255, 255, 64 };
+
+		v= AddGuiQuad(
+			v,
+			int(main_loop_.ViewportWidth()) - 40-2, 20-2,
+			20+4, 100+4,
+			c_health_bg_color );
+
+		v= AddGuiQuad(
+			v,
+			int(main_loop_.ViewportWidth()) - 40, 20,
+			20, player_.GetHealth(),
+			c_health_color );
+	}
+	{ // ammo
+		// TODO - select same color, as for bullets lights and sprites
+		static const unsigned char c_color[LastBullet][4]=
+		{
+			{ 255, 255, 255, 128 },
+			{ 255, 255,  64, 128 },
+			{  64, 255,  64, 128 },
+		};
+
+		int y= 40;
+		for( unsigned int a= 0; a < LastBullet; a++ )
+		{
+			unsigned int ammo= player_.GetAmmo(BulletType(a));
+			unsigned int ammo_x64= ammo / 64;
+			unsigned int ammo_x8 = ammo / 8 % 8;
+			unsigned int ammo_x1 = ammo % 8;
+
+			int x0= 20;
+			int y0= y;
+			const int c_border= 3;
+			
+			for( unsigned int i= 0; i < ammo_x1; i++ )
+			{
+				v= AddGuiQuad(
+					v,
+					x0 + i * (4 + c_border), y,
+					4, 4,
+					c_color[a] );
+			}
+			y+= 4 + c_border;
+
+			for( unsigned int i= 0; i < ammo_x8; i++ )
+			{
+				v= AddGuiQuad(
+					v,
+					x0 + i * (8 + c_border), y,
+					8, 8,
+					c_color[a] );
+			}
+			y+= 8 + c_border;
+
+			for( unsigned int i= 0; i < ammo_x64; i++ )
+			{
+				v= AddGuiQuad(
+					v,
+					x0 + i * (16 + c_border), y,
+					16, 16,
+					c_color[a] );
+			}
+			y+= 16;
+
+			v= AddGuiQuad(
+				v,
+				x0 - c_border * 2, y0,
+				c_border, y - y0,
+				c_color[a] );
+
+			y+= c_border * 2;
+		}
+	}
+
+	MX_ASSERT( v - vertices <= MX_MAX_GUI_VERTICES );
+
+	gui_vertex_buffer_.Bind();
+	gui_vertex_buffer_.VertexSubData( vertices, (v - vertices) * sizeof(GuiVertex), 0 );
+
+	gui_shader_.Bind();
+
+	float inv_size[3]= { 1.0f / float(main_loop_.ViewportWidth()), 1.0f / float(main_loop_.ViewportHeight()), 1.0f };
+	gui_shader_.UniformVec3( "isz", inv_size );
+
+	glDisable( GL_DEPTH_TEST );
+	glEnable( GL_BLEND );
+	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+
+	glDrawArrays( GL_TRIANGLES, 0, v - vertices );
+
+	glDisable( GL_BLEND );
 	glEnable( GL_DEPTH_TEST );
 }

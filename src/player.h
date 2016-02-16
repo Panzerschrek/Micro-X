@@ -14,6 +14,7 @@ public:
 	const float Fov() const;
 
 	const mx_LevelSector* GetSector() const;
+	unsigned int GetAmmo( BulletType type ) const;
 
 	void Tick();
 	void Rotate( float pixel_delta_x, float pixel_delta_y );
@@ -118,6 +119,11 @@ inline const float mx_Player::Fov() const
 inline const mx_LevelSector* mx_Player::GetSector() const
 {
 	return sector_;
+}
+
+inline unsigned int mx_Player::GetAmmo( BulletType type ) const
+{
+	return ammo_[type];
 }
 
 inline void mx_Player::ShotButtonPressed()

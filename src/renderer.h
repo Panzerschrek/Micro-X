@@ -33,6 +33,8 @@ private:
 	void DrawLightSource( const mx_Light& light_source );
 	void MakeTonemapping();
 
+	void DrawGui();
+
 private:
 	const mx_MainLoop& main_loop_;
 	const mx_Level& level_;
@@ -48,6 +50,9 @@ private:
 
 	mx_GLSLProgram plasma_ball_shader_;
 	mx_VertexBuffer plasma_balls_vertex_buffer_;
+
+	mx_GLSLProgram gui_shader_;
+	mx_VertexBuffer gui_vertex_buffer_;
 
 	float perspective_matrix_[16];
 	float view_matrix_[16];

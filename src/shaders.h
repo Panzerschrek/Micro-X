@@ -3,6 +3,9 @@
 namespace mx_Shaders
 {
 
+extern const char gui_shader_v[];
+extern const char gui_shader_f[];
+
 extern const char text_shader_v[];
 extern const char text_shader_f[];
 

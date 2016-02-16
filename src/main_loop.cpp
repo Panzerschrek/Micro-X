@@ -285,13 +285,13 @@ void mx_MainLoop::Loop()
 				str[5]= '0' + fps_calc_.frame_count_to_show / 1000 % 10;
 
 			text_->AddText( 0, 0, 1, mx_Text::default_color, str );
-
+			/*
 			char health_str[]= "health: 000";
 			health_str[10]+= player_->GetHealth()       % 10;
 			health_str[ 9]+= player_->GetHealth() /  10 % 10;
 			health_str[ 8]+= player_->GetHealth() / 100 % 10;
 			text_->AddText( 1, (viewport_height_ / MX_LETTER_HEIGHT) - 2, 1, mx_Text::default_color, health_str );
-
+			*/
 
 			text_->Draw();
 		}

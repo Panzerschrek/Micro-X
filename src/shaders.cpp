@@ -30,6 +30,30 @@ common input/output names
 "n_" - output normal in fragment shader
 */
 
+// gui shader
+const char gui_shader_v[]=
+VERSION_HEADER
+"in vec2 p;"//in position
+"in vec4 c;"//in color
+"uniform vec3 isz;" // invert screen size. z component unuzed
+"out vec4 fc;"//out color
+"void main()"
+"{"
+	"fc=c;"
+	"gl_Position=vec4(p*isz.xy*2.0-vec2(1.0,1.0),-1.0,1.0);"
+"}"
+;
+
+const char gui_shader_f[]=
+VERSION_HEADER
+"in vec4 fc;"
+"out vec4 c_;"
+"void main()"
+"{"
+	"c_=fc;"
+"}"
+;
+
 //text shader
 const char text_shader_v[]=
 VERSION_HEADER
