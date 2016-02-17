@@ -13,6 +13,7 @@
 
 #define MX_MAX_SECTOR_PLANES 8
 #define MX_MAX_SECTOR_LIGHTS 16
+#define MX_MAX_SECTOR_AMMO_BOXES 4
 
 // 32bit struct
 #pragma pack(push, 1)
@@ -32,6 +33,12 @@ struct mx_Light
 {
 	float pos[3];
 	float light_rgb[4]; // 4th component - unused
+};
+
+struct mx_AmmoBox
+{
+	float pos[3];
+	BulletType type;
 };
 
 struct mx_LevelTriangle
@@ -61,6 +68,9 @@ struct mx_LevelSector
 
 	mx_Light lights[MX_MAX_SECTOR_LIGHTS];
 	unsigned int light_count;
+
+	mx_AmmoBox ammo_boxes[MX_MAX_SECTOR_AMMO_BOXES];
+	unsigned int ammo_box_count;
 
 	mx_LevelSector* connections[MX_MAX_ROOM_CONNECTIONS];
 	unsigned int connections_count;

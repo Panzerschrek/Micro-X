@@ -25,6 +25,9 @@ struct GuiVertex
 	unsigned char color[4];
 };
 
+static const float g_texture_aray_coord_eps= 0.1f;
+
+// TODO - move all bullets colors to one place
 static const float g_bullets_light_color[LastBullet][3]=
 {
 	{ 0.1f, 0.1f, 0.1f },
@@ -203,6 +206,16 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 
 			combined_model.Add( &model );
 		}
+		{
+			mx_DrawingModel model;
+			model.LoadFromMFMD( mx_Models::cube );
+			model.Scale( 0.1f );
+
+			monsters_models_first_index_[LastMonster]= combined_model.GetIndexCount();
+			monsters_models_index_count_[LastMonster]= model.GetIndexCount();
+
+			combined_model.Add( &model );
+		}
 
 		monsters_vertex_buffer_.VertexData(
 			combined_model.GetVertexData(),
@@ -278,19 +291,23 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 			glGenerateMipmap( GL_TEXTURE_2D_ARRAY );
 		} // for diffuse and normal
 	}
-	{ // monsters textures
+	{ // monsters and amo boxes textures
 		mx_Texture tex( 9, 9 );
 		glGenTextures( 1, &monsters_textures_array_id_ );
 		glBindTexture( GL_TEXTURE_2D_ARRAY, monsters_textures_array_id_ );
 
 		glTexImage3D(
 			GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8,
-			tex.SizeX(), tex.SizeY(), LastMonster,
+			tex.SizeX(), tex.SizeY(), LastMonster + LastBullet,
 			0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
 
-		for( unsigned int i= 0; i < LastMonster; i++ )
+		for( unsigned int i= 0; i < LastMonster + LastBullet; i++ )
 		{
-			gen_monsters_textures_func_table[i]( &tex );
+			if( i < LastMonster )
+				gen_monsters_textures_func_table[i]( &tex );
+			else
+				gen_ammo_textures_func_table[ i - LastMonster ]( &tex );
+
 			tex.LinearNormalization( 1.0f );
 
 			glTexSubImage3D(
@@ -374,6 +391,7 @@ void mx_Renderer::Draw()
 
 	DrawWorld();
 	DrawMonsters();
+	DrawAmmo();
 
 	// Bind HDR screen buffer. Clear cboth buffers.
 	glBindFramebuffer( GL_FRAMEBUFFER, hdr_buffer_.fbo_id );
@@ -557,7 +575,7 @@ void mx_Renderer::DrawMonsters()
 		mxMat4ToMat3( rotate_mat, normals_mat );
 		monsters_shader_.UniformMat3( "nmat", normals_mat );
 
-		monsters_shader_.UniformFloat( "texn", float(monster->GetType()) + 0.5f );
+		monsters_shader_.UniformFloat( "texn", float(monster->GetType()) + g_texture_aray_coord_eps );
 
 		glDrawElements(
 			GL_TRIANGLES,
@@ -565,6 +583,65 @@ void mx_Renderer::DrawMonsters()
 			GL_UNSIGNED_SHORT,
 			(void*)( monsters_models_first_index_[monster->GetType()] * sizeof(unsigned short) ) );
 	}
+
+	glDisable (GL_CULL_FACE );
+}
+
+void mx_Renderer::DrawAmmo()
+{
+	glActiveTexture( GL_TEXTURE0 );
+	glBindTexture( GL_TEXTURE_2D_ARRAY, monsters_textures_array_id_ );
+
+	monsters_shader_.Bind();
+	monsters_shader_.UniformInt( "tex", 0 );
+
+	monsters_vertex_buffer_.Bind();
+
+	glEnable( GL_CULL_FACE );
+	glCullFace( GL_BACK );
+
+	const mx_LevelData& level_data= level_.GetLevelData();
+	for( unsigned int s= 0; s < level_data.sector_count; s++ )
+	{
+		if( level_data.sectors[s].traverse_id != visible_sectors_tag_ )
+			continue;
+
+		for( unsigned int a= 0; a < level_data.sectors[s].ammo_box_count; a++ )
+		{
+			const mx_AmmoBox& box=level_data.sectors[s].ammo_boxes[a];
+
+			float translate_mat[16];
+			float rotate_mat[16];
+			float result_mat[16];
+			float normals_mat[9];
+
+			// Rotate a
+			float rotation_vector_rotation= mx_MainLoop::Instance()->GetTime();
+			float self_rotation= rotation_vector_rotation * ( 9.0f / 16.0f);
+			float rotation_vec[3];
+			rotation_vec[0]= std::cosf(rotation_vector_rotation);
+			rotation_vec[1]= std::sinf(rotation_vector_rotation);
+			rotation_vec[2]= 0.0f;
+			mxMat4RotateAroundVector( rotate_mat, rotation_vec, self_rotation );
+
+			mxMat4Translate( translate_mat, box.pos );
+			mxMat4Mul( rotate_mat, translate_mat, result_mat );
+			mxMat4Mul( result_mat, view_matrix_ );
+
+			monsters_shader_.UniformMat4( "mat", result_mat );
+
+			mxMat4ToMat3( rotate_mat, normals_mat );
+			monsters_shader_.UniformMat3( "nmat", normals_mat );
+
+			monsters_shader_.UniformFloat( "texn", float( LastMonster + box.type ) + g_texture_aray_coord_eps );
+
+			glDrawElements(
+				GL_TRIANGLES,
+				monsters_models_index_count_[LastMonster],
+				GL_UNSIGNED_SHORT,
+				(void*)( monsters_models_first_index_[LastMonster] * sizeof(unsigned short) ) );
+		} // for ammo boxes
+	} // for sectors
 
 	glDisable (GL_CULL_FACE );
 }

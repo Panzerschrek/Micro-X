@@ -5,16 +5,20 @@
 namespace mx_Models
 {
 
+const unsigned char cube[]=
+#include "../models/cube.h"
+;
+
+const unsigned char icosahedron[]=
+#include "../models/icosahedron.h"
+;
+
 static const unsigned char robot_model[]=
 #include "../models/robot.h"
 ;
 
 static const unsigned char pyramid_robot_model[]=
 #include "../models/pyramid_robot.h"
-;
-
-const unsigned char icosahedron[]=
-#include "../models/icosahedron.h"
 ;
 
 const unsigned char* monsters_models[LastMonster]=

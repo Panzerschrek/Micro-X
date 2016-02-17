@@ -27,6 +27,7 @@ private:
 	void CalculateMatrices();
 	void DrawWorld();
 	void DrawMonsters();
+	void DrawAmmo();
 	void DrawBullets();
 
 	void MakeLighting();
@@ -44,9 +45,11 @@ private:
 	mx_VertexBuffer world_vertex_buffer_;
 
 	mx_GLSLProgram monsters_shader_;
+
+	// HACK - last model in this array is ammo box
 	mx_VertexBuffer monsters_vertex_buffer_;
-	unsigned int monsters_models_first_index_[ LastMonster ];
-	unsigned int monsters_models_index_count_[ LastMonster ];
+	unsigned int monsters_models_first_index_[ LastMonster + 1 ];
+	unsigned int monsters_models_index_count_[ LastMonster + 1 ];
 
 	mx_GLSLProgram plasma_ball_shader_;
 	mx_VertexBuffer plasma_balls_vertex_buffer_;
@@ -60,6 +63,8 @@ private:
 
 	GLuint world_texture_array_;
 	GLuint world_normal_maps_array_;
+
+	// HACK. Here placed, also, ammo boxes textures
 	GLuint monsters_textures_array_id_;
 
 	bool screen_buffers_initialized_;

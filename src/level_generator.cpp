@@ -778,6 +778,11 @@ void mx_LevelGenerator::SetupRoomSector( const Room* room, mx_LevelSector* secto
 			sector->lights[l].pos[i]= rand_.RandF( sector->bb_min[i] + 1.0f, sector->bb_max[i] - 1.0f );
 			sector->lights[l].light_rgb[i]= rand_.RandF( 0.5f, 2.0f );
 		}
+
+	sector->ammo_box_count= 1;
+	for( unsigned int i= 0; i < 3; i++ )
+		sector->ammo_boxes[0].pos[i]= 0.5f * ( sector->bb_min[i] + sector->bb_max[i] );
+	sector->ammo_boxes[0].type= BulletType( rand_.Rand() % LastBullet );
 }
 
 void mx_LevelGenerator::SetupConnectionSector( const Connection* connection, mx_LevelSector* sector )
@@ -842,6 +847,8 @@ void mx_LevelGenerator::SetupConnectionSector( const Connection* connection, mx_
 	}
 
 	MX_ASSERT( sector->light_count == light_count );
+
+	sector->ammo_box_count= 0;
 }
 
 void mx_LevelGenerator::CalculateNormals()

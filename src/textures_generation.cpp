@@ -185,10 +185,91 @@ static void GenPyramidRobotTexture( mx_Texture * texture )
 	texture->FillRect( 180, 64, 40, 40, g_monsters_dark_color );
 }
 
-void (* const gen_monsters_textures_func_table[LastMonster])( mx_Texture * texture )=
+static void GetAmmoBoxTextureBase( mx_Texture* texture, const float* color )
+{
+	static const float c_bg[4]= { 0.1f, 0.1f, 0.1f, 0.9f };
+	texture->Fill( c_bg );
+
+	unsigned int border_size= texture->SizeX() >> 4;
+	unsigned int corner_size= border_size * 3;
+
+	// Left
+	texture->FillRect(
+		0, 0,
+		border_size, texture->SizeY(),
+		color );
+	// Right
+	texture->FillRect(
+		texture->SizeX() - border_size, 0,
+		border_size, texture->SizeY(),
+		color );
+
+	// Bottom
+	texture->FillRect(
+		0, 0,
+		texture->SizeX(), border_size,
+		color );
+	// Top
+	texture->FillRect(
+		0, texture->SizeY() - border_size,
+		texture->SizeX(), border_size,
+		color );
+
+	// Lower left
+	texture->FillRect(
+		0, 0,
+		corner_size, corner_size,
+		color );
+	// Lower Right
+	texture->FillRect(
+		texture->SizeX() - corner_size, 0,
+		corner_size, corner_size,
+		color );
+
+	// Upper left
+	texture->FillRect(
+		0, texture->SizeX() - corner_size,
+		corner_size, corner_size,
+		color );
+	// Upper Right
+	texture->FillRect(
+		texture->SizeX() - corner_size, texture->SizeX() - corner_size,
+		corner_size, corner_size,
+		color );
+}
+
+static void GenBulletAmmoBoxTexture( mx_Texture* texture )
+{
+	// TODO - move all bullets colors to one place
+	static const float c_color[4]= { 1.0f, 1.0f, 1.0f, 0.0f };
+	GetAmmoBoxTextureBase( texture, c_color );
+}
+
+static void GenRocketAmmoBoxTexture( mx_Texture* texture )
+{
+	// TODO - move all bullets colors to one place
+	static const float c_color[4]= { 0.8f, 0.8f, 0.2f, 0.0f };
+	GetAmmoBoxTextureBase( texture, c_color );
+}
+
+static void GenPlasmaAmmoBoxTexture( mx_Texture* texture )
+{
+	// TODO - move all bullets colors to one place
+	static const float c_color[4]= { 0.2f, 1.0f, 0.2f, 0.0f };
+	GetAmmoBoxTextureBase( texture, c_color );
+}
+
+void (* const gen_monsters_textures_func_table[LastMonster])( mx_Texture* texture )=
 {
 	GenOctoRobotTexture,
 	GenPyramidRobotTexture,
+};
+
+void (* const gen_ammo_textures_func_table[LastBullet])( mx_Texture* texture )=
+{
+	GenBulletAmmoBoxTexture,
+	GenRocketAmmoBoxTexture,
+	GenPlasmaAmmoBoxTexture,
 };
 
 void (* const gen_level_textures_func_table[LastLevelTexture])( mx_Texture* texture )=
