@@ -4,6 +4,7 @@ namespace mx_GameConstants
 {
 
 const int initial_player_health= 100;
+const int player_max_health= 100;
 
 const int initial_monsters_health[LastMonster]=
 {

@@ -19,6 +19,7 @@ namespace mx_GameConstants
 {
 
 extern const int initial_player_health;
+extern const int player_max_health;
 
 extern const int initial_monsters_health[LastMonster];
 extern const float monsters_radius[LastMonster];

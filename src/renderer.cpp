@@ -825,24 +825,45 @@ void mx_Renderer::DrawGui()
 	GuiVertex vertices[ MX_MAX_GUI_VERTICES ];
 	GuiVertex* v= vertices;
 
+	const int c_screen_border_indent= 20;
+
 	{ // health
 		static const unsigned char c_health_color[4]= { 64, 240, 64, 128 };
 		static const unsigned char c_health_bg_color[4]= { 255, 255, 255, 64 };
 
+		const int c_health_bar_width= 20;
+		const int c_health_bar_border_width= 2;
+		const int c_health_bar_height= 100;
+
 		v= AddGuiQuad(
 			v,
-			int(main_loop_.ViewportWidth()) - 40-2, 20-2,
-			20+4, 100+4,
+			int(main_loop_.ViewportWidth()) - ( c_screen_border_indent + c_health_bar_border_width * 2 + c_health_bar_width ),
+			c_screen_border_indent,
+			c_health_bar_width + c_health_bar_border_width * 2,
+			c_health_bar_height + c_health_bar_border_width * 2,
 			c_health_bg_color );
 
 		v= AddGuiQuad(
 			v,
-			int(main_loop_.ViewportWidth()) - 40, 20,
-			20, player_.GetHealth(),
+			int(main_loop_.ViewportWidth()) - ( c_screen_border_indent + c_health_bar_border_width + c_health_bar_width ),
+			c_screen_border_indent + c_health_bar_border_width,
+			c_health_bar_width,
+			player_.GetHealth() * c_health_bar_height / mx_GameConstants::player_max_health,
 			c_health_color );
 	}
 	{ // ammo
-		int y= 40;
+		const int c_border= 3;
+		const int c_current_weapon_quad_size= 24;
+		int x0= c_screen_border_indent;
+		int y= c_screen_border_indent;
+
+		unsigned char current_weapon_color[4];
+		FloatColorToByte( mx_GameConstants::bullets_colors[ player_.GetCurrentWeapon() ], current_weapon_color );
+		current_weapon_color[3]= 128;
+		v= AddGuiQuad( v, x0, y, c_current_weapon_quad_size, c_current_weapon_quad_size, current_weapon_color );
+
+		y+= c_current_weapon_quad_size + c_border * 3;
+
 		for( unsigned int a= 0; a < LastBullet; a++ )
 		{
 			unsigned char color[4];
@@ -854,15 +875,13 @@ void mx_Renderer::DrawGui()
 			unsigned int ammo_x8 = ammo / 8 % 8;
 			unsigned int ammo_x1 = ammo % 8;
 
-			int x0= 20;
 			int y0= y;
-			const int c_border= 3;
 			
 			for( unsigned int i= 0; i < ammo_x1; i++ )
 			{
 				v= AddGuiQuad(
 					v,
-					x0 + i * (4 + c_border), y,
+					(2*c_border + x0) + i * (4 + c_border), y,
 					4, 4,
 					color );
 			}
@@ -872,7 +891,7 @@ void mx_Renderer::DrawGui()
 			{
 				v= AddGuiQuad(
 					v,
-					x0 + i * (8 + c_border), y,
+					(2*c_border + x0) + i * (8 + c_border), y,
 					8, 8,
 					color );
 			}
@@ -882,7 +901,7 @@ void mx_Renderer::DrawGui()
 			{
 				v= AddGuiQuad(
 					v,
-					x0 + i * (16 + c_border), y,
+					(2*c_border + x0) + i * (16 + c_border), y,
 					16, 16,
 					color );
 			}
@@ -890,7 +909,7 @@ void mx_Renderer::DrawGui()
 
 			v= AddGuiQuad(
 				v,
-				x0 - c_border * 2, y0,
+				x0, y0,
 				c_border, y - y0,
 				color );
 

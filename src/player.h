@@ -15,6 +15,7 @@ public:
 
 	const mx_LevelSector* GetSector() const;
 	unsigned int GetAmmo( BulletType type ) const;
+	BulletType GetCurrentWeapon() const;
 
 	void Tick();
 	void Rotate( float pixel_delta_x, float pixel_delta_y );
@@ -124,6 +125,11 @@ inline const mx_LevelSector* mx_Player::GetSector() const
 inline unsigned int mx_Player::GetAmmo( BulletType type ) const
 {
 	return ammo_[type];
+}
+
+inline BulletType mx_Player::GetCurrentWeapon() const
+{
+	return current_weapon_;
 }
 
 inline void mx_Player::ShotButtonPressed()
