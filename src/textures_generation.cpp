@@ -1,5 +1,6 @@
 #include <algorithm>
 
+#include "mx_assert.h"
 #include "mx_math.h"
 #include "texture.h"
 
@@ -187,32 +188,35 @@ static void GenPyramidRobotTexture( mx_Texture * texture )
 
 static void GetAmmoBoxTextureBase( mx_Texture* texture, const float* color )
 {
+	MX_ASSERT( texture->SizeX() == texture->SizeY() );
+	unsigned int size= texture->SizeX();
+
 	static const float c_bg[4]= { 0.1f, 0.1f, 0.1f, 0.9f };
 	texture->Fill( c_bg );
 
-	unsigned int border_size= texture->SizeX() >> 4;
+	unsigned int border_size= size >> 4;
 	unsigned int corner_size= border_size * 3;
 
 	// Left
 	texture->FillRect(
 		0, 0,
-		border_size, texture->SizeY(),
+		border_size, size,
 		color );
 	// Right
 	texture->FillRect(
-		texture->SizeX() - border_size, 0,
-		border_size, texture->SizeY(),
+		size - border_size, 0,
+		border_size, size,
 		color );
 
 	// Bottom
 	texture->FillRect(
 		0, 0,
-		texture->SizeX(), border_size,
+		size, border_size,
 		color );
 	// Top
 	texture->FillRect(
-		0, texture->SizeY() - border_size,
-		texture->SizeX(), border_size,
+		0, size - border_size,
+		size, border_size,
 		color );
 
 	// Lower left
@@ -222,41 +226,75 @@ static void GetAmmoBoxTextureBase( mx_Texture* texture, const float* color )
 		color );
 	// Lower Right
 	texture->FillRect(
-		texture->SizeX() - corner_size, 0,
+		size - corner_size, 0,
 		corner_size, corner_size,
 		color );
 
 	// Upper left
 	texture->FillRect(
-		0, texture->SizeX() - corner_size,
+		0, size - corner_size,
 		corner_size, corner_size,
 		color );
 	// Upper Right
 	texture->FillRect(
-		texture->SizeX() - corner_size, texture->SizeX() - corner_size,
+		size - corner_size, size - corner_size,
 		corner_size, corner_size,
 		color );
 }
 
 static void GenBulletAmmoBoxTexture( mx_Texture* texture )
 {
+	MX_ASSERT( texture->SizeX() == texture->SizeY() );
+	unsigned int size= texture->SizeX();
+
 	// TODO - move all bullets colors to one place
 	static const float c_color[4]= { 1.0f, 1.0f, 1.0f, 0.0f };
 	GetAmmoBoxTextureBase( texture, c_color );
+
+	for( unsigned int x= 0; x < 3; x++ )
+	for( unsigned int y= 0; y < 2; y++ )
+		texture->FillRect(
+			( size * ( 9 +  6 * x ) ) >> 5,
+			( size * ( 6 + 12 * y ) ) >> 5,
+			( 2 * size ) >> 5,
+			( 8 * size ) >> 5,
+			c_color );
+
 }
 
 static void GenRocketAmmoBoxTexture( mx_Texture* texture )
 {
+	MX_ASSERT( texture->SizeX() == texture->SizeY() );
+	unsigned int size= texture->SizeX();
+
 	// TODO - move all bullets colors to one place
 	static const float c_color[4]= { 0.8f, 0.8f, 0.2f, 0.0f };
 	GetAmmoBoxTextureBase( texture, c_color );
+
+	texture->FillRect(
+		( size * 11 ) >> 5,
+		( size *  6 ) >> 5,
+		( size * 10 ) >> 5,
+		( size * 20 ) >> 5,
+		c_color );
 }
 
 static void GenPlasmaAmmoBoxTexture( mx_Texture* texture )
 {
+	MX_ASSERT( texture->SizeX() == texture->SizeY() );
+	unsigned int size= texture->SizeX();
+
 	// TODO - move all bullets colors to one place
 	static const float c_color[4]= { 0.2f, 1.0f, 0.2f, 0.0f };
 	GetAmmoBoxTextureBase( texture, c_color );
+
+	for( unsigned int x= 0; x < 2; x++ )
+	for( unsigned int y= 0; y < 2; y++ )
+		texture->FillEllipse(
+			( size * ( 5 + x * 6 ) ) >> 4,
+			( size * ( 5 + y * 6 ) ) >> 4,
+			size >> 3,
+			c_color );
 }
 
 void (* const gen_monsters_textures_func_table[LastMonster])( mx_Texture* texture )=
