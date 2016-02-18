@@ -27,12 +27,11 @@ struct GuiVertex
 
 static const float g_texture_aray_coord_eps= 0.1f;
 
-// TODO - move all bullets colors to one place
-static const float g_bullets_light_color[LastBullet][3]=
+static const float g_bullets_light_intensity[LastBullet]=
 {
-	{ 0.1f, 0.1f, 0.1f },
-	{ 0.4f, 0.3f, 0.1f },
-	{ 0.08f, 0.2f, 0.08f },
+	0.1f,
+	0.3f,
+	0.2f,
 };
 
 static void MarkSectors_r( mx_LevelSector* sector, unsigned int tag, unsigned int depth )
@@ -68,7 +67,15 @@ static GuiVertex* AddGuiQuad( GuiVertex* v, int x, int y, int width, int height,
 	v[5]= v[2];
 
 	return v + 6;
+}
 
+static void FloatColorToByte( const float* float_color, unsigned char* byte_color )
+{
+	for( unsigned int i= 0; i < 3; i++ )
+	{
+		MX_ASSERT( float_color[i] >= 0.0f && float_color[i] <= 1.0f );
+		byte_color[i]= (unsigned char)( float_color[i] * 255.0f );
+	}
 }
 
 static void SetupFBOTextureParameters()
@@ -655,7 +662,7 @@ void mx_Renderer::DrawBullets()
 	for( unsigned int b= 0; b < bullet_count; b++ )
 	{
 		VEC3_CPY( bullets_vertices[b].pos, bullets[b].pos );
-		VEC3_CPY( bullets_vertices[b].color, g_bullets_light_color[bullets[b].type] );
+		VEC3_CPY( bullets_vertices[b].color, mx_GameConstants::bullets_colors[ bullets[b].type ] );
 		mxVec3Normalize( bullets_vertices[b].color );
 	}
 
@@ -729,8 +736,14 @@ void mx_Renderer::MakeLighting()
 	for( unsigned int b= 0; b < bullet_count; b++ )
 	{
 		mx_Light light_source;
+
 		VEC3_CPY( light_source.pos, bullets[b].pos );
-		VEC3_CPY( light_source.light_rgb, g_bullets_light_color[bullets[b].type] );
+
+		mxVec3Mul(
+			mx_GameConstants::bullets_colors[ bullets[b].type ],
+			g_bullets_light_intensity[ bullets[b].type ],
+			light_source.light_rgb );
+
 		DrawLightSource( light_source );
 	}
 
@@ -829,17 +842,13 @@ void mx_Renderer::DrawGui()
 			c_health_color );
 	}
 	{ // ammo
-		// TODO - select same color, as for bullets lights and sprites
-		static const unsigned char c_color[LastBullet][4]=
-		{
-			{ 255, 255, 255, 128 },
-			{ 255, 255,  64, 128 },
-			{  64, 255,  64, 128 },
-		};
-
 		int y= 40;
 		for( unsigned int a= 0; a < LastBullet; a++ )
 		{
+			unsigned char color[4];
+			FloatColorToByte( mx_GameConstants::bullets_colors[a], color );
+			color[3]= 128;
+
 			unsigned int ammo= player_.GetAmmo(BulletType(a));
 			unsigned int ammo_x64= ammo / 64;
 			unsigned int ammo_x8 = ammo / 8 % 8;
@@ -855,7 +864,7 @@ void mx_Renderer::DrawGui()
 					v,
 					x0 + i * (4 + c_border), y,
 					4, 4,
-					c_color[a] );
+					color );
 			}
 			y+= 4 + c_border;
 
@@ -865,7 +874,7 @@ void mx_Renderer::DrawGui()
 					v,
 					x0 + i * (8 + c_border), y,
 					8, 8,
-					c_color[a] );
+					color );
 			}
 			y+= 8 + c_border;
 
@@ -875,7 +884,7 @@ void mx_Renderer::DrawGui()
 					v,
 					x0 + i * (16 + c_border), y,
 					16, 16,
-					c_color[a] );
+					color );
 			}
 			y+= 16;
 
@@ -883,7 +892,7 @@ void mx_Renderer::DrawGui()
 				v,
 				x0 - c_border * 2, y0,
 				c_border, y - y0,
-				c_color[a] );
+				color );
 
 			y+= c_border * 2;
 		}

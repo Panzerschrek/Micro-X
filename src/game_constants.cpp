@@ -35,6 +35,13 @@ const float bullets_speed[LastBullet]=
 	 6.0f,
 };
 
+const float bullets_colors[LastBullet][3]=
+{
+	{ 0.9f, 0.9f, 0.9f },
+	{ 0.9f, 0.8f, 0.3f },
+	{ 0.2f, 0.9f, 0.2f },
+};
+
 const unsigned int player_initial_ammo[LastBullet]=
 {
 	100,

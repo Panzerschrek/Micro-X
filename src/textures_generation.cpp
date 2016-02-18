@@ -1,5 +1,6 @@
 #include <algorithm>
 
+#include "game_constants.h"
 #include "mx_assert.h"
 #include "mx_math.h"
 #include "texture.h"
@@ -242,14 +243,22 @@ static void GetAmmoBoxTextureBase( mx_Texture* texture, const float* color )
 		color );
 }
 
+static void SetBulletColor( float* color, BulletType bullet )
+{
+	for( unsigned int i= 0; i < 3; i++ )
+		color[i]= mx_GameConstants::bullets_colors[bullet][i];
+	color[3]= 0.0f;
+}
+
 static void GenBulletAmmoBoxTexture( mx_Texture* texture )
 {
 	MX_ASSERT( texture->SizeX() == texture->SizeY() );
 	unsigned int size= texture->SizeX();
 
-	// TODO - move all bullets colors to one place
-	static const float c_color[4]= { 1.0f, 1.0f, 1.0f, 0.0f };
-	GetAmmoBoxTextureBase( texture, c_color );
+	float color[4];
+	SetBulletColor( color, MachinegunBullet );
+
+	GetAmmoBoxTextureBase( texture, color );
 
 	for( unsigned int x= 0; x < 3; x++ )
 	for( unsigned int y= 0; y < 2; y++ )
@@ -258,8 +267,7 @@ static void GenBulletAmmoBoxTexture( mx_Texture* texture )
 			( size * ( 6 + 12 * y ) ) >> 5,
 			( 2 * size ) >> 5,
 			( 8 * size ) >> 5,
-			c_color );
-
+			color );
 }
 
 static void GenRocketAmmoBoxTexture( mx_Texture* texture )
@@ -267,16 +275,17 @@ static void GenRocketAmmoBoxTexture( mx_Texture* texture )
 	MX_ASSERT( texture->SizeX() == texture->SizeY() );
 	unsigned int size= texture->SizeX();
 
-	// TODO - move all bullets colors to one place
-	static const float c_color[4]= { 0.8f, 0.8f, 0.2f, 0.0f };
-	GetAmmoBoxTextureBase( texture, c_color );
+	float color[4];
+	SetBulletColor( color, Rocket );
+
+	GetAmmoBoxTextureBase( texture, color );
 
 	texture->FillRect(
 		( size * 11 ) >> 5,
 		( size *  6 ) >> 5,
 		( size * 10 ) >> 5,
 		( size * 20 ) >> 5,
-		c_color );
+		color );
 }
 
 static void GenPlasmaAmmoBoxTexture( mx_Texture* texture )
@@ -284,9 +293,10 @@ static void GenPlasmaAmmoBoxTexture( mx_Texture* texture )
 	MX_ASSERT( texture->SizeX() == texture->SizeY() );
 	unsigned int size= texture->SizeX();
 
-	// TODO - move all bullets colors to one place
-	static const float c_color[4]= { 0.2f, 1.0f, 0.2f, 0.0f };
-	GetAmmoBoxTextureBase( texture, c_color );
+	float color[4];
+	SetBulletColor( color, PlasmaBall );
+
+	GetAmmoBoxTextureBase( texture, color );
 
 	for( unsigned int x= 0; x < 2; x++ )
 	for( unsigned int y= 0; y < 2; y++ )
@@ -294,7 +304,7 @@ static void GenPlasmaAmmoBoxTexture( mx_Texture* texture )
 			( size * ( 5 + x * 6 ) ) >> 4,
 			( size * ( 5 + y * 6 ) ) >> 4,
 			size >> 3,
-			c_color );
+			color );
 }
 
 void (* const gen_monsters_textures_func_table[LastMonster])( mx_Texture* texture )=

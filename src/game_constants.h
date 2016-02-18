@@ -31,6 +31,8 @@ extern const int bullets_damage[LastBullet];
 // units per second
 extern const float bullets_speed[LastBullet];
 
+extern const float bullets_colors[LastBullet][3];
+
 extern const unsigned int player_initial_ammo[LastBullet];
 
 extern const float player_radius;
