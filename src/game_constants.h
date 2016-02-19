@@ -35,7 +35,9 @@ extern const float bullets_speed[LastBullet];
 extern const float bullets_colors[LastBullet][3];
 
 extern const unsigned int player_initial_ammo[LastBullet];
+extern const unsigned int ammo_boxes_bullets_count[LastBullet];
 
+extern const float ammo_pockup_radius;
 extern const float player_radius;
 
 extern const float machinegun_shot_interval;

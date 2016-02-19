@@ -50,6 +50,14 @@ const unsigned int player_initial_ammo[LastBullet]=
 	 30,
 };
 
+const unsigned int ammo_boxes_bullets_count[LastBullet]=
+{
+	50,
+	10,
+	20,
+};
+
+const float ammo_pockup_radius= 0.2f;
 const float player_radius= 0.3f;
 
 const float machinegun_shot_interval= 1.0f / 8.0f;

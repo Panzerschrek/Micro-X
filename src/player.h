@@ -10,6 +10,7 @@ public:
 	~mx_Player();
 
 	void SetLevel( mx_Level* level );
+	void AddAmmo( BulletType type, unsigned int count );
 
 	const float Fov() const;
 
@@ -104,6 +105,11 @@ private:
 inline void mx_Player::SetLevel( mx_Level* level )
 {
 	level_= level;
+}
+
+inline void mx_Player::AddAmmo( BulletType type, unsigned int count )
+{
+	ammo_[type]+= count;
 }
 
 /*

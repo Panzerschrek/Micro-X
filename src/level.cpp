@@ -298,6 +298,30 @@ kill:
 		b++;
 	}
 
+	// Try pickup ammo
+	if( mx_LevelSector* sector= const_cast<mx_LevelSector*>( player_.GetSector() ) )
+	{
+		for( unsigned int a= 0; a < sector->ammo_box_count; )
+		{
+			mx_AmmoBox& box= sector->ammo_boxes[a];
+
+			if( mxSquareDistance( player_.Pos(), box.pos ) <= 
+				mx_GameConstants::ammo_pockup_radius * mx_GameConstants::ammo_pockup_radius )
+			{
+				player_.AddAmmo( box.type, mx_GameConstants::ammo_boxes_bullets_count[box.type] );
+
+				mx_SoundEngine::Instance()->AddSingleSound( SoundPowerupPickup, 1.0f, 1.0f, box.pos );
+
+				if( a != sector->ammo_box_count - 1 )
+					sector->ammo_boxes[a]= sector->ammo_boxes[sector->ammo_box_count - 1];
+
+				sector->ammo_box_count--;
+				continue;
+			}
+			a++;
+		}
+	}
+
 	// Remove killed monsters
 	for( unsigned int m= 0; m < monster_count_; )
 	{
