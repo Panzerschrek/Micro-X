@@ -234,7 +234,7 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 		mx_DrawingModelVertex v;
 		monsters_vertex_buffer_.VertexAttrib( 0, 3, GL_FLOAT, false, ((char*)v.pos) - ((char*)&v) );
 		monsters_vertex_buffer_.VertexAttrib( 1, 3, GL_FLOAT, true, ((char*)v.normal) - ((char*)&v) );
-		monsters_vertex_buffer_.VertexAttrib( 2, 3, GL_FLOAT, false, ((char*)v.tex_coord) - ((char*)&v) );
+		monsters_vertex_buffer_.VertexAttrib( 2, 2, GL_FLOAT, false, ((char*)v.tex_coord) - ((char*)&v) );
 	}
 	{ // monsters shader
 		monsters_shader_.SetAttribLocation( "p", 0 );
