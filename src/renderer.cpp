@@ -827,9 +827,10 @@ void mx_Renderer::DrawGui()
 
 	const int c_screen_border_indent= 20;
 
+	static const unsigned char c_gui_main_color[4]= { 255, 255, 255, 64 };
+
 	{ // health
 		static const unsigned char c_health_color[4]= { 64, 240, 64, 128 };
-		static const unsigned char c_health_bg_color[4]= { 255, 255, 255, 64 };
 
 		const int c_health_bar_width= 20;
 		const int c_health_bar_border_width= 2;
@@ -841,7 +842,7 @@ void mx_Renderer::DrawGui()
 			c_screen_border_indent,
 			c_health_bar_width + c_health_bar_border_width * 2,
 			c_health_bar_height + c_health_bar_border_width * 2,
-			c_health_bg_color );
+			c_gui_main_color );
 
 		v= AddGuiQuad(
 			v,
@@ -915,6 +916,49 @@ void mx_Renderer::DrawGui()
 
 			y+= c_border * 2;
 		}
+	}
+	{ // crosshair
+		int center_x= main_loop_.ViewportWidth () / 2;
+		int center_y= main_loop_.ViewportHeight() / 2;
+
+		const int c_bar_length= 14;
+		const int c_half_bar_width= 2;
+		const int c_bar_width= c_half_bar_width * 2;
+		const int c_distance_to_center= 10;
+
+		// left
+		v= AddGuiQuad(
+			v,
+			center_x - (c_bar_length + c_distance_to_center),
+			center_y - c_half_bar_width,
+			c_bar_length,
+			c_bar_width,
+			c_gui_main_color );
+		// right
+		v= AddGuiQuad(
+			v,
+			center_x + c_distance_to_center,
+			center_y - c_half_bar_width,
+			c_bar_length,
+			c_bar_width,
+			c_gui_main_color );
+
+		// top
+		v= AddGuiQuad(
+			v,
+			center_x - c_half_bar_width,
+			center_y + c_distance_to_center,
+			c_bar_width,
+			c_bar_length,
+			c_gui_main_color );
+		// bottom
+		v= AddGuiQuad(
+			v,
+			center_x - c_half_bar_width,
+			center_y - (c_distance_to_center + c_bar_length),
+			c_bar_width,
+			c_bar_length,
+			c_gui_main_color );
 	}
 
 	MX_ASSERT( v - vertices <= MX_MAX_GUI_VERTICES );
