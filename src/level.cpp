@@ -387,12 +387,12 @@ void mx_Level::RocketBlast( const float* pos )
 		else
 			pawn= monsters_[m];
 
-		float dist= mxDistance( pos, pawn->Pos() );
-		if( dist < mx_GameConstants::rocket_blast_max_damage_distance )
+		float square_dist= mxSquareDistance( pos, pawn->Pos() );
+		if( square_dist < mx_GameConstants::rocket_blast_max_damage_distance * mx_GameConstants::rocket_blast_max_damage_distance )
 		{
 			int damage=
 				min(
-					int( mx_GameConstants::rocket_blast_damage_on_distance_1 / dist ),
+					int( mx_GameConstants::rocket_blast_damage_on_distance_1 / square_dist ),
 					mx_GameConstants::rocket_blast_max_damage );
 			if( damage != 0 )
 				pawn->Hit( damage );

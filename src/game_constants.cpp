@@ -19,7 +19,7 @@ const float monsters_radius[LastMonster]=
 };
 
 const int rocket_blast_max_damage= 16;
-const float rocket_blast_damage_on_distance_1= 8.0f;
+const float rocket_blast_damage_on_distance_1= 20.0f;
 const float rocket_blast_max_damage_distance= 3.0f;
 
 const int bullets_damage[LastBullet]=
@@ -31,15 +31,15 @@ const int bullets_damage[LastBullet]=
 
 const float bullets_speed[LastBullet]=
 {
-	50.0f,
-	 4.0f,
+	36.0f,
 	 6.0f,
+	12.0f,
 };
 
 const float bullets_colors[LastBullet][3]=
 {
 	{ 0.9f, 0.9f, 0.9f },
-	{ 0.9f, 0.8f, 0.3f },
+	{ 0.9f, 0.7f, 0.3f },
 	{ 0.2f, 0.9f, 0.2f },
 };
 
@@ -57,7 +57,7 @@ const unsigned int ammo_boxes_bullets_count[LastBullet]=
 	20,
 };
 
-const float ammo_pockup_radius= 0.2f;
+const float ammo_pockup_radius= 0.4f;
 const float player_radius= 0.3f;
 
 const float machinegun_shot_interval= 1.0f / 8.0f;

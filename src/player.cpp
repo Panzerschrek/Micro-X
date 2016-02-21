@@ -138,7 +138,7 @@ void mx_Player::Tick()
 
 	static const float c_acceleration= 20.0f;
 	static const float c_deceleration= -7.0f;
-	static const float c_max_speed= 4.0f;
+	static const float c_max_speed= 3.5f;
 	for( unsigned int i= 0; i < 3; i++ )
 	{
 		speed_[i]+= c_acceleration * dt * move_vector[i];
