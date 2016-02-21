@@ -58,6 +58,11 @@ mx_Player::~mx_Player()
 {
 }
 
+void mx_Player::SetPos( const float* pos )
+{
+	VEC3_CPY( pos_, pos );
+}
+
 void mx_Player::Tick()
 {
 	float dt= mx_MainLoop::Instance()->GetTickTime();

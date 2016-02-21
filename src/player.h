@@ -10,6 +10,7 @@ public:
 	~mx_Player();
 
 	void SetLevel( mx_Level* level );
+	void SetPos( const float* pos );
 	void AddAmmo( BulletType type, unsigned int count );
 
 	const float Fov() const;

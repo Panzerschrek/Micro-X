@@ -16,10 +16,26 @@ mx_Level::mx_Level( const mx_LevelData& level_data, mx_Player& player )
 {
 	mx_Rand rand;
 
+	mx_LevelSector* player_sector;
+	do
+	{
+		player_sector= &level_data_.sectors[ rand.Rand() % level_data_.sector_count ];
+	} while( player_sector->type != mx_LevelSector::ROOM );
+
+	{ // spawn player
+		float pos[3];
+		mxVec3Add( player_sector->bb_min, player_sector->bb_max, pos );
+		mxVec3Mul( pos, 0.5f );
+		player_.SetPos( pos );
+
+		// Remove all ammo from this sector
+		player_sector->ammo_box_count= 0;
+	}
+
 	for( unsigned int i= 0; i < level_data_.sector_count && monster_count_ < MX_MAX_MONSTERS; i++ )
 	{
 		const mx_LevelSector& sector= level_data_.sectors[i];
-		if( sector.type != mx_LevelSector::ROOM )
+		if( &sector == player_sector || sector.type != mx_LevelSector::ROOM )
 			continue;
 		
 		float pos[3];
