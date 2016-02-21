@@ -32,6 +32,8 @@ public:
 
 	MonsterType GetType() const;
 
+	const mx_LevelSector& GetSector() const;
+
 protected:
 	virtual void ExecFunc();
 
@@ -63,4 +65,9 @@ private:
 inline MonsterType mx_Monster::GetType() const
 {
 	return type_;
+}
+
+inline const mx_LevelSector& mx_Monster::GetSector() const
+{
+	return home_sector_;
 }

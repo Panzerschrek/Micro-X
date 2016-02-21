@@ -571,6 +571,8 @@ void mx_Renderer::DrawMonsters()
 		float result_mat[16];
 
 		const mx_Monster* monster= monsters[m];
+		if( monster->GetSector().traverse_id != visible_sectors_tag_ )
+			continue;
 
 		mxMat4Translate( translate_mat, monster->Pos() );
 		monster->CreateRotationMatrix4( rotate_mat, true );
