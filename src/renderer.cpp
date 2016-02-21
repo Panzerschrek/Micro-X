@@ -29,9 +29,9 @@ static const float g_texture_aray_coord_eps= 0.1f;
 
 static const float g_bullets_light_intensity[LastBullet]=
 {
-	0.1f,
-	0.3f,
-	0.2f,
+	0.05f,
+	0.5f,
+	0.15f,
 };
 
 static void MarkSectors_r( mx_LevelSector* sector, unsigned int tag, unsigned int depth )
@@ -775,7 +775,7 @@ void mx_Renderer::DrawLightSource( const mx_Light& light_source )
 	static const float c_lsb_vec[4]= { c_min_valuable_light, c_min_valuable_light, c_min_valuable_light, c_min_valuable_light };
 	postprocessing_shader_.UniformVec4( "lsb", c_lsb_vec );
 	
-	if( mxSquareDistance( light_source.pos, player_.Pos() ) >= min_light_distance * min_light_distance )
+	if( mxSquareDistance( light_source.pos, player_.Pos() ) >= ( min_light_distance + z_near_ ) * ( min_light_distance + z_near_ ) )
 	{
 		mxMat4Scale( scale_mat, min_light_distance );
 		mxMat4Translate( translate_mat, light_source.pos );
