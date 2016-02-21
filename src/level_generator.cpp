@@ -392,6 +392,7 @@ void mx_LevelGenerator::GenerateMeshes()
 	out_level_data_.vertices= new mx_LevelVertex[ out_level_data_.vertices_capacity ];
 	out_level_data_.triangles= new mx_LevelTriangle[ out_level_data_.triangles_capacity ];
 
+	out_level_data_.icosahedron_count= 0;
 	out_level_data_.sector_count= 0;
 	out_level_data_.sectors= new mx_LevelSector[ room_count_ + connection_count_ ];
 
@@ -413,6 +414,13 @@ void mx_LevelGenerator::GenerateMeshes()
 
 			room_to_sector_index[i]= out_level_data_.sector_count;
 
+			sector->has_icosahedron= bool( rand_.Rand() & 1);
+			if( sector->has_icosahedron )
+			{
+				out_level_data_.icosahedron_count++;
+				sector->icosahedron_picked= false;
+			}
+
 			out_level_data_.sector_count++;
 			sector++;
 		}
@@ -426,6 +434,7 @@ void mx_LevelGenerator::GenerateMeshes()
 			SetupConnectionSector( connections_ + i, sector );
 
 			sector->type= mx_LevelSector::CONNECTION;
+			sector->has_icosahedron= false;
 			sector->first_triangle= out_level_data_.triangle_count;
 			AddConnectionCube( connections_ + i );
 			sector->triangles_count= out_level_data_.triangle_count - sector->first_triangle;

@@ -11,7 +11,7 @@
 
 #include "renderer.h"
 
-#define MX_MAX_GUI_VERTICES 4096
+#define MX_MAX_GUI_VERTICES 8192
 
 struct BulletVertex
 {
@@ -67,6 +67,34 @@ static GuiVertex* AddGuiQuad( GuiVertex* v, int x, int y, int width, int height,
 	v[5]= v[2];
 
 	return v + 6;
+}
+
+static GuiVertex* AddGuiIcosahedronProjection( GuiVertex* v, int center_x, int center_y, int radius, const unsigned char* color )
+{
+	GuiVertex* v0= v;
+
+	static const float k= MX_2PI / 6.0f;
+	float radius_f= float(radius);
+
+	for( unsigned int i= 0; i < 6; i++, v+= 3 )
+	{
+		for( unsigned int j= 0; j < 2; j++ )
+		{
+			float a= MX_PI6 + float(i+j) * k;
+			v[j].pos[0]= short( center_x + int(mxRound( std::cosf(a) * radius_f )) );
+			v[j].pos[1]= short( center_y + int(mxRound( std::sinf(a) * radius_f )) );
+		}
+		v[2].pos[0]= short(center_x);
+		v[2].pos[1]= short(center_y);
+	}
+
+	const unsigned int vertex_count= 6 * 3;
+
+	for( unsigned int i= 0; i < vertex_count; i++ )
+	for( unsigned int j= 0; j < 4; j++ )
+		v0[i].color[j]= color[j];
+
+	return v;
 }
 
 static void FloatColorToByte( const float* float_color, unsigned char* byte_color )
@@ -961,6 +989,36 @@ void mx_Renderer::DrawGui()
 			c_bar_width,
 			c_bar_length,
 			c_gui_main_color );
+	}
+	{ // draw icosahedrons
+		static const unsigned char c_icosahedron_color[4]= { 0xFF, 0xFF, 0, 0x7F };
+		const int c_radius= 12;
+		const int c_border_size= 2;
+		const unsigned int c_items_in_row= 12;
+
+		const int x0= c_screen_border_indent + c_radius + c_border_size;
+		int y0= main_loop_.ViewportHeight() - (c_screen_border_indent + c_radius + c_border_size);
+
+		const mx_LevelSector* sectors= level_.GetLevelData().sectors;
+		unsigned int sector_count= level_.GetLevelData().sector_count;
+
+		for( unsigned int s= 0, i= 0; s < sector_count; s++ )
+		{
+			if( !sectors[s].has_icosahedron )
+				continue;
+
+			int column= i % c_items_in_row;
+			int row= i / c_items_in_row;
+
+			int x= x0 + column * (c_radius + c_border_size) * 2;
+			int y= y0 - row * (c_radius + c_border_size + 2) * 2;
+
+			v= AddGuiIcosahedronProjection( v, x, y, c_radius + c_border_size, c_gui_main_color );
+			if( sectors[s].icosahedron_picked )
+				v= AddGuiIcosahedronProjection( v, x, y, c_radius, c_icosahedron_color );
+
+			i++;
+		}
 	}
 
 	MX_ASSERT( v - vertices <= MX_MAX_GUI_VERTICES );

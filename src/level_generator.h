@@ -80,6 +80,10 @@ struct mx_LevelSector
 
 	// Unique number for each sector-graph based algorithms.
 	unsigned int traverse_id;
+
+	float icosahedron_pos[3];
+	bool has_icosahedron;
+	bool icosahedron_picked;
 };
 
 struct mx_LevelData
@@ -94,6 +98,8 @@ struct mx_LevelData
 	mx_LevelTriangle* triangles;
 	unsigned int triangles_capacity;
 	unsigned int triangle_count;
+
+	unsigned int icosahedron_count;
 };
 
 struct mx_LevelMesh
