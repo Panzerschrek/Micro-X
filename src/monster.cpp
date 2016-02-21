@@ -270,12 +270,26 @@ void mx_Monster::Attack()
 
 bool mx_Monster::SelectTargetPosition( float* out_pos )
 {
+	static const float c_min_distance= 1.0f;
+	static const float c_max_distance= 6.0f;
+	static const float c_radius= 0.5f;
+
+	float square_dist_to_player = mxSquareDistance( pos_, player_.Pos() );
+	if( square_dist_to_player >= c_max_distance * c_max_distance )
+	{
+		float vec_to_player[3];
+		mxVec3Sub( player_.Pos(), pos_, vec_to_player );
+
+		mxVec3Mul(
+			vec_to_player,
+			rand_.RandF( c_max_distance * 0.5f, c_max_distance ) / std::sqrt(square_dist_to_player),
+			out_pos );
+		mxVec3Add( out_pos, pos_ );
+		return true;
+	}
+
 	for( unsigned int p= 0; p < 256; p++ )
 	{
-		static const float c_min_distance= 1.0f;
-		static const float c_max_distance= 6.0f;
-		static const float c_radius= 0.5f;
-
 		float vec[3];
 		float square_lengh= 0.0f;
 		for( unsigned int i= 0; i < 3; i++ )
