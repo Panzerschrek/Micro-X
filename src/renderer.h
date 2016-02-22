@@ -28,6 +28,7 @@ private:
 	void DrawWorld();
 	void DrawMonsters();
 	void DrawAmmo();
+	void DrawIcosahedrons();
 	void DrawBullets();
 
 	void MakeLighting();
@@ -35,6 +36,8 @@ private:
 	void MakeTonemapping();
 
 	void DrawGui();
+
+	void MakePowerupsRotationMatrix( float* out_mat );
 
 private:
 	const mx_MainLoop& main_loop_;
@@ -46,10 +49,10 @@ private:
 
 	mx_GLSLProgram monsters_shader_;
 
-	// HACK - last model in this array is ammo box
+	// HACK - last models in this array are ammo box and icosahderon
 	mx_VertexBuffer monsters_vertex_buffer_;
-	unsigned int monsters_models_first_index_[ LastMonster + 1 ];
-	unsigned int monsters_models_index_count_[ LastMonster + 1 ];
+	unsigned int monsters_models_first_index_[ LastMonster + 2 ];
+	unsigned int monsters_models_index_count_[ LastMonster + 2 ];
 
 	mx_GLSLProgram plasma_ball_shader_;
 	mx_VertexBuffer plasma_balls_vertex_buffer_;

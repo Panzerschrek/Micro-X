@@ -77,7 +77,7 @@ mx_Level::mx_Level( const mx_LevelData& level_data, mx_Player& player )
 	do
 	{
 		player_sector= &level_data_.sectors[ rand.Rand() % level_data_.sector_count ];
-	} while( player_sector->type != mx_LevelSector::ROOM );
+	} while( !( player_sector->type == mx_LevelSector::ROOM  && !player_sector->has_icosahedron ) );
 
 	{ // spawn player
 		float pos[3];
@@ -380,9 +380,9 @@ kill:
 		b++;
 	}
 
-	// Try pickup ammo
 	if( mx_LevelSector* sector= const_cast<mx_LevelSector*>( player_.GetSector() ) )
 	{
+		// Try pickup ammo
 		for( unsigned int a= 0; a < sector->ammo_box_count; )
 		{
 			mx_AmmoBox& box= sector->ammo_boxes[a];
@@ -401,6 +401,17 @@ kill:
 				continue;
 			}
 			a++;
+		}
+
+		// Try pickup icosahedrons
+		if( sector->has_icosahedron && !sector->icosahedron_picked )
+		{
+			if( mxSquareDistance( player_.Pos(), sector->icosahedron_pos ) <= 
+				mx_GameConstants::icosahedron_pickup_radius * mx_GameConstants::icosahedron_pickup_radius )
+			{
+				mx_SoundEngine::Instance()->AddSingleSound( SoundPowerupPickup, 1.0f, 1.0f, sector->icosahedron_pos );
+				sector->icosahedron_picked= true;
+			}
 		}
 	}
 

@@ -14,3 +14,5 @@ extern void (* const gen_ammo_textures_func_table[LastBullet])( mx_Texture* text
 
 extern void (* const gen_level_textures_func_table[LastLevelTexture])( mx_Texture* texture );
 extern void (* const gen_level_textures_height_map_func_table[LastLevelTexture])( mx_Texture* height_map );
+
+void mxGenIcosahedronTexture( mx_Texture* texture );

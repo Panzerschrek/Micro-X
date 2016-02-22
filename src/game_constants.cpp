@@ -43,6 +43,8 @@ const float bullets_colors[LastBullet][3]=
 	{ 0.2f, 0.9f, 0.2f },
 };
 
+const float icosahedron_color[3]= { 0.9f, 0.9f, 0.1f };
+
 const unsigned int player_initial_ammo[LastBullet]=
 {
 	100,
@@ -58,6 +60,7 @@ const unsigned int ammo_boxes_bullets_count[LastBullet]=
 };
 
 const float ammo_pockup_radius= 0.4f;
+const float icosahedron_pickup_radius= 0.4f;
 const float player_radius= 0.3f;
 
 const float machinegun_shot_interval= 1.0f / 8.0f;

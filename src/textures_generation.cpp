@@ -17,6 +17,8 @@ static const float g_monsters_eyes_color[4]= { 1.0f, 0.2f, 0.2f, 0.0f };
 static const float g_monsters_antenna_color[4]= { 1.0f, 0.2f, 0.2f, 1.0f };
 static const float g_monsters_dark_color[4]= { 0.08f, 0.08f, 0.08f, 1.0f };
 
+static const float g_powerups_bg[4]= { 0.1f, 0.1f, 0.1f, 0.9f };
+
 static void AddHemisphereToHeightmap(
 	mx_Texture* height_map,
 	unsigned int center_x, unsigned int center_y,
@@ -191,9 +193,7 @@ static void GetAmmoBoxTextureBase( mx_Texture* texture, const float* color )
 {
 	MX_ASSERT( texture->SizeX() == texture->SizeY() );
 	unsigned int size= texture->SizeX();
-
-	static const float c_bg[4]= { 0.1f, 0.1f, 0.1f, 0.9f };
-	texture->Fill( c_bg );
+	texture->Fill( g_powerups_bg );
 
 	unsigned int border_size= size >> 4;
 	unsigned int corner_size= border_size * 3;
@@ -305,6 +305,29 @@ static void GenPlasmaAmmoBoxTexture( mx_Texture* texture )
 			( size * ( 5 + y * 6 ) ) >> 4,
 			size >> 3,
 			color );
+}
+
+void mxGenIcosahedronTexture( mx_Texture* texture )
+{
+	MX_ASSERT( texture->SizeX() == texture->SizeY() );
+	unsigned int size= texture->SizeX();
+	unsigned int size_log2= texture->SizeXLog2();
+
+	texture->Fill( g_powerups_bg );
+
+	const unsigned int c_border_size= 16;
+
+	float* d= texture->GetData();
+	for( unsigned int y= c_border_size; y < size - c_border_size; y++ )
+	{
+		for( unsigned int x= y + c_border_size; x < size - c_border_size; x++ )
+		{
+			float* pix= d + ( ( x + (y << size_log2) ) << 2 );
+			for( unsigned int j= 0; j < 3; j++ )
+				pix[j]= mx_GameConstants::icosahedron_color[j];
+			pix[3]= 0.0f;
+		}
+	}
 }
 
 void (* const gen_monsters_textures_func_table[LastMonster])( mx_Texture* texture )=

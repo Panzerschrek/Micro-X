@@ -241,13 +241,16 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 
 			combined_model.Add( &model );
 		}
+		for( unsigned int i= 0; i < 2; i++ )
 		{
+			static const unsigned char* const models[2]= { mx_Models::cube, mx_Models::icosahedron };
+			static const float scale[2]= { 0.1f, 0.15f };
 			mx_DrawingModel model;
-			model.LoadFromMFMD( mx_Models::cube );
-			model.Scale( 0.1f );
+			model.LoadFromMFMD( models[i] );
+			model.Scale( scale[i] );
 
-			monsters_models_first_index_[LastMonster]= combined_model.GetIndexCount();
-			monsters_models_index_count_[LastMonster]= model.GetIndexCount();
+			monsters_models_first_index_[LastMonster + i]= combined_model.GetIndexCount();
+			monsters_models_index_count_[LastMonster + i]= model.GetIndexCount();
 
 			combined_model.Add( &model );
 		}
@@ -333,15 +336,17 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 
 		glTexImage3D(
 			GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8,
-			tex.SizeX(), tex.SizeY(), LastMonster + LastBullet,
+			tex.SizeX(), tex.SizeY(), LastMonster + LastBullet + 1,
 			0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
 
-		for( unsigned int i= 0; i < LastMonster + LastBullet; i++ )
+		for( unsigned int i= 0; i < LastMonster + LastBullet + 1; i++ )
 		{
 			if( i < LastMonster )
 				gen_monsters_textures_func_table[i]( &tex );
-			else
+			else if( i < LastMonster + LastBullet )
 				gen_ammo_textures_func_table[ i - LastMonster ]( &tex );
+			else
+				mxGenIcosahedronTexture( &tex );
 
 			tex.LinearNormalization( 1.0f );
 
@@ -427,6 +432,7 @@ void mx_Renderer::Draw()
 	DrawWorld();
 	DrawMonsters();
 	DrawAmmo();
+	DrawIcosahedrons();
 
 	// Bind HDR screen buffer. Clear cboth buffers.
 	glBindFramebuffer( GL_FRAMEBUFFER, hdr_buffer_.fbo_id );
@@ -640,26 +646,20 @@ void mx_Renderer::DrawAmmo()
 	const mx_LevelData& level_data= level_.GetLevelData();
 	for( unsigned int s= 0; s < level_data.sector_count; s++ )
 	{
-		if( level_data.sectors[s].traverse_id != visible_sectors_tag_ )
+		const mx_LevelSector& sector= level_data.sectors[s];
+		if( sector.traverse_id != visible_sectors_tag_ )
 			continue;
 
-		for( unsigned int a= 0; a < level_data.sectors[s].ammo_box_count; a++ )
+		for( unsigned int a= 0; a < sector.ammo_box_count; a++ )
 		{
-			const mx_AmmoBox& box=level_data.sectors[s].ammo_boxes[a];
+			const mx_AmmoBox& box= sector.ammo_boxes[a];
 
 			float translate_mat[16];
 			float rotate_mat[16];
 			float result_mat[16];
 			float normals_mat[9];
 
-			// Rotate a
-			float rotation_vector_rotation= mx_MainLoop::Instance()->GetTime();
-			float self_rotation= rotation_vector_rotation * ( 9.0f / 16.0f);
-			float rotation_vec[3];
-			rotation_vec[0]= std::cosf(rotation_vector_rotation);
-			rotation_vec[1]= std::sinf(rotation_vector_rotation);
-			rotation_vec[2]= 0.0f;
-			mxMat4RotateAroundVector( rotate_mat, rotation_vec, self_rotation );
+			MakePowerupsRotationMatrix( rotate_mat );
 
 			mxMat4Translate( translate_mat, box.pos );
 			mxMat4Mul( rotate_mat, translate_mat, result_mat );
@@ -679,6 +679,57 @@ void mx_Renderer::DrawAmmo()
 				(void*)( monsters_models_first_index_[LastMonster] * sizeof(unsigned short) ) );
 		} // for ammo boxes
 	} // for sectors
+
+	glDisable (GL_CULL_FACE );
+}
+
+void mx_Renderer::DrawIcosahedrons()
+{
+	glActiveTexture( GL_TEXTURE0 );
+	glBindTexture( GL_TEXTURE_2D_ARRAY, monsters_textures_array_id_ );
+
+	monsters_shader_.Bind();
+	monsters_shader_.UniformInt( "tex", 0 );
+
+	monsters_vertex_buffer_.Bind();
+
+	glEnable( GL_CULL_FACE );
+	glCullFace( GL_BACK );
+
+	const mx_LevelData& level_data= level_.GetLevelData();
+	for( unsigned int s= 0; s < level_data.sector_count; s++ )
+	{
+		const mx_LevelSector& sector= level_data.sectors[s];
+		if( sector.traverse_id != visible_sectors_tag_ )
+			continue;
+
+		if( sector.has_icosahedron && !sector.icosahedron_picked )
+		{
+			float translate_mat[16];
+			float rotate_mat[16];
+			float result_mat[16];
+			float normals_mat[9];
+
+			MakePowerupsRotationMatrix( rotate_mat );
+
+			mxMat4Translate( translate_mat, sector.icosahedron_pos );
+			mxMat4Mul( rotate_mat, translate_mat, result_mat );
+			mxMat4Mul( result_mat, view_matrix_ );
+
+			monsters_shader_.UniformMat4( "mat", result_mat );
+
+			mxMat4ToMat3( rotate_mat, normals_mat );
+			monsters_shader_.UniformMat3( "nmat", normals_mat );
+
+			monsters_shader_.UniformFloat( "texn", float( LastMonster + LastBullet ) + g_texture_aray_coord_eps );
+
+			glDrawElements(
+				GL_TRIANGLES,
+				monsters_models_index_count_[LastMonster + 1],
+				GL_UNSIGNED_SHORT,
+				(void*)( monsters_models_first_index_[LastMonster + 1] * sizeof(unsigned short) ) );
+		}
+	}
 
 	glDisable (GL_CULL_FACE );
 }
@@ -755,10 +806,25 @@ void mx_Renderer::MakeLighting()
 	const mx_LevelData& level_data= level_.GetLevelData();
 	for( unsigned int s= 0; s < level_data.sector_count; s++ )
 	{
-		if( level_data.sectors[s].traverse_id != visible_sectors_tag_ )
+		const mx_LevelSector& sector= level_data.sectors[s];
+
+		if( sector.traverse_id != visible_sectors_tag_ )
 			continue;
+
 		for( unsigned int l= 0; l < level_data.sectors[s].light_count; l++ )
-			DrawLightSource( level_data.sectors[s].lights[l] );
+			DrawLightSource( sector.lights[l] );
+
+		if( sector.has_icosahedron && !sector.icosahedron_picked )
+		{
+			static const float c_light_intensity= 0.5f;
+
+			mx_Light light_source;
+
+			VEC3_CPY( light_source.pos, sector.icosahedron_pos );
+			mxVec3Mul( mx_GameConstants::icosahedron_color, c_light_intensity, light_source.light_rgb );
+
+			DrawLightSource( light_source );
+		}
 	}
 
 	const mx_Bullet* bullets= level_.GetBullets();
@@ -991,7 +1057,10 @@ void mx_Renderer::DrawGui()
 			c_gui_main_color );
 	}
 	{ // draw icosahedrons
-		static const unsigned char c_icosahedron_color[4]= { 0xFF, 0xFF, 0, 0x7F };
+		unsigned char icosahedron_color[4]= { 0xFF, 0xFF, 0, 0x7F };
+		FloatColorToByte( mx_GameConstants::icosahedron_color, icosahedron_color );
+		icosahedron_color[3]= 0x7F;
+
 		const int c_radius= 12;
 		const int c_border_size= 2;
 		const unsigned int c_items_in_row= 12;
@@ -1015,7 +1084,7 @@ void mx_Renderer::DrawGui()
 
 			v= AddGuiIcosahedronProjection( v, x, y, c_radius + c_border_size, c_gui_main_color );
 			if( sectors[s].icosahedron_picked )
-				v= AddGuiIcosahedronProjection( v, x, y, c_radius, c_icosahedron_color );
+				v= AddGuiIcosahedronProjection( v, x, y, c_radius, icosahedron_color );
 
 			i++;
 		}
@@ -1039,4 +1108,15 @@ void mx_Renderer::DrawGui()
 
 	glDisable( GL_BLEND );
 	glEnable( GL_DEPTH_TEST );
+}
+
+void mx_Renderer::MakePowerupsRotationMatrix( float* out_mat )
+{
+	float rotation_vector_rotation= mx_MainLoop::Instance()->GetTime();
+	float self_rotation= rotation_vector_rotation * ( 9.0f / 16.0f);
+	float rotation_vec[3];
+	rotation_vec[0]= std::cosf(rotation_vector_rotation);
+	rotation_vec[1]= std::sinf(rotation_vector_rotation);
+	rotation_vec[2]= 0.0f;
+	mxMat4RotateAroundVector( out_mat, rotation_vec, self_rotation );
 }

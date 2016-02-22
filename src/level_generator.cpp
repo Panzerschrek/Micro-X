@@ -414,13 +414,6 @@ void mx_LevelGenerator::GenerateMeshes()
 
 			room_to_sector_index[i]= out_level_data_.sector_count;
 
-			sector->has_icosahedron= bool( rand_.Rand() & 1);
-			if( sector->has_icosahedron )
-			{
-				out_level_data_.icosahedron_count++;
-				sector->icosahedron_picked= false;
-			}
-
 			out_level_data_.sector_count++;
 			sector++;
 		}
@@ -790,8 +783,19 @@ void mx_LevelGenerator::SetupRoomSector( const Room* room, mx_LevelSector* secto
 
 	sector->ammo_box_count= 1;
 	for( unsigned int i= 0; i < 3; i++ )
-		sector->ammo_boxes[0].pos[i]= 0.5f * ( sector->bb_min[i] + sector->bb_max[i] );
+		sector->ammo_boxes[0].pos[i]= rand_.RandF( sector->bb_min[i] + 1.0f, sector->bb_max[i] - 1.0f );
 	sector->ammo_boxes[0].type= BulletType( rand_.Rand() % LastBullet );
+
+	sector->has_icosahedron= bool( rand_.Rand() & 1);
+	if( sector->has_icosahedron )
+	{
+		sector->icosahedron_picked= false;
+
+		for( unsigned int i= 0; i < 3; i++ )
+			sector->icosahedron_pos[i]= ( sector->bb_min[i] + sector->bb_max[i] ) * 0.5f;
+
+		out_level_data_.icosahedron_count++;
+	}
 }
 
 void mx_LevelGenerator::SetupConnectionSector( const Connection* connection, mx_LevelSector* sector )
