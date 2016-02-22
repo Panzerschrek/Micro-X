@@ -1079,8 +1079,8 @@ void mx_Renderer::DrawGui()
 			int column= i % c_items_in_row;
 			int row= i / c_items_in_row;
 
-			int x= x0 + column * (c_radius + c_border_size) * 2;
-			int y= y0 - row * (c_radius + c_border_size + 2) * 2;
+			int x= x0 + column * (c_radius + c_border_size) * 2 + (c_radius + c_border_size) * (row&1);
+			int y= y0 - row * (c_radius + c_border_size - 1) * 2;
 
 			v= AddGuiIcosahedronProjection( v, x, y, c_radius + c_border_size, c_gui_main_color );
 			if( sectors[s].icosahedron_picked )
