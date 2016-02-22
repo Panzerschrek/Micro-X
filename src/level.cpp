@@ -376,7 +376,7 @@ kill:
 		float d_pos[3];
 		mxVec3Mul( bullet.speed, dt, d_pos );
 		mxVec3Add( bullet.pos, d_pos );
-		
+
 		b++;
 	}
 
@@ -409,8 +409,12 @@ kill:
 	{
 		if( monsters_[m]->GetHealth() <= 0 )
 		{
+			delete monsters_[m];
+
 			if( m < monster_count_ - 1 )
 				monsters_[m]= monsters_[ monster_count_ - 1 ];
+
+			monster_count_--;
 			continue;
 		}
 		m++;
