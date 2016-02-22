@@ -132,26 +132,34 @@ void mx_Player::Tick()
 
 	// Get final move vector
 	float move_vec_mat[16];
-	CreateRotationMatrix4( move_vec_mat, false );
-	mxMat4Transpose( move_vec_mat );
+	CreateRotationMatrix4( move_vec_mat, true );
 	mxVec3Mat4Mul( move_vector, move_vec_mat );
+	float move_vec_len= mxVec3Len( move_vector );
+	if( move_vec_len > 0.00001f ) mxVec3Mul( move_vector, 1.0f / move_vec_len );
 
 	static const float c_acceleration= 20.0f;
-	static const float c_deceleration= -7.0f;
+	static const float c_deceleration= 7.0f;
 	static const float c_max_speed= 3.5f;
+	// Accelerate
 	for( unsigned int i= 0; i < 3; i++ )
-	{
 		speed_[i]+= c_acceleration * dt * move_vector[i];
-		if( std::fabsf(speed_[i]) > 0.0f )
-		{
-			float ds= c_deceleration * dt;
-			if( -ds > std::fabsf(speed_[i]) ) speed_[i]= 0.0f;
-			else speed_[i]+= ds * mxSign(speed_[i]);
-		}
+	
+	// Decelerate
+	float speed_len= mxVec3Len( speed_ );
+	if( speed_len > c_max_speed )
+	{
+		mxVec3Mul( speed_, c_max_speed / speed_len );
+		speed_len= c_max_speed;
 	}
-	float speed_length= mxVec3Len( speed_ );
-	if( speed_length > c_max_speed )
-		mxVec3Mul( speed_, c_max_speed / speed_length );
+	float deceleration_vec_len= c_deceleration * dt;
+	if( deceleration_vec_len < speed_len )
+	{
+		float deceleration_vec[3];
+		mxVec3Mul( speed_, deceleration_vec_len / speed_len, deceleration_vec );
+		mxVec3Sub( speed_, deceleration_vec );
+	}
+	else
+		speed_[0]= speed_[1]= speed_[2]= 0.0f;
 
 	float d_pos[3];
 	mxVec3Mul( speed_, dt, d_pos );
