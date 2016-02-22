@@ -8,6 +8,63 @@
 
 #include "level.h"
 
+static bool CollideWithEdge( const float* v0, const float* v1, float* in_out_pos, float radius )
+{
+	float v0_to_v1_vec[3];
+	mxVec3Sub( v1, v0, v0_to_v1_vec );
+	float v0_to_v1_vec_squre_len= mxVec3SquareLen( v0_to_v1_vec );
+
+	float vec_to_v0[3];
+	mxVec3Sub( in_out_pos, v0, vec_to_v0 );
+	float vec_to_v0_square_len= mxVec3SquareLen( vec_to_v0 );
+
+	float projection= mxVec3Dot( vec_to_v0, v0_to_v1_vec );
+	if( projection <= 0.0f )
+	{
+		float dist= std::sqrtf(vec_to_v0_square_len);
+		if( dist >= radius )
+			return false;
+
+		float d_pos[3];
+		mxVec3Mul( vec_to_v0, radius / dist, d_pos );
+		mxVec3Add( in_out_pos, d_pos );
+		return true;
+	}
+	else if( projection >= std::sqrtf( v0_to_v1_vec_squre_len ) )
+	{
+		float projection_vec[3];
+		mxVec3Mul( v0_to_v1_vec, projection / std::sqrtf(v0_to_v1_vec_squre_len), projection_vec );
+
+		float normal_vec[3];
+		mxVec3Sub( vec_to_v0, projection_vec, normal_vec );
+
+		float normal_vec_len= mxVec3Len( normal_vec );
+		if( normal_vec_len >= radius )
+			return false;
+
+		mxVec3Normalize( normal_vec );
+		float d_dist= radius - normal_vec_len;
+		float d_pos[3];
+		mxVec3Mul( normal_vec, d_dist, d_pos );
+		mxVec3Add( in_out_pos, d_pos );
+		return true;
+	}
+	else
+	{
+		float vec_to_v1[3];
+		mxVec3Sub( in_out_pos, v1, vec_to_v1 );
+		float dist= mxVec3Len( vec_to_v1 );
+
+		if( dist >= radius )
+			return false;
+
+		float d_pos[3];
+		mxVec3Mul( vec_to_v1, radius / dist, d_pos );
+		mxVec3Add( in_out_pos, d_pos );
+		return true;
+	}
+}
+
 mx_Level::mx_Level( const mx_LevelData& level_data, mx_Player& player )
 	: player_(player)
 	, level_data_(level_data)
@@ -157,7 +214,16 @@ bool mx_Level::CollideWithSectorTriangles( float* in_out_pos, float radius, cons
 		mxVec3Mul( normal, radius, pos_delta );
 		mxVec3Add( point_on_plane, pos_delta, in_out_pos );
 
-outside_triangle:;
+outside_triangle:
+		for( unsigned int j= 0; j < 3; j++ )
+		{
+			if( CollideWithEdge(
+				level_data_.vertices[ triangle.vertex_index[(j + 1) % 3] ].xyz,
+				level_data_.vertices[ triangle.vertex_index[j] ].xyz,
+				in_out_pos,
+				radius ) )
+				collided= true;
+		}
 	}
 
 	return collided;
@@ -281,7 +347,7 @@ void mx_Level::Tick()
 					triangle[j]= level_data_.vertices[ level_data_.triangles[i].vertex_index[j] ].xyz;
 
 				float intersection_pos[3];
-				if( mxBeamIntersectModel( triangle, bullet.pos, dir, max_dist, intersection_pos ) )
+				if( mxBeamIntersectTriangle( triangle, bullet.pos, dir, max_dist, intersection_pos ) )
 				{
 					// TODO - find nearest intersection
 					dead= true;

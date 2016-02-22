@@ -469,7 +469,7 @@ float mxDistanceFromLineToPoint( const float* line_point, const float* line_dir,
 	return mxVec3Len( perpendicular );
 }
 
-bool mxBeamIntersectModel(
+bool mxBeamIntersectTriangle(
 	const float* const* triangle, // 3 pointers to 3d vectors
 	const float* beam_point, const float* beam_dir,
 	float max_distance,

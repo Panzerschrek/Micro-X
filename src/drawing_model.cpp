@@ -272,7 +272,7 @@ bool mx_DrawingModel::BeamIntersectModel( const float* beam_point, const float* 
 			triangle[j]= vertices_[ind[j]].pos;
 
 		float intersection_pos[3];
-		if( mxBeamIntersectModel( triangle, beam_point, beam_dir, max_distance, intersection_pos ) )
+		if( mxBeamIntersectTriangle( triangle, beam_point, beam_dir, max_distance, intersection_pos ) )
 		{
 			is_intersection= true;
 

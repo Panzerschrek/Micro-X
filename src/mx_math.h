@@ -74,7 +74,7 @@ void mxDoubleMat4Invert( const double* m, double* out_m );
 
 float mxDistanceFromLineToPoint( const float* line_point, const float* line_dir, const float* point );
 
-bool mxBeamIntersectModel(
+bool mxBeamIntersectTriangle(
 	const float* const* triangle, // 3 pointers to 3d vectors
 	const float* beam_point, const float* beam_dir,
 	float max_distance,
