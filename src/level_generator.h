@@ -7,7 +7,8 @@
 
 #define MX_MAX_ROOM_SIZE 9
 #define MX_MIN_ROOM_SIZE 2
-#define MX_MAX_ROOM_CONNECTIONS 8
+#define MX_CENTRAL_ROOM_HALF_SIZE 4
+#define MX_MAX_ROOM_CONNECTIONS 12
 
 #define MX_MIN_ROOM_DISTANCE 3
 
@@ -84,6 +85,8 @@ struct mx_LevelSector
 	float icosahedron_pos[3];
 	bool has_icosahedron;
 	bool icosahedron_picked;
+
+	bool is_central_sector;
 };
 
 struct mx_LevelData

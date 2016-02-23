@@ -77,7 +77,10 @@ mx_Level::mx_Level( const mx_LevelData& level_data, mx_Player& player )
 	do
 	{
 		player_sector= &level_data_.sectors[ rand.Rand() % level_data_.sector_count ];
-	} while( !( player_sector->type == mx_LevelSector::ROOM  && !player_sector->has_icosahedron ) );
+	} while( !(
+		player_sector->type == mx_LevelSector::ROOM  &&
+		!player_sector->has_icosahedron &&
+		!player_sector->is_central_sector ) );
 
 	{ // spawn player
 		float pos[3];

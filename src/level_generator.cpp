@@ -113,8 +113,25 @@ mx_LevelGenerator::Element*& mx_LevelGenerator::ElementMap( int x, int y, int z 
 
 void mx_LevelGenerator::PlaceRooms()
 {
-		Room* room= rooms_;
-	for( unsigned int i= 0; i < MX_MAX_ROOMS * 2; i++ )
+	Room* room= rooms_;
+
+	{ // Place central room
+		for( unsigned int j= 0; j < 3; j++ )
+		{
+			room->coord_min[j]= MX_MAX_LEVEL_SIZE_CELLS / 2 - MX_CENTRAL_ROOM_HALF_SIZE;
+			room->coord_max[j]= MX_MAX_LEVEL_SIZE_CELLS / 2 + MX_CENTRAL_ROOM_HALF_SIZE;
+		}
+		for( int z= room->coord_min[2]; z < room->coord_max[2]; z++ )
+		for( int y= room->coord_min[1]; y < room->coord_max[1]; y++ )
+		for( int x= room->coord_min[0]; x < room->coord_max[0]; x++ )
+			ElementMap( x, y, z )= room;
+
+		room->connection_count= 0;
+		room++;
+		room_count_++;
+	}
+
+	for( unsigned int i= 1; i < MX_MAX_ROOMS * 2; i++ )
 	{
 		// Create room
 		for( unsigned int j= 0; j < 3; j++ )
@@ -786,7 +803,27 @@ void mx_LevelGenerator::SetupRoomSector( const Room* room, mx_LevelSector* secto
 		sector->ammo_boxes[0].pos[i]= rand_.RandF( sector->bb_min[i] + 1.0f, sector->bb_max[i] - 1.0f );
 	sector->ammo_boxes[0].type= BulletType( rand_.Rand() % LastBullet );
 
-	sector->has_icosahedron= bool( rand_.Rand() & 1);
+	// Central sector is first
+	sector->is_central_sector= room == rooms_;
+	if( sector->is_central_sector )
+	{
+		// Setup lights in corners of sector
+		sector->light_count= 8;
+		const float* mm[2]= { sector->bb_min, sector->bb_max };
+		static const float c_shift[2]= { 1.2f, -1.2f };
+		for( unsigned int l= 0; l < 8; l++ )
+		{
+			static const float c_light_intensity= 2.0f;
+			for( unsigned int j= 0; j < 3; j++ )
+			{
+				unsigned int k= ( l >> j ) & 1;
+				sector->lights[l].pos[j]= mm[k][j] + c_shift[k];
+				sector->lights[l].light_rgb[j]= mx_GameConstants::icosahedron_color[j] * c_light_intensity;
+			}
+		}
+	}
+
+	sector->has_icosahedron= bool( rand_.Rand() & 1) && !sector->is_central_sector;
 	if( sector->has_icosahedron )
 	{
 		sector->icosahedron_picked= false;
@@ -862,6 +899,8 @@ void mx_LevelGenerator::SetupConnectionSector( const Connection* connection, mx_
 	MX_ASSERT( sector->light_count == light_count );
 
 	sector->ammo_box_count= 0;
+
+	sector->is_central_sector= false;
 }
 
 void mx_LevelGenerator::CalculateNormals()
