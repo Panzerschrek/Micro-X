@@ -18,6 +18,7 @@ public:
 	const mx_LevelSector* GetSector() const;
 	unsigned int GetAmmo( BulletType type ) const;
 	BulletType GetCurrentWeapon() const;
+	const float* GetSpeed() const;
 
 	void Tick();
 	void Rotate( float pixel_delta_x, float pixel_delta_y );
@@ -137,6 +138,11 @@ inline unsigned int mx_Player::GetAmmo( BulletType type ) const
 inline BulletType mx_Player::GetCurrentWeapon() const
 {
 	return current_weapon_;
+}
+
+inline const float* mx_Player::GetSpeed() const
+{
+	return speed_;
 }
 
 inline void mx_Player::ShotButtonPressed()

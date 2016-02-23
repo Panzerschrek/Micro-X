@@ -185,14 +185,6 @@ mx_MainLoop::mx_MainLoop(
 
 	mx_SoundEngine::CreateInstance( hwnd_ );
 
-	mx_SoundSource* src= mx_SoundEngine::Instance()->CreateSoundSource( SoundMelody );
-	static const float c_zero_vec[3]= { 0.0f, 0.0f, 0.0f };
-	src->SetOrientation( c_zero_vec, c_zero_vec );
-	src->SetVolume( 40.0f );
-	/*
-	src->Play();
-	*/
-
 	// Start game time calculations after all heavy operations
 	start_time_ms_= prev_time_ms_= GetTickCount();
 	toatal_time_s_= 0.0f;
@@ -229,10 +221,6 @@ void mx_MainLoop::Loop()
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
-		{
-			//char str[32];
-			//sprintf( str, "fps: %d", fps_calc_.frame_count_to_show );
-		}
 
 		if( mouse_captured_ )
 		{
@@ -262,8 +250,7 @@ void mx_MainLoop::Loop()
 		{ // Sound here
 				float player_mat[16];
 				player_->CreateRotationMatrix4( player_mat, true );
-				static const float vel[3]= { 0.0f, 0.0f, 0.0f };
-				mx_SoundEngine::Instance()->SetListenerOrinetation( player_->Pos(),player_mat, vel );
+				mx_SoundEngine::Instance()->SetListenerOrinetation( player_->Pos(),player_mat, player_->GetSpeed() );
 				mx_SoundEngine::Instance()->Tick();
 		}
 
@@ -285,13 +272,6 @@ void mx_MainLoop::Loop()
 				str[5]= '0' + fps_calc_.frame_count_to_show / 1000 % 10;
 
 			text_->AddText( 0, 0, 1, mx_Text::default_color, str );
-			/*
-			char health_str[]= "health: 000";
-			health_str[10]+= player_->GetHealth()       % 10;
-			health_str[ 9]+= player_->GetHealth() /  10 % 10;
-			health_str[ 8]+= player_->GetHealth() / 100 % 10;
-			text_->AddText( 1, (viewport_height_ / MX_LETTER_HEIGHT) - 2, 1, mx_Text::default_color, health_str );
-			*/
 
 			text_->Draw();
 		}
@@ -330,7 +310,6 @@ LRESULT CALLBACK mx_MainLoop::WindowProc( HWND hwnd, UINT uMsg, WPARAM wParam, L
 		break;
 	case WM_LBUTTONUP:
 		player->ShotButtonReleased();
-		//instance->gui_->MouseClick( lParam&65535, lParam>>16 );
 		break;
 	case WM_MOUSEMOVE:
 		break;
@@ -454,10 +433,7 @@ def_proc:
 void mx_MainLoop::Resize()
 {
 	if(fullscreen_)
-	{
-		//MoveWindow( hwnd_, 0, 0, viewport_width_, viewport_height_, true );
 		return;
-	}
 
 	RECT rect;
 	GetClientRect( hwnd_, &rect );
