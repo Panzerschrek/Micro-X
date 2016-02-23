@@ -24,6 +24,7 @@ private:
 
 	void MarkPotentialyVisibleSectors();
 
+	void DrawMap();
 	void CalculateMatrices();
 	void DrawWorld();
 	void DrawMonsters();
@@ -45,6 +46,7 @@ private:
 	const mx_Player& player_;
 
 	mx_GLSLProgram world_shader_;
+	mx_GLSLProgram world_map_shader_;
 	mx_VertexBuffer world_vertex_buffer_;
 
 	mx_GLSLProgram monsters_shader_;

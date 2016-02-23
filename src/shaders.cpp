@@ -119,6 +119,27 @@ VERSION_HEADER
 "}"
 ;
 
+const char world_map_shader_v[]=
+VERSION_HEADER
+"in vec3 p;" // position
+"uniform mat4 mat;"
+"void main()"
+"{"
+	"gl_Position=mat*vec4(p,1.0);"
+"}"
+;
+
+const char world_map_shader_f[]=
+VERSION_HEADER
+"out vec4 c_;"
+"uniform float m10;" // perspective matrix value 10
+"void main()"
+"{"
+	"float c=(gl_FragCoord.z-1.0)/(gl_FragCoord.z-m10);"
+	"c_=vec4(c,c,c,1.0);"
+"}"
+;
+
 // monster shader
 const char monster_shader_v[]=
 VERSION_HEADER

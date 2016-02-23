@@ -18,6 +18,7 @@ mx_Player::mx_Player()
 	, level_(NULL)
 	, aspect_(1.0f), fov_(MX_INITIAL_FOV), target_fov_(MX_INITIAL_FOV)
 	, sector_(NULL)
+	, map_mode_(false)
 	, shot_button_pressed_(false)
 	, last_shot_time_s_(0.0f)
 	, shot_side_(0)
@@ -71,12 +72,15 @@ void mx_Player::Tick()
 	float move_vector[3]= { 0.0f, 0.0f, 0.0f };
 	float rotation_angles[3]= { 0.0f, 0.0f, 0.0f };
 
-	if(forward_pressed_) move_vector[1]+= 1.0f;
-	if(backward_pressed_) move_vector[1]+= -1.0f;
-	if(left_pressed_) move_vector[0]+= -1.0f;
-	if(right_pressed_) move_vector[0]+= 1.0f;
-	if(up_pressed_) move_vector[2]+= 1.0f;
-	if(down_pressed_) move_vector[2]+= -1.0f;
+	if( !map_mode_ )
+	{
+		if(forward_pressed_) move_vector[1]+= 1.0f;
+		if(backward_pressed_) move_vector[1]+= -1.0f;
+		if(left_pressed_) move_vector[0]+= -1.0f;
+		if(right_pressed_) move_vector[0]+= 1.0f;
+		if(up_pressed_) move_vector[2]+= 1.0f;
+		if(down_pressed_) move_vector[2]+= -1.0f;
+	}
 
 	if(rotate_up_pressed_) rotation_angles[0] += 1.0f;
 	if(rotate_down_pressed_) rotation_angles[0] += -1.0f;
@@ -181,6 +185,9 @@ void mx_Player::Tick()
 			level_->CollideWithMonsters( pos_, mx_GameConstants::player_radius );
 		}
 	}
+
+	if( map_mode_ )
+		return;
 
 	// Shot
 	float weapon_shot_interval;

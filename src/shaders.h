@@ -12,6 +12,9 @@ extern const char text_shader_f[];
 extern const char world_shader_v[];
 extern const char world_shader_f[];
 
+extern const char world_map_shader_v[];
+extern const char world_map_shader_f[];
+
 extern const char monster_shader_v[];
 extern const char monster_shader_f[];
 

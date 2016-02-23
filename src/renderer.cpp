@@ -34,6 +34,15 @@ static const float g_bullets_light_intensity[LastBullet]=
 	0.15f,
 };
 
+static void CreateBasisChangeMatrix( float* mat )
+{
+	mxMat4RotateX( mat, -MX_PI2 );
+	float tmp_mat[16];
+	mxMat4Identity( tmp_mat );
+	tmp_mat[10]= -1.0f;
+	mxMat4Mul( mat, tmp_mat );
+}
+
 static void MarkSectors_r( mx_LevelSector* sector, unsigned int tag, unsigned int depth )
 {
 	sector->traverse_id= tag;
@@ -196,7 +205,13 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 		static const char* const uniforms[]= { "mat", "tex", "nmap" };
 		world_shader_.FindUniforms( uniforms, sizeof(uniforms) / sizeof(char*) );
 	}
+	{ // World map shader
+		world_map_shader_.SetAttribLocation( "p", 0 );
 
+		world_map_shader_.Create( mx_Shaders::world_map_shader_v, mx_Shaders::world_map_shader_f );
+		world_map_shader_.FindUniform( "mat" );
+		world_map_shader_.FindUniform( "m10" );
+	}
 	{ // plasma ball shader
 		plasma_ball_shader_.SetAttribLocation( "p", 0 );
 		plasma_ball_shader_.SetAttribLocation( "c", 1 );
@@ -422,30 +437,35 @@ void mx_Renderer::OnFramebufferResize()
 
 void mx_Renderer::Draw()
 {
-	MarkPotentialyVisibleSectors();
-	CalculateMatrices();
+	if( player_.IsInMapMode() )
+		DrawMap();
+	else
+	{
+		MarkPotentialyVisibleSectors();
+		CalculateMatrices();
 
-	// Bind GBuffer. We do not need clear color
-	glBindFramebuffer( GL_FRAMEBUFFER, g_buffer_.fbo_id );
-	glClear( GL_DEPTH_BUFFER_BIT );
+		// Bind GBuffer. We do not need clear color
+		glBindFramebuffer( GL_FRAMEBUFFER, g_buffer_.fbo_id );
+		glClear( GL_DEPTH_BUFFER_BIT );
 
-	DrawWorld();
-	DrawMonsters();
-	DrawAmmo();
-	DrawIcosahedrons();
+		DrawWorld();
+		DrawMonsters();
+		DrawAmmo();
+		DrawIcosahedrons();
 
-	// Bind HDR screen buffer. Clear cboth buffers.
-	glBindFramebuffer( GL_FRAMEBUFFER, hdr_buffer_.fbo_id );
-	glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
-	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+		// Bind HDR screen buffer. Clear cboth buffers.
+		glBindFramebuffer( GL_FRAMEBUFFER, hdr_buffer_.fbo_id );
+		glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
+		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-	MakeLighting();
-	DrawBullets();
+		MakeLighting();
+		DrawBullets();
 
-	// Bind screen framebuffer. We do non need clear it.
-	glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+		// Bind screen framebuffer. We do non need clear it.
+		glBindFramebuffer( GL_FRAMEBUFFER, 0 );
 
-	MakeTonemapping();
+		MakeTonemapping();
+	}
 
 	DrawGui();
 }
@@ -529,6 +549,47 @@ void mx_Renderer::MarkPotentialyVisibleSectors()
 	}
 }
 
+void mx_Renderer::DrawMap()
+{
+	float player_translate_mat[16];
+	float rotation_mat[16];
+	float cam_translate_mat[16];
+	float basis_change_mat[16];
+
+	float translate_vec[3];
+	mxVec3Mul( player_.Pos(), -1.0f, translate_vec );
+	mxMat4Translate( player_translate_mat, translate_vec );
+
+	player_.CreateRotationMatrix4( rotation_mat, false );
+
+	static const float cam_translate_vec[3]= { 0.0f, 0.0f, 4.0f };
+	mxMat4Translate( cam_translate_mat, cam_translate_vec );
+
+	CreateBasisChangeMatrix( basis_change_mat );
+
+	z_near_= 1.0f / 16.0f;
+	z_far_= 24.0f;
+	mxMat4Perspective( perspective_matrix_,
+		float(main_loop_.ViewportWidth())/ float(main_loop_.ViewportHeight()),
+		player_.Fov(),
+		z_near_, z_far_ );
+
+	mxMat4Mul( player_translate_mat, rotation_mat, view_matrix_ );
+	mxMat4Mul( view_matrix_, basis_change_mat );
+	mxMat4Mul( view_matrix_, cam_translate_mat );
+	mxMat4Mul( view_matrix_, perspective_matrix_ );
+
+	world_map_shader_.Bind();
+	world_map_shader_.UniformMat4( "mat", view_matrix_ );
+	world_map_shader_.UniformFloat( "m10", perspective_matrix_[10] );
+
+	world_vertex_buffer_.Bind();
+
+	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+	glDrawElements( GL_TRIANGLES, world_vertex_buffer_.IndexDataSize() / sizeof(unsigned int), GL_UNSIGNED_INT, NULL );
+	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+}
+
 void mx_Renderer::CalculateMatrices()
 {
 	float translate_mat[16];
@@ -541,13 +602,7 @@ void mx_Renderer::CalculateMatrices()
 
 	player_.CreateRotationMatrix4( rotation_mat, false );
 
-	{
-		mxMat4RotateX( basis_change_mat, -MX_PI2 );
-		float tmp_mat[16];
-		mxMat4Identity( tmp_mat );
-		tmp_mat[10]= -1.0f;
-		mxMat4Mul( basis_change_mat, tmp_mat );
-	}
+	CreateBasisChangeMatrix( basis_change_mat );
 
 	z_near_= 1.0f / 16.0f;
 	z_far_= 128.0f;

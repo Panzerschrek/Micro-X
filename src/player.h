@@ -14,6 +14,7 @@ public:
 	void AddAmmo( BulletType type, unsigned int count );
 
 	const float Fov() const;
+	bool IsInMapMode() const;
 
 	const mx_LevelSector* GetSector() const;
 	unsigned int GetAmmo( BulletType type ) const;
@@ -23,6 +24,7 @@ public:
 	void Tick();
 	void Rotate( float pixel_delta_x, float pixel_delta_y );
 
+	void ToggleMapMode();
 	void ShotButtonPressed();
 	void ShotButtonReleased();
 	void NextWeapon();
@@ -87,6 +89,8 @@ private:
 
 	const mx_LevelSector* sector_;
 
+	bool map_mode_;
+
 	unsigned int ammo_[LastBullet];
 	bool shot_button_pressed_;
 	float last_shot_time_s_;
@@ -125,6 +129,11 @@ inline const float mx_Player::Fov() const
 	return fov_;
 }
 
+inline bool mx_Player::IsInMapMode() const
+{
+	return map_mode_;
+}
+
 inline const mx_LevelSector* mx_Player::GetSector() const
 {
 	return sector_;
@@ -143,6 +152,11 @@ inline BulletType mx_Player::GetCurrentWeapon() const
 inline const float* mx_Player::GetSpeed() const
 {
 	return speed_;
+}
+
+inline void mx_Player::ToggleMapMode()
+{
+	map_mode_= !map_mode_;
 }
 
 inline void mx_Player::ShotButtonPressed()

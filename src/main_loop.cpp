@@ -329,6 +329,9 @@ LRESULT CALLBACK mx_MainLoop::WindowProc( HWND hwnd, UINT uMsg, WPARAM wParam, L
 			player->DebugToggleNoclip();
 			break;
 #endif
+		case VK_TAB:
+			player->ToggleMapMode();
+			break;
 		case KEY('M'):
 			instance_->need_capture_mouse_= !instance_->need_capture_mouse_;
 			instance_->CaptureMouse( instance_->need_capture_mouse_ );
