@@ -1089,6 +1089,31 @@ void mx_Renderer::DrawGui()
 			i++;
 		}
 	}
+	{ // fps
+		const int c_fps_bar_height= c_screen_border_indent;
+
+		static const unsigned char c_fps_colors[4][4]=
+		{
+			{ 0xFF, 0x10, 0x10, 0x7F }, // red
+			{ 0xFF, 0x7F, 0x10, 0x7F }, // orange
+			{ 0xFF, 0xFF, 0x10, 0x7F }, // yellow
+			{ 0x10, 0xFF, 0x10, 0x7F }, // green
+		};
+		const unsigned char* color;
+		int fps= int(main_loop_.FPS());
+		if( fps < 20 ) color= c_fps_colors[0];
+		else if( fps < 30 ) color= c_fps_colors[1];
+		else if( fps < 59 ) color= c_fps_colors[2];
+		else color= c_fps_colors[3];
+
+		v= AddGuiQuad(
+			v,
+			int(main_loop_.ViewportWidth ()) - fps,
+			int(main_loop_.ViewportHeight()) - c_fps_bar_height,
+			fps,
+			c_fps_bar_height,
+			color );
+	}
 
 	MX_ASSERT( v - vertices <= MX_MAX_GUI_VERTICES );
 
