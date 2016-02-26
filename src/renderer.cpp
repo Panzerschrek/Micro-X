@@ -313,12 +313,6 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 				if( t == 0 )
 				{
 					gen_level_textures_func_table[i]( &tex );
-
-					static const float c_zero_alpha[4]= { 1.0f, 1.0f, 1.0f, 0.0f };
-					static const float c_one_alpha[4]= { 0.0f, 0.0f, 0.0f, 1.0f };
-					tex.Mul( c_zero_alpha );
-					tex.Add( c_one_alpha );
-
 					tex.LinearNormalization( 1.0f );
 				}
 				else

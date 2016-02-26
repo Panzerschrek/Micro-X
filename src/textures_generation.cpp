@@ -45,6 +45,14 @@ static void AddHemisphereToHeightmap(
 	}
 }
 
+static void SetAlphaToOne( mx_Texture* texture )
+{
+	static const float c_zero_alpha[4]= { 1.0f, 1.0f, 1.0f, 0.0f };
+	static const float c_one_alpha[4]= { 0.0f, 0.0f, 0.0f, 1.0f };
+	texture->Mul( c_zero_alpha );
+	texture->Add( c_one_alpha );
+}
+
 static void GenNoisedColorMix(
 	mx_Texture * texture,
 	const float* bg_color,
@@ -87,6 +95,7 @@ static void GenGraniteTexture( mx_Texture * texture )
 	};
 
 	GenNoisedColorMix( texture, c_bg_color, c_colors[0], 6, 4 );
+	SetAlphaToOne( texture );
 }
 
 static void GenGraniteTextureHeightMap( mx_Texture * height_map )
@@ -113,6 +122,7 @@ static void GenSteelPlateTexture( mx_Texture * texture )
 	};
 
 	GenNoisedColorMix( texture, c_bg_color, c_colors[0], 8, 3 );
+	SetAlphaToOne( texture );
 }
 
 static void GenSteelPlateTextureHeightMap( mx_Texture* height_map )
@@ -142,6 +152,32 @@ static void GenSteelPlateTextureHeightMap( mx_Texture* height_map )
 	}
 
 	// AddHemisphereToHeightmap( height_map, 512, 512, 128, 128 - 8 );
+}
+
+static void GenMapScreenTexture( mx_Texture * texture )
+{
+	MX_ASSERT( texture->SizeX() == texture->SizeY() );
+	unsigned int size= texture->SizeX();
+
+	texture->Fill( g_powerups_bg );
+
+	mx_Rand rand;
+
+	for( unsigned int i= 0; i < 64; i++ )
+	{
+		static const float c_line_color[4]= { 1.0f, 1.0f, 1.0f, 0.1f };
+		texture->DrawLine(
+			rand.RandI( 1, size ),
+			rand.RandI( 1, size ),
+			rand.RandI( 1, size ),
+			rand.RandI( 1, size ),
+			c_line_color );
+	}
+}
+
+static void GenMapScreenTextureHeightMap( mx_Texture * texture )
+{
+	texture->Fill( g_black );
 }
 
 static void GenOctoRobotTexture( mx_Texture * texture )
@@ -347,10 +383,12 @@ void (* const gen_level_textures_func_table[LastLevelTexture])( mx_Texture* text
 {
 	GenGraniteTexture,
 	GenSteelPlateTexture,
+	GenMapScreenTexture,
 };
 
 void (* const gen_level_textures_height_map_func_table[LastLevelTexture])( mx_Texture* height_map )=
 {
 	GenGraniteTextureHeightMap,
 	GenSteelPlateTextureHeightMap,
+	GenMapScreenTextureHeightMap,
 };

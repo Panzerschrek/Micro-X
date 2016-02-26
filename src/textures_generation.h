@@ -6,6 +6,7 @@ enum LevelTexture
 {
 	TextureGranite,
 	TextureSteelPlate,
+	TextureMapScreen,
 	LastLevelTexture,
 };
 
