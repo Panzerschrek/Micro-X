@@ -4,6 +4,7 @@
 #include "monster.h"
 #include "mx_assert.h"
 #include "mx_math.h"
+#include "particles_manager.h"
 #include "player.h"
 #include "shaders.h"
 #include "texture.h"
@@ -12,12 +13,6 @@
 #include "renderer.h"
 
 #define MX_MAX_GUI_VERTICES 8192
-
-struct BulletVertex
-{
-	float pos[3];
-	float color[3];
-};
 
 struct GuiVertex
 {
@@ -212,21 +207,19 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 		world_map_shader_.FindUniform( "mat" );
 		world_map_shader_.FindUniform( "m10" );
 	}
-	{ // plasma ball shader
-		plasma_ball_shader_.SetAttribLocation( "p", 0 );
-		plasma_ball_shader_.SetAttribLocation( "c", 1 );
-		plasma_ball_shader_.Create( mx_Shaders::plasma_ball_shader_v, mx_Shaders::plasma_ball_shader_f );
-		static const char* const uniforms[]= { "mat" };
-		plasma_ball_shader_.FindUniforms( uniforms, sizeof(uniforms) / sizeof(char*) );
+	{ // partices shader
+		particles_shader_.SetAttribLocation( "p", 0 );
+		particles_shader_.SetAttribLocation( "c", 1 );
+		particles_shader_.Create( mx_Shaders::particles_shader_v, mx_Shaders::particles_shader_f );
+		particles_shader_.FindUniform( "mat" );
+		particles_shader_.FindUniform( "ss" );
 	}
+	{ // particles vbo
+		particles_vertex_buffer_.VertexData( NULL, MX_MAX_PARTICLES * sizeof(mx_ParticleVertex), sizeof(mx_ParticleVertex) );
 
-	{ // plasma ball vbo
-
-		plasma_balls_vertex_buffer_.VertexData( NULL, MX_MAX_BULLETS * sizeof(BulletVertex), sizeof(BulletVertex) );
-
-		BulletVertex v;
-		plasma_balls_vertex_buffer_.VertexAttrib( 0, 3, GL_FLOAT, false, ((char*)v.pos) - ((char*)&v) );
-		plasma_balls_vertex_buffer_.VertexAttrib( 1, 3, GL_FLOAT, false, ((char*)v.color) - ((char*)&v) );
+		mx_ParticleVertex v;
+		particles_vertex_buffer_.VertexAttrib( 0, 4, GL_FLOAT, false, ((char*)v.pos_size) - ((char*)&v) );
+		particles_vertex_buffer_.VertexAttrib( 1, 4, GL_FLOAT, false, ((char*)v.color) - ((char*)&v) );
 	}
 	{ // gui shader
 		gui_shader_.SetAttribLocation( "p", 0 );
@@ -453,7 +446,7 @@ void mx_Renderer::Draw()
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
 		MakeLighting();
-		DrawBullets();
+		DrawParticles();
 
 		// Bind screen framebuffer. We do non need clear it.
 		glBindFramebuffer( GL_FRAMEBUFFER, 0 );
@@ -783,30 +776,26 @@ void mx_Renderer::DrawIcosahedrons()
 	glDisable (GL_CULL_FACE );
 }
 
-void mx_Renderer::DrawBullets()
+void mx_Renderer::DrawParticles()
 {
-	BulletVertex bullets_vertices[ MX_MAX_BULLETS ];
+	const mx_ParticlesManager* particles_manager= level_.GetParticlesManager();
 
-	const mx_Bullet* bullets= level_.GetBullets();
-	unsigned int bullet_count= level_.GetBulletCount();
-	for( unsigned int b= 0; b < bullet_count; b++ )
-	{
-		VEC3_CPY( bullets_vertices[b].pos, bullets[b].pos );
-		VEC3_CPY( bullets_vertices[b].color, mx_GameConstants::bullets_colors[ bullets[b].type ] );
-		mxVec3Normalize( bullets_vertices[b].color );
-	}
+	mx_ParticleVertex vertices[ MX_MAX_PARTICLES ];
+	particles_manager->PrepareParticlesVertices( vertices );
+	unsigned int particle_count= particles_manager->GetParticlesCount();
 
-	plasma_balls_vertex_buffer_.VertexSubData( bullets_vertices, bullet_count * sizeof(BulletVertex), 0 );
+	particles_vertex_buffer_.VertexSubData( vertices, particle_count * sizeof(mx_ParticleVertex), 0 );
 
-	plasma_ball_shader_.Bind();
-	plasma_ball_shader_.UniformMat4( "mat", view_matrix_ );
+	particles_shader_.Bind();
+	particles_shader_.UniformMat4( "mat", view_matrix_ );
+	particles_shader_.UniformFloat( "ss",  float(main_loop_.ViewportHeight()) / std::tanf(player_.Fov()*0.5f) );
 
 	glDepthMask( 0 );
 	glEnable( GL_PROGRAM_POINT_SIZE );
 	glEnable( GL_BLEND );
-	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+	glBlendFunc( GL_ONE, GL_ONE );
 
-	glDrawArrays( GL_POINTS, 0, bullet_count );
+	glDrawArrays( GL_POINTS, 0, particle_count );
 
 	glDisable( GL_BLEND );
 	glDisable( GL_PROGRAM_POINT_SIZE );

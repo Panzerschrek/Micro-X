@@ -30,7 +30,7 @@ private:
 	void DrawMonsters();
 	void DrawAmmo();
 	void DrawIcosahedrons();
-	void DrawBullets();
+	void DrawParticles();
 
 	void MakeLighting();
 	void DrawLightSource( const mx_Light& light_source );
@@ -56,8 +56,8 @@ private:
 	unsigned int monsters_models_first_index_[ LastMonster + 2 ];
 	unsigned int monsters_models_index_count_[ LastMonster + 2 ];
 
-	mx_GLSLProgram plasma_ball_shader_;
-	mx_VertexBuffer plasma_balls_vertex_buffer_;
+	mx_GLSLProgram particles_shader_;
+	mx_VertexBuffer particles_vertex_buffer_;
 
 	mx_GLSLProgram gui_shader_;
 	mx_VertexBuffer gui_vertex_buffer_;

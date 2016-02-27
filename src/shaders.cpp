@@ -173,30 +173,31 @@ VERSION_HEADER
 "}"
 ;
 
-// plasma ball shader
-const char plasma_ball_shader_v[]=
+// particles shader
+const char particles_shader_v[]=
 VERSION_HEADER
-"in vec3 p;"
-"in vec3 c;"
+"in vec4 p;"
+"in vec4 c;"
 "uniform mat4 mat;"
-"out vec3 fc;"
+"uniform float ss;" // screen size
+"out vec4 fc;"
 "void main()"
 "{"
 	"fc=c;"
-	"vec4 v=mat*vec4(p,1.0);"
+	"vec4 v=mat*vec4(p.xyz,1.0);"
 	"gl_Position=v;"
-	"gl_PointSize=64.0/v.w;"
+	"gl_PointSize=p.w*ss/v.w;"
 "}"
 ;
 
-const char plasma_ball_shader_f[]=
+const char particles_shader_f[]=
 VERSION_HEADER
-"in vec3 fc;"
+"in vec4 fc;"
 "out vec4 c_;"
 "void main()"
 "{"
 	"vec2 r=gl_PointCoord.xy-vec2(0.5,0.5);"
-	"c_=vec4(fc,max(1.0-4.0*dot(r,r),0.0));"
+	"c_=fc*max(1.0-4.0*dot(r,r),0.0);"
 "}"
 ;
 

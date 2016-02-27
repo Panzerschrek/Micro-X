@@ -36,6 +36,8 @@ public:
 	const mx_Bullet* GetBullets() const;
 	unsigned int GetBulletCount() const;
 
+	const mx_ParticlesManager* GetParticlesManager() const;
+
 	const mx_LevelData& GetLevelData() const;
 
 	const mx_LevelSector* FindSectorForPoint( const float* point ) const;
@@ -66,6 +68,8 @@ private:
 
 	unsigned int bullet_count_;
 	mx_Bullet bullets_[ MX_MAX_BULLETS ];
+
+	mx_ParticlesManager* const particles_manager_;
 };
 
 inline const mx_LevelVertex* mx_Level::GetVertices() const
@@ -106,6 +110,11 @@ inline const mx_Bullet* mx_Level::GetBullets() const
 inline unsigned int mx_Level::GetBulletCount() const
 {
 	return bullet_count_;
+}
+
+inline const mx_ParticlesManager* mx_Level::GetParticlesManager() const
+{
+	return particles_manager_;
 }
 
 inline const mx_LevelData& mx_Level::GetLevelData() const

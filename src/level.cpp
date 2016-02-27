@@ -3,6 +3,7 @@
 #include "monster.h"
 #include "mx_assert.h"
 #include "mx_math.h"
+#include "particles_manager.h"
 #include "player.h"
 #include "sound_engine.h"
 
@@ -70,6 +71,7 @@ mx_Level::mx_Level( const mx_LevelData& level_data, mx_Player& player )
 	, level_data_(level_data)
 	, monster_count_(0)
 	, bullet_count_(0)
+	, particles_manager_(new mx_ParticlesManager)
 {
 	mx_Rand rand;
 
@@ -265,6 +267,9 @@ void mx_Level::Tick()
 		monsters_[m]->Exec();
 	}
 
+	// Process particles. Make this BEFORE after logic, wher we can add particles.
+	particles_manager_->Tick( dt );
+
 	// Process bullets
 	for( unsigned int b= 0; b < bullet_count_; )
 	{
@@ -379,6 +384,7 @@ kill:
 		float d_pos[3];
 		mxVec3Mul( bullet.speed, dt, d_pos );
 		mxVec3Add( bullet.pos, d_pos );
+		particles_manager_->AddBullet( &bullet );
 
 		b++;
 	}
@@ -465,6 +471,8 @@ void mx_Level::RocketBlast( const float* pos )
 
 	for( unsigned int m= 0; m < monster_count_ + 1; m++ )
 	{
+		particles_manager_->AddBlast( pos );
+
 		mx_Pawn* pawn;
 		if( m == monster_count_ )
 			pawn= &player_;
