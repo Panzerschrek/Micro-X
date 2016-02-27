@@ -55,6 +55,8 @@ public:
 	void Tick();
 	void Shot( mx_Pawn* shooter, BulletType bullet_type, const float* pos, const float* normalized_dir );
 
+	void WarnMonsters();
+
 private:
 	struct Blast
 	{

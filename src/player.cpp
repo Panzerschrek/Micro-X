@@ -186,6 +186,13 @@ void mx_Player::Tick()
 		}
 	}
 
+	bool monsters_warned= false;
+	if( mxVec3Len( speed_ ) > c_max_speed * 0.25f )
+	{
+		monsters_warned= true;
+		level_->WarnMonsters();
+	}
+
 	if( map_mode_ )
 		return;
 
@@ -224,6 +231,9 @@ void mx_Player::Tick()
 		level_->Shot( this, current_weapon_, shot_pos, result_dir );
 
 		ammo_[current_weapon_]--;
+
+		if( !monsters_warned )
+			level_->WarnMonsters();
 	}
 }
 

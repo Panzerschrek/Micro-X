@@ -30,8 +30,9 @@ public:
 
 	~mx_Monster();
 
-	MonsterType GetType() const;
+	void Warn();
 
+	MonsterType GetType() const;
 	const mx_LevelSector& GetSector() const;
 
 protected:
@@ -59,8 +60,14 @@ private:
 
 	mx_Rand rand_;
 
+	bool warned_;
 	bool destroy_;
 };
+
+inline void mx_Monster::Warn()
+{
+	warned_= true;
+}
 
 inline MonsterType mx_Monster::GetType() const
 {

@@ -39,6 +39,7 @@ mx_Monster::mx_Monster(
 	, player_(player)
 	, patrol_path_( patrol_path ? *patrol_path : mx_PatrolPath() )
 	, have_patrol_path_( patrol_path != NULL )
+	, warned_(false)
 	, destroy_(false)
 {
 	if( have_patrol_path_ )
@@ -146,6 +147,12 @@ bool mx_Monster::CanAttack()
 {
 	if( player_.GetSector() == &home_sector_ )
 	{
+		if( warned_ )
+		{
+			warned_= false;
+			return true;
+		}
+
 		float vec_to_player[3];
 		mxVec3Sub( player_.Pos(), Pos(), vec_to_player );
 		mxVec3Normalize( vec_to_player );

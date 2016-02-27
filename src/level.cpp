@@ -502,6 +502,16 @@ void mx_Level::Shot( mx_Pawn* shooter, BulletType bullet_type, const float* pos,
 	bullet_count_++;
 }
 
+void mx_Level::WarnMonsters()
+{
+	for( unsigned int m= 0; m < monster_count_; m++ )
+	{
+		mx_Monster* monster= monsters_[m];
+		if( &monster->GetSector() == player_.GetSector() )
+			monster->Warn();
+	}
+}
+
 void mx_Level::RocketBlast( const float* pos )
 {
 	AddBlast( pos );
