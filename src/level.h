@@ -56,6 +56,7 @@ private:
 	mx_Level& operator=(const mx_Level&);
 
 	void RocketBlast( const float* pos );
+	void AddBlast( const float* pos );
 
 private:
 	mx_Player& player_;

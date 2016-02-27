@@ -429,6 +429,7 @@ kill:
 	{
 		if( monsters_[m]->GetHealth() <= 0 )
 		{
+			AddBlast( monsters_[m]->Pos() );
 			delete monsters_[m];
 
 			if( m < monster_count_ - 1 )
@@ -467,12 +468,10 @@ void mx_Level::Shot( mx_Pawn* shooter, BulletType bullet_type, const float* pos,
 
 void mx_Level::RocketBlast( const float* pos )
 {
-	mx_SoundEngine::Instance()->AddSingleSound( SoundBlast, 1.0f, 1.0f, pos );
+	AddBlast( pos );
 
 	for( unsigned int m= 0; m < monster_count_ + 1; m++ )
 	{
-		particles_manager_->AddBlast( pos );
-
 		mx_Pawn* pawn;
 		if( m == monster_count_ )
 			pawn= &player_;
@@ -490,4 +489,10 @@ void mx_Level::RocketBlast( const float* pos )
 				pawn->Hit( damage );
 		}
 	}
+}
+
+void mx_Level::AddBlast( const float* pos )
+{
+	mx_SoundEngine::Instance()->AddSingleSound( SoundBlast, 1.0f, 1.0f, pos );
+	particles_manager_->AddBlast( pos );
 }

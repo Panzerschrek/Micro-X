@@ -71,7 +71,7 @@ void mx_ParticlesManager::AddBullet( const mx_Bullet* bullet )
 
 void mx_ParticlesManager::AddBlast( const float* pos )
 {
-	const unsigned int c_particles_count= 40;
+	const unsigned int c_particles_count= 768;
 
 	Particle* particle= particles_ + particle_count_;
 	for( unsigned int i= 0; i< c_particles_count; )
@@ -107,11 +107,11 @@ void mx_ParticlesManager::PrepareParticlesVertices( mx_ParticleVertex* out_verti
 		case Particle::RocketBlast:
 			{
 				float lifetime_k= ( current_tick_time_ - particle->spawn_time ) * ( 1.0f / MX_BLAST_FIRE_LIFETIME );
-				vertex->pos_size[3]= 0.01f + 0.11f * lifetime_k;
+				vertex->pos_size[3]= 0.02f + 0.11f * lifetime_k;
 
 				float luminance= 1.0f - lifetime_k;
 				luminance= luminance * luminance;
-				mxVec3Mul( mx_GameConstants::bullets_colors[Rocket], luminance, vertex->color );
+				mxVec3Mul( mx_GameConstants::bullets_colors[Rocket], 1.3f * luminance, vertex->color );
 			}
 			break;
 		case Particle::RocketTrail:
