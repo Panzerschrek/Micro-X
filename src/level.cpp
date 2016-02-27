@@ -9,6 +9,8 @@
 
 #include "level.h"
 
+#define MX_BLAST_LIFETIME 1.0f
+
 static bool CollideWithEdge( const float* v0, const float* v1, float* in_out_pos, float radius )
 {
 	float v0_to_v1_vec[3];
@@ -71,6 +73,7 @@ mx_Level::mx_Level( const mx_LevelData& level_data, mx_Player& player )
 	, level_data_(level_data)
 	, monster_count_(0)
 	, bullet_count_(0)
+	, blast_count_(0)
 	, particles_manager_(new mx_ParticlesManager)
 {
 	mx_Rand rand;
@@ -142,6 +145,30 @@ mx_Level::mx_Level( const mx_LevelData& level_data, mx_Player& player )
 
 mx_Level::~mx_Level()
 {
+}
+
+void mx_Level::PrepareBlastLights( mx_Light* out_lights ) const
+{
+	float total_time= mx_MainLoop::Instance()->GetTime();
+
+	for( unsigned int i= 0; i < blast_count_; i++ )
+	{
+		const Blast& blast= blasts_[i];
+		mx_Light& light= out_lights[i];
+		VEC3_CPY( light.pos, blast.pos );
+
+		float relative_life_time= ( total_time - blast.start_time ) / MX_BLAST_LIFETIME;
+		float luminance=
+			20.0f *
+			relative_life_time *
+			std::cosf( relative_life_time * 1.5f ) /
+			std::expf( relative_life_time * 2.0f );
+
+		mxVec3Mul(
+			mx_GameConstants::bullets_colors[Rocket],
+			luminance,
+			light.light_rgb );
+	}
 }
 
 const mx_LevelSector* mx_Level::FindSectorForPoint( const float* point ) const
@@ -267,6 +294,20 @@ void mx_Level::Tick()
 		monsters_[m]->Exec();
 	}
 
+	// Process blasts
+	for( unsigned int b= 0; b < blast_count_; )
+	{
+		Blast& blast= blasts_[b];
+		if( blast.start_time + MX_BLAST_LIFETIME <= total_time )
+		{
+			if( b != blast_count_ - 1 )
+				blasts_[b]= blasts_[ blast_count_ - 1 ];
+			blast_count_--;
+			continue;
+		}
+		b++;
+	}
+
 	// Process particles. Make this BEFORE after logic, wher we can add particles.
 	particles_manager_->Tick( dt );
 
@@ -368,12 +409,7 @@ kill:
 		if( dead )
 		{
 			if( bullet.type == Rocket )
-			{
-				float new_pos[3];
-				mxVec3Mul( bullet.speed, dt, new_pos );
-				mxVec3Add( new_pos, bullet.pos );
-				RocketBlast( new_pos );
-			}
+				RocketBlast( bullet.pos );
 
 			if( b != bullet_count_ - 1u )
 				bullets_[b]= bullets_[ bullet_count_ - 1u ];
@@ -495,4 +531,10 @@ void mx_Level::AddBlast( const float* pos )
 {
 	mx_SoundEngine::Instance()->AddSingleSound( SoundBlast, 1.0f, 1.0f, pos );
 	particles_manager_->AddBlast( pos );
+
+	Blast& blast= blasts_[ blast_count_ ];
+	VEC3_CPY( blast.pos, pos );
+	blast.start_time= mx_MainLoop::Instance()->GetTime();
+
+	blast_count_++;
 }

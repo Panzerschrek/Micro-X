@@ -881,6 +881,11 @@ void mx_Renderer::MakeLighting()
 		DrawLightSource( light_source );
 	}
 
+	mx_Light blasts_lights[ MX_MAX_BLAST_LIGHTS ];
+	level_.PrepareBlastLights( blasts_lights );
+	for( unsigned int i= 0; i < level_.GetBlastLightCount(); i++ )
+		DrawLightSource( blasts_lights[i] );
+
 	glDepthMask( 1 );
 	glDisable( GL_CULL_FACE );
 	glDisable( GL_BLEND );

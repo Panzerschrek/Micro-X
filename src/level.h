@@ -8,6 +8,7 @@
 
 #define MX_MAX_MONSTERS 256
 #define MX_MAX_BULLETS 512
+#define MX_MAX_BLAST_LIGHTS 64
 
 struct mx_Bullet
 {
@@ -36,6 +37,9 @@ public:
 	const mx_Bullet* GetBullets() const;
 	unsigned int GetBulletCount() const;
 
+	unsigned int GetBlastLightCount() const;
+	void PrepareBlastLights( mx_Light* out_lights ) const;
+
 	const mx_ParticlesManager* GetParticlesManager() const;
 
 	const mx_LevelData& GetLevelData() const;
@@ -52,6 +56,14 @@ public:
 	void Shot( mx_Pawn* shooter, BulletType bullet_type, const float* pos, const float* normalized_dir );
 
 private:
+	struct Blast
+	{
+		float start_time;
+		float pos[3];
+	};
+
+private:
+
 	mx_Level(const mx_Level&);
 	mx_Level& operator=(const mx_Level&);
 
@@ -69,6 +81,9 @@ private:
 
 	unsigned int bullet_count_;
 	mx_Bullet bullets_[ MX_MAX_BULLETS ];
+
+	unsigned int blast_count_;
+	Blast blasts_[ MX_MAX_BLAST_LIGHTS ];
 
 	mx_ParticlesManager* const particles_manager_;
 };
@@ -111,6 +126,11 @@ inline const mx_Bullet* mx_Level::GetBullets() const
 inline unsigned int mx_Level::GetBulletCount() const
 {
 	return bullet_count_;
+}
+
+inline unsigned int mx_Level::GetBlastLightCount() const
+{
+	return blast_count_;
 }
 
 inline const mx_ParticlesManager* mx_Level::GetParticlesManager() const

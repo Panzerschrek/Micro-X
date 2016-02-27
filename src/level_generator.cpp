@@ -976,7 +976,7 @@ void mx_LevelGenerator::SetupTextures()
 {
 	for( unsigned int s= 0; s < out_level_data_.sector_count; s++ )
 	{
-		unsigned char tex_id= rand_.Rand() % LastLevelTexture;
+		unsigned char tex_id= rand_.Rand() % TextureMapScreen;
 
 		mx_LevelSector& sector= out_level_data_.sectors[s];
 		
