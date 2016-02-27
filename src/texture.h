@@ -76,7 +76,7 @@ public:
 	void AlphaBlendOneMinusSrc( const mx_Texture* t );
 	void AlphaBlendOneMinusDst( const mx_Texture* t );
 
-	void DrawText( unsigned int x, unsigned int y, unsigned int size, const float* color, const char* text );
+	//void DrawText( unsigned int x, unsigned int y, unsigned int size, const float* color, const char* text );
 
 	void LinearNormalization( float k );
 	void ExpNormalization( float k );

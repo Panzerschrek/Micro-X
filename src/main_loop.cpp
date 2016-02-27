@@ -7,7 +7,7 @@
 #include "player.h"
 #include "renderer.h"
 #include "sound_engine.h"
-#include "text.h"
+//#include "text.h"
 
 #include "main_loop.h"
 
@@ -181,7 +181,7 @@ mx_MainLoop::mx_MainLoop(
 	player_->SetLevel(level_);
 	
 	renderer_= new mx_Renderer( *level_, *player_ );
-	text_= new mx_Text();
+	//text_= new mx_Text();
 
 	mx_SoundEngine::CreateInstance( hwnd_ );
 
@@ -197,7 +197,7 @@ mx_MainLoop::~mx_MainLoop()
 {
 	mx_SoundEngine::DeleteInstance();
 
-	delete instance_->text_;
+	//delete instance_->text_;
 	delete instance_->renderer_;
 	delete instance_->player_;
 	delete instance_->level_;
@@ -259,6 +259,7 @@ void mx_MainLoop::Loop()
 
 		renderer_->Draw();
 		
+		/*
 		{ // texts
 			//TODO: remove this, if we reach 32kb limit
 
@@ -275,6 +276,7 @@ void mx_MainLoop::Loop()
 
 			text_->Draw();
 		}
+		*/
 
 		SwapBuffers( hdc_ );
 		CalculateFPS();

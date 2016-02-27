@@ -81,7 +81,7 @@ private:
 	mx_Player* player_;
 	mx_Level* level_;
 	mx_Renderer* renderer_;
-	mx_Text* text_;
+	//mx_Text* text_;
 };
 
 inline mx_MainLoop* mx_MainLoop::Instance()

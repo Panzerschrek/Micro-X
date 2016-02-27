@@ -1,6 +1,9 @@
+#include <cstdlib>
+#include <cstring>
+
 #include "mx_assert.h"
 #include "mx_math.h"
-#include "text.h"
+//#include "text.h"
 
 #include "texture.h"
 
@@ -964,6 +967,7 @@ void mx_Texture::AlphaBlendOneMinusDst( const mx_Texture* t )
 	}
 }
 
+/*
 void mx_Texture::DrawText( unsigned int x, unsigned int y, unsigned int size, const float* color, const char* text )
 {
 	unsigned int size_x1= size_[0] - 1;
@@ -997,6 +1001,7 @@ void mx_Texture::DrawText( unsigned int x, unsigned int y, unsigned int size, co
 		x+= MX_LETTER_WIDTH * size;
 	}
 }
+*/
 
 void mx_Texture::LinearNormalization( float k )
 {
