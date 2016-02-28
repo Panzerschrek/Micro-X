@@ -575,6 +575,8 @@ void mx_Renderer::DrawMap()
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 	glDrawElements( GL_TRIANGLES, world_vertex_buffer_.IndexDataSize() / sizeof(unsigned int), GL_UNSIGNED_INT, NULL );
 	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+
+	DrawIcosahedrons();
 }
 
 void mx_Renderer::CalculateMatrices()
