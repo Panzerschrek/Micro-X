@@ -30,6 +30,7 @@ private:
 	void DrawMonsters();
 	void DrawAmmo();
 	void DrawIcosahedrons();
+	void DrawHealthPacks();
 	void DrawParticles();
 
 	void MakeLighting();

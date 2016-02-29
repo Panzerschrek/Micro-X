@@ -21,6 +21,9 @@ namespace mx_GameConstants
 extern const int initial_player_health;
 extern const int player_max_health;
 
+extern const int health_pack_health;
+extern const float health_pack_drop_chance;
+
 extern const int initial_monsters_health[LastMonster];
 extern const float monsters_radius[LastMonster];
 
@@ -41,6 +44,7 @@ extern const unsigned int ammo_boxes_bullets_count[LastBullet];
 
 extern const float ammo_pockup_radius;
 extern const float icosahedron_pickup_radius;
+extern const float health_pack_pickup_radius;
 extern const float player_radius;
 
 extern const float machinegun_shot_interval;

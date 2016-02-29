@@ -4,11 +4,14 @@
 #include "fwd.h"
 #include "game_constants.h"
 #include "level_generator.h"
+#include "mx_math.h"
 #include "pawn.h"
 
 #define MX_MAX_MONSTERS 256
 #define MX_MAX_BULLETS 512
 #define MX_MAX_BLAST_LIGHTS 64
+
+#define MX_MAX_HEALTH_PACKS MX_MAX_MONSTERS
 
 struct mx_Bullet
 {
@@ -17,6 +20,12 @@ struct mx_Bullet
 	float pos[3];
 	float speed[3];
 	float birth_time;
+};
+
+struct mx_HealthPack
+{
+	float pos[3];
+	const mx_LevelSector* sector;
 };
 
 class mx_Level
@@ -33,6 +42,9 @@ public:
 
 	const mx_Monster* const* GetMonsters() const;
 	unsigned int GetMonsterCount() const;
+
+	const mx_HealthPack* GetHealthPacks() const;
+	unsigned int GetHealthPackCount() const;
 
 	const mx_Bullet* GetBullets() const;
 	unsigned int GetBulletCount() const;
@@ -76,10 +88,15 @@ private:
 	mx_Player& player_;
 	const mx_LevelData level_data_;
 
+	mx_Rand randomizer_;
+
 	mx_DrawingModel monsters_models_[ LastMonster ];
 
 	unsigned int monster_count_;
 	mx_Monster* monsters_[ MX_MAX_MONSTERS ];
+
+	unsigned int health_pack_count_;
+	mx_HealthPack health_packs_[ MX_MAX_HEALTH_PACKS ];
 
 	unsigned int bullet_count_;
 	mx_Bullet bullets_[ MX_MAX_BULLETS ];
@@ -118,6 +135,16 @@ inline const mx_Monster* const* mx_Level::GetMonsters() const
 inline unsigned int mx_Level::GetMonsterCount() const
 {
 	return monster_count_;
+}
+
+inline const mx_HealthPack* mx_Level::GetHealthPacks() const
+{
+	return health_packs_;
+}
+
+inline unsigned int mx_Level::GetHealthPackCount() const
+{
+	return health_pack_count_;
 }
 
 inline const mx_Bullet* mx_Level::GetBullets() const

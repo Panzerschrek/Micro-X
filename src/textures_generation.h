@@ -17,3 +17,4 @@ extern void (* const gen_level_textures_func_table[LastLevelTexture])( mx_Textur
 extern void (* const gen_level_textures_height_map_func_table[LastLevelTexture])( mx_Texture* height_map );
 
 void mxGenIcosahedronTexture( mx_Texture* texture );
+void mxGenHealthPackTextire( mx_Texture* texture );

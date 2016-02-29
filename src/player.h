@@ -12,6 +12,7 @@ public:
 	void SetLevel( mx_Level* level );
 	void SetPos( const float* pos );
 	void AddAmmo( BulletType type, unsigned int count );
+	void AddHealth( int health );
 
 	const float Fov() const;
 	bool IsInMapMode() const;

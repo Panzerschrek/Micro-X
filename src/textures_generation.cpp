@@ -366,6 +366,40 @@ void mxGenIcosahedronTexture( mx_Texture* texture )
 	}
 }
 
+void mxGenHealthPackTextire( mx_Texture* texture )
+{
+	MX_ASSERT( texture->SizeX() == texture->SizeY() );
+	unsigned int size= texture->SizeX();
+	unsigned int size_log2= texture->SizeXLog2();
+	unsigned int size_log2_minus_5= size_log2 - 5;
+
+	static const float c_color[4]= { 0.9f, 0.9f, 0.9f, g_powerups_bg[3] };
+	texture->Fill( c_color);
+
+	texture->FillRect( size / 16, size / 16, size * 14 / 16, size * 14 / 16, g_powerups_bg );
+
+	static const float c_cross_color[4]= { 1.0f, 0.1f, 0.1f, g_powerups_bg[3] };
+
+	for( unsigned int i= 0; i < 2; i++ )
+	{
+		unsigned int xy= i * 12;
+
+		texture->FillRect(
+			(8 + xy) << size_log2_minus_5,
+			(3 + xy) << size_log2_minus_5,
+			 4 << size_log2_minus_5,
+			14 << size_log2_minus_5,
+			c_cross_color );
+
+		texture->FillRect(
+			(3 + xy) << size_log2_minus_5,
+			(8 + xy) << size_log2_minus_5,
+			14 << size_log2_minus_5,
+			 4<< size_log2_minus_5,
+			c_cross_color );
+	}
+}
+
 void (* const gen_monsters_textures_func_table[LastMonster])( mx_Texture* texture )=
 {
 	GenOctoRobotTexture,

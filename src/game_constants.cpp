@@ -5,6 +5,9 @@ namespace mx_GameConstants
 
 const int initial_player_health= 100;
 const int player_max_health= 100;
+const int health_pack_health= 25;
+
+const float health_pack_drop_chance= 0.5f;
 
 const int initial_monsters_health[LastMonster]=
 {
@@ -61,6 +64,7 @@ const unsigned int ammo_boxes_bullets_count[LastBullet]=
 
 const float ammo_pockup_radius= 0.4f;
 const float icosahedron_pickup_radius= 0.4f;
+const float health_pack_pickup_radius= 0.4f;
 const float player_radius= 0.3f;
 
 const float machinegun_shot_interval= 1.0f / 8.0f;

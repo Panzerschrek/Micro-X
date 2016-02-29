@@ -64,6 +64,13 @@ void mx_Player::SetPos( const float* pos )
 	VEC3_CPY( pos_, pos );
 }
 
+void mx_Player::AddHealth( int health )
+{
+	health_+= health;
+	if( health_ > mx_GameConstants::player_max_health )
+		health_= mx_GameConstants::player_max_health;
+}
+
 void mx_Player::Tick()
 {
 	float dt= mx_MainLoop::Instance()->GetTickTime();

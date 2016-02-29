@@ -338,17 +338,19 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 
 		glTexImage3D(
 			GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8,
-			tex.SizeX(), tex.SizeY(), LastMonster + LastBullet + 1,
+			tex.SizeX(), tex.SizeY(), LastMonster + LastBullet + 1 + 1,
 			0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
 
-		for( unsigned int i= 0; i < LastMonster + LastBullet + 1; i++ )
+		for( unsigned int i= 0; i < LastMonster + LastBullet + 1 + 1; i++ )
 		{
 			if( i < LastMonster )
 				gen_monsters_textures_func_table[i]( &tex );
 			else if( i < LastMonster + LastBullet )
 				gen_ammo_textures_func_table[ i - LastMonster ]( &tex );
-			else
+			else if ( i < LastMonster + LastBullet + 1 )
 				mxGenIcosahedronTexture( &tex );
+			else
+				mxGenHealthPackTextire( &tex );
 
 			tex.LinearNormalization( 1.0f );
 
@@ -439,6 +441,7 @@ void mx_Renderer::Draw()
 		DrawMonsters();
 		DrawAmmo();
 		DrawIcosahedrons();
+		DrawHealthPacks();
 
 		// Bind HDR screen buffer. Clear cboth buffers.
 		glBindFramebuffer( GL_FRAMEBUFFER, hdr_buffer_.fbo_id );
@@ -773,6 +776,56 @@ void mx_Renderer::DrawIcosahedrons()
 				GL_UNSIGNED_SHORT,
 				(void*)( monsters_models_first_index_[LastMonster + 1] * sizeof(unsigned short) ) );
 		}
+	}
+
+	glDisable (GL_CULL_FACE );
+}
+
+void mx_Renderer::DrawHealthPacks()
+{
+	glActiveTexture( GL_TEXTURE0 );
+	glBindTexture( GL_TEXTURE_2D_ARRAY, monsters_textures_array_id_ );
+
+	monsters_shader_.Bind();
+	monsters_shader_.UniformInt( "tex", 0 );
+
+	monsters_vertex_buffer_.Bind();
+
+	glEnable( GL_CULL_FACE );
+	glCullFace( GL_BACK );
+
+	const mx_HealthPack* health_packs= level_.GetHealthPacks();
+	unsigned int health_pack_count= level_.GetHealthPackCount();
+
+	for( unsigned int i= 0; i < health_pack_count; i++ )
+	{
+		const mx_HealthPack& pack= health_packs[i];
+		if( pack.sector->traverse_id != visible_sectors_tag_ )
+			continue;
+
+		float translate_mat[16];
+		float rotate_mat[16];
+		float result_mat[16];
+		float normals_mat[9];
+
+		MakePowerupsRotationMatrix( rotate_mat );
+
+		mxMat4Translate( translate_mat, pack.pos );
+		mxMat4Mul( rotate_mat, translate_mat, result_mat );
+		mxMat4Mul( result_mat, view_matrix_ );
+
+		monsters_shader_.UniformMat4( "mat", result_mat );
+
+		mxMat4ToMat3( rotate_mat, normals_mat );
+		monsters_shader_.UniformMat3( "nmat", normals_mat );
+
+		monsters_shader_.UniformFloat( "texn", float( LastMonster + LastBullet + 1 ) + g_texture_aray_coord_eps );
+
+		glDrawElements(
+			GL_TRIANGLES,
+			monsters_models_index_count_[LastMonster],
+			GL_UNSIGNED_SHORT,
+			(void*)( monsters_models_first_index_[LastMonster] * sizeof(unsigned short) ) );
 	}
 
 	glDisable (GL_CULL_FACE );

@@ -72,16 +72,15 @@ mx_Level::mx_Level( const mx_LevelData& level_data, mx_Player& player )
 	: player_(player)
 	, level_data_(level_data)
 	, monster_count_(0)
+	, health_pack_count_(0)
 	, bullet_count_(0)
 	, blast_count_(0)
 	, particles_manager_(new mx_ParticlesManager)
 {
-	mx_Rand rand;
-
 	mx_LevelSector* player_sector;
 	do
 	{
-		player_sector= &level_data_.sectors[ rand.Rand() % level_data_.sector_count ];
+		player_sector= &level_data_.sectors[ randomizer_.Rand() % level_data_.sector_count ];
 	} while( !(
 		player_sector->type == mx_LevelSector::ROOM  &&
 		!player_sector->has_icosahedron &&
@@ -127,7 +126,7 @@ mx_Level::mx_Level( const mx_LevelData& level_data, mx_Player& player )
 		path.path_plane= longest_coord;
 
 		monsters_[ monster_count_ ]= new mx_Monster(
-			MonsterType(rand.Rand() % LastMonster),
+			MonsterType(randomizer_.Rand() % LastMonster),
 			sector,
 			*this,
 			player_,
@@ -448,6 +447,29 @@ kill:
 			a++;
 		}
 
+		// Try pickup health
+		if( player_.GetHealth() < mx_GameConstants::player_max_health )
+			for( unsigned int i= 0; i < health_pack_count_; )
+			{
+				mx_HealthPack& pack= health_packs_[i];
+				
+				if( pack.sector == player_.GetSector() && 
+					mxSquareDistance( player_.Pos(), pack.pos ) <= 
+					mx_GameConstants::health_pack_pickup_radius * mx_GameConstants::health_pack_pickup_radius )
+				{
+					player_.AddHealth( mx_GameConstants::health_pack_health );
+
+					mx_SoundEngine::Instance()->AddSingleSound( SoundPowerupPickup, 1.0f, 1.0f, pack.pos );
+
+					if( i != health_pack_count_- 1 )
+						health_packs_[i]= health_packs_[health_pack_count_- 1];
+
+					health_pack_count_--;
+					continue;
+				}
+				i++;
+			}
+
 		// Try pickup icosahedrons
 		if( sector->has_icosahedron && !sector->icosahedron_picked )
 		{
@@ -465,6 +487,15 @@ kill:
 	{
 		if( monsters_[m]->GetHealth() <= 0 )
 		{
+			if( randomizer_.RandF(1.0f) <= mx_GameConstants::health_pack_drop_chance )
+			{
+				mx_HealthPack& dropped_health_pack= health_packs_[ health_pack_count_ ];
+				health_pack_count_++;
+
+				VEC3_CPY( dropped_health_pack.pos, monsters_[m]->Pos() );
+				dropped_health_pack.sector= &(monsters_[m]->GetSector());
+			}
+
 			AddBlast( monsters_[m]->Pos() );
 			delete monsters_[m];
 
