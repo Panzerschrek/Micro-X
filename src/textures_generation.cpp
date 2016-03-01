@@ -402,17 +402,15 @@ void mxGenHealthPackTextire( mx_Texture* texture )
 	}
 }
 
-void (* const gen_monsters_textures_func_table[LastMonster])( mx_Texture* texture )=
+void (* const gen_models_textures_func_table[LastModelTexture])( mx_Texture* texture )=
 {
 	GenOctoRobotTexture,
 	GenPyramidRobotTexture,
-};
-
-void (* const gen_ammo_textures_func_table[LastBullet])( mx_Texture* texture )=
-{
 	GenBulletAmmoBoxTexture,
 	GenRocketAmmoBoxTexture,
 	GenPlasmaAmmoBoxTexture,
+	mxGenIcosahedronTexture,
+	mxGenHealthPackTextire,
 };
 
 void (* const gen_level_textures_func_table[LastLevelTexture])( mx_Texture* texture )=

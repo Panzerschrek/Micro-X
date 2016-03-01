@@ -137,8 +137,9 @@ mx_Level::mx_Level( const mx_LevelData& level_data, mx_Player& player )
 
 	for( unsigned int i= 0; i < LastMonster; i++ )
 	{
-		monsters_models_[i].LoadFromMFMD( mx_Models::monsters_models[i] );
-		monsters_models_[i].Scale( mx_Models::monsters_models_scale[i] );
+		mx_Models::Model model= mx_Models::monster_to_model_table[i];
+		monsters_models_[i].LoadFromMFMD( mx_Models::models[model] );
+		monsters_models_[i].Scale( mx_Models::models_scale[model] );
 	}
 }
 

@@ -10,11 +10,19 @@ enum LevelTexture
 	LastLevelTexture,
 };
 
-extern void (* const gen_monsters_textures_func_table[LastMonster])( mx_Texture* texture );
-extern void (* const gen_ammo_textures_func_table[LastBullet])( mx_Texture* texture );
+enum ModelTexture
+{
+	TextureOctoRobot,
+	TexturePyramidRobot,
+	TextureBulletAmmo,
+	TextureRocketAmmo,
+	TexturePlasmaAmmo,
+	TextureIcosahedron,
+	TextureHealthPack,
+	LastModelTexture,
+};
+
+extern void (* const gen_models_textures_func_table[LastModelTexture])( mx_Texture* texture );
 
 extern void (* const gen_level_textures_func_table[LastLevelTexture])( mx_Texture* texture );
 extern void (* const gen_level_textures_height_map_func_table[LastLevelTexture])( mx_Texture* height_map );
-
-void mxGenIcosahedronTexture( mx_Texture* texture );
-void mxGenHealthPackTextire( mx_Texture* texture );

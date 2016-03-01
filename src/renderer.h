@@ -4,6 +4,8 @@
 #include "fwd.h"
 #include "glsl_program.h"
 #include "level_generator.h"
+#include "models.h"
+#include "textures_generation.h"
 #include "vertex_buffer.h"
 
 class mx_Renderer
@@ -29,7 +31,7 @@ private:
 	void DrawWorld();
 
 	void DrawModels();
-	void DrawModel( unsigned int model_index, unsigned int texture_index );
+	void DrawModel( mx_Models::Model model_index, ModelTexture texture_index );
 	void DrawMonsters();
 	void DrawAmmo();
 	void DrawIcosahedrons();
@@ -53,12 +55,11 @@ private:
 	mx_GLSLProgram world_map_shader_;
 	mx_VertexBuffer world_vertex_buffer_;
 
-	mx_GLSLProgram monsters_shader_;
+	mx_GLSLProgram models_shader_;
 
-	// HACK - last models in this array are ammo box and icosahderon
-	mx_VertexBuffer monsters_vertex_buffer_;
-	unsigned int monsters_models_first_index_[ LastMonster + 2 ];
-	unsigned int monsters_models_index_count_[ LastMonster + 2 ];
+	mx_VertexBuffer models_vertex_buffer_;
+	unsigned int models_first_index_[ mx_Models::LastModel ];
+	unsigned int models_index_count_[ mx_Models::LastModel ];
 
 	mx_GLSLProgram particles_shader_;
 	mx_VertexBuffer particles_vertex_buffer_;

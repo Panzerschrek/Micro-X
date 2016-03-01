@@ -141,7 +141,7 @@ VERSION_HEADER
 ;
 
 // monster shader
-const char monster_shader_v[]=
+const char models_shader_v[]=
 VERSION_HEADER
 "in vec3 p;"
 "in vec3 n;"
@@ -158,7 +158,7 @@ VERSION_HEADER
 "}"
 ;
 
-const char monster_shader_f[]=
+const char models_shader_f[]=
 VERSION_HEADER
 "uniform sampler2DArray tex;"
 "uniform float texn;"

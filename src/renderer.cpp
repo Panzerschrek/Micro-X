@@ -1,6 +1,5 @@
 #include "level.h"
 #include "main_loop.h"
-#include "models.h"
 #include "monster.h"
 #include "mx_assert.h"
 #include "mx_math.h"
@@ -8,7 +7,6 @@
 #include "player.h"
 #include "shaders.h"
 #include "texture.h"
-#include "textures_generation.h"
 
 #include "renderer.h"
 
@@ -27,6 +25,19 @@ static const float g_bullets_light_intensity[LastBullet]=
 	0.05f,
 	0.5f,
 	0.15f,
+};
+
+static const ModelTexture g_monster_to_texture_table[LastMonster]=
+{
+	TextureOctoRobot,
+	TexturePyramidRobot,
+};
+
+static const ModelTexture g_ammo_to_texture_table[LastBullet]=
+{
+	TextureBulletAmmo,
+	TextureRocketAmmo,
+	TexturePlasmaAmmo,
 };
 
 static void CreateBasisChangeMatrix( float* mat )
@@ -238,53 +249,40 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 	{ // monsters vbo
 		mx_DrawingModel combined_model;
 
-		for( unsigned int i= 0; i < LastMonster; i++ )
+		for( unsigned int i= 0; i < mx_Models::LastModel; i++ )
 		{
 			mx_DrawingModel model;
-			model.LoadFromMFMD( mx_Models::monsters_models[i] );
-			model.Scale( mx_Models::monsters_models_scale[i] );
+			model.LoadFromMFMD( mx_Models::models[i] );
+			model.Scale( mx_Models::models_scale[i] );
 
-			monsters_models_first_index_[i]= combined_model.GetIndexCount();
-			monsters_models_index_count_[i]= model.GetIndexCount();
-
-			combined_model.Add( &model );
-		}
-		for( unsigned int i= 0; i < 2; i++ )
-		{
-			static const unsigned char* const models[2]= { mx_Models::cube, mx_Models::icosahedron };
-			static const float scale[2]= { 0.1f, 0.15f };
-			mx_DrawingModel model;
-			model.LoadFromMFMD( models[i] );
-			model.Scale( scale[i] );
-
-			monsters_models_first_index_[LastMonster + i]= combined_model.GetIndexCount();
-			monsters_models_index_count_[LastMonster + i]= model.GetIndexCount();
+			models_first_index_[i]= combined_model.GetIndexCount();
+			models_index_count_[i]= model.GetIndexCount();
 
 			combined_model.Add( &model );
 		}
 
-		monsters_vertex_buffer_.VertexData(
+		models_vertex_buffer_.VertexData(
 			combined_model.GetVertexData(),
 			combined_model.GetVertexCount() * sizeof(mx_DrawingModelVertex),
 			sizeof(mx_DrawingModelVertex) );
 
-		monsters_vertex_buffer_.IndexData( combined_model.GetIndexData(), combined_model.GetIndexCount() * sizeof(unsigned short) );
+		models_vertex_buffer_.IndexData( combined_model.GetIndexData(), combined_model.GetIndexCount() * sizeof(unsigned short) );
 
 		mx_DrawingModelVertex v;
-		monsters_vertex_buffer_.VertexAttrib( 0, 3, GL_FLOAT, false, ((char*)v.pos) - ((char*)&v) );
-		monsters_vertex_buffer_.VertexAttrib( 1, 3, GL_FLOAT, true, ((char*)v.normal) - ((char*)&v) );
-		monsters_vertex_buffer_.VertexAttrib( 2, 2, GL_FLOAT, false, ((char*)v.tex_coord) - ((char*)&v) );
+		models_vertex_buffer_.VertexAttrib( 0, 3, GL_FLOAT, false, ((char*)v.pos) - ((char*)&v) );
+		models_vertex_buffer_.VertexAttrib( 1, 3, GL_FLOAT, true, ((char*)v.normal) - ((char*)&v) );
+		models_vertex_buffer_.VertexAttrib( 2, 2, GL_FLOAT, false, ((char*)v.tex_coord) - ((char*)&v) );
 	}
 	{ // monsters shader
-		monsters_shader_.SetAttribLocation( "p", 0 );
-		monsters_shader_.SetAttribLocation( "n", 1 );
-		monsters_shader_.SetAttribLocation( "tc", 2 );
-		monsters_shader_.SetFragDataLocation( "c_", 0 );
-		monsters_shader_.SetFragDataLocation( "n_", 1 );
+		models_shader_.SetAttribLocation( "p", 0 );
+		models_shader_.SetAttribLocation( "n", 1 );
+		models_shader_.SetAttribLocation( "tc", 2 );
+		models_shader_.SetFragDataLocation( "c_", 0 );
+		models_shader_.SetFragDataLocation( "n_", 1 );
 
-		monsters_shader_.Create( mx_Shaders::monster_shader_v, mx_Shaders::monster_shader_f );
+		models_shader_.Create( mx_Shaders::models_shader_v, mx_Shaders::models_shader_f );
 		static const char* const uniforms[]= { "mat", "nmat", "tex", "texn" };
-		monsters_shader_.FindUniforms( uniforms, sizeof(uniforms) / sizeof(char*) );
+		models_shader_.FindUniforms( uniforms, sizeof(uniforms) / sizeof(char*) );
 	}
 	{ // level textures
 		mx_Texture tex( 10, 10 );
@@ -338,19 +336,12 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 
 		glTexImage3D(
 			GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8,
-			tex.SizeX(), tex.SizeY(), LastMonster + LastBullet + 1 + 1,
+			tex.SizeX(), tex.SizeY(), LastModelTexture,
 			0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
 
-		for( unsigned int i= 0; i < LastMonster + LastBullet + 1 + 1; i++ )
+		for( unsigned int i= 0; i < LastModelTexture; i++ )
 		{
-			if( i < LastMonster )
-				gen_monsters_textures_func_table[i]( &tex );
-			else if( i < LastMonster + LastBullet )
-				gen_ammo_textures_func_table[ i - LastMonster ]( &tex );
-			else if ( i < LastMonster + LastBullet + 1 )
-				mxGenIcosahedronTexture( &tex );
-			else
-				mxGenHealthPackTextire( &tex );
+			gen_models_textures_func_table[i]( &tex );
 
 			tex.LinearNormalization( 1.0f );
 
@@ -386,7 +377,7 @@ mx_Renderer::mx_Renderer( const mx_Level& level, const mx_Player& player )
 		postprocessing_shader_.FindUniforms( uniforms, sizeof(uniforms) / sizeof(char*) );
 	}
 	{ // light sorce vertex buffer
-		light_source_model_.LoadFromMFMD( mx_Models::icosahedron );
+		light_source_model_.LoadFromMFMD( mx_Models::models[ mx_Models::ModelIcosahedron ] );
 
 		// HACK. Put to model data fullscreen quad
 		mx_DrawingModel fullscreen_quad_model;
@@ -635,13 +626,13 @@ void mx_Renderer::DrawModels()
 	glActiveTexture( GL_TEXTURE0 );
 	glBindTexture( GL_TEXTURE_2D_ARRAY, monsters_textures_array_id_ );
 
-	monsters_shader_.Bind();
-	monsters_shader_.UniformInt( "tex", 0 );
+	models_shader_.Bind();
+	models_shader_.UniformInt( "tex", 0 );
 
 	glEnable( GL_CULL_FACE );
 	glCullFace( GL_BACK );
 
-	monsters_vertex_buffer_.Bind();
+	models_vertex_buffer_.Bind();
 
 	if( player_.IsInMapMode() )
 		DrawIcosahedrons();
@@ -656,15 +647,15 @@ void mx_Renderer::DrawModels()
 	glDisable (GL_CULL_FACE );
 }
 
-void mx_Renderer::DrawModel( unsigned int model_index, unsigned int texture_index )
+void mx_Renderer::DrawModel( mx_Models::Model model_index, ModelTexture texture_index )
 {
-	monsters_shader_.UniformFloat( "texn", float(texture_index) + g_texture_aray_coord_eps );
+	models_shader_.UniformFloat( "texn", float(texture_index) + g_texture_aray_coord_eps );
 
 	glDrawElements(
 		GL_TRIANGLES,
-		monsters_models_index_count_[model_index],
+		models_index_count_[model_index],
 		GL_UNSIGNED_SHORT,
-		(void*)( monsters_models_first_index_[model_index] * sizeof(unsigned short) ) );
+		(void*)( models_first_index_[model_index] * sizeof(unsigned short) ) );
 }
 
 void mx_Renderer::DrawMonsters()
@@ -686,12 +677,14 @@ void mx_Renderer::DrawMonsters()
 		mxMat4Mul( rotate_mat, translate_mat, result_mat );
 		mxMat4Mul( result_mat, view_matrix_ );
 
-		monsters_shader_.UniformMat4( "mat", result_mat );
+		models_shader_.UniformMat4( "mat", result_mat );
 
 		mxMat4ToMat3( rotate_mat, normals_mat );
-		monsters_shader_.UniformMat3( "nmat", normals_mat );
+		models_shader_.UniformMat3( "nmat", normals_mat );
 
-		DrawModel( monster->GetType(), monster->GetType() );
+		DrawModel(
+			mx_Models::monster_to_model_table[  monster->GetType() ],
+			g_monster_to_texture_table[ monster->GetType() ] );
 	}
 }
 
@@ -719,12 +712,12 @@ void mx_Renderer::DrawAmmo()
 			mxMat4Mul( rotate_mat, translate_mat, result_mat );
 			mxMat4Mul( result_mat, view_matrix_ );
 
-			monsters_shader_.UniformMat4( "mat", result_mat );
+			models_shader_.UniformMat4( "mat", result_mat );
 
 			mxMat4ToMat3( rotate_mat, normals_mat );
-			monsters_shader_.UniformMat3( "nmat", normals_mat );
+			models_shader_.UniformMat3( "nmat", normals_mat );
 
-			DrawModel( LastMonster, LastMonster + box.type );
+			DrawModel( mx_Models::ModelCube, g_ammo_to_texture_table[ box.type ] );
 		} // for ammo boxes
 	} // for sectors
 }
@@ -751,12 +744,12 @@ void mx_Renderer::DrawIcosahedrons()
 			mxMat4Mul( rotate_mat, translate_mat, result_mat );
 			mxMat4Mul( result_mat, view_matrix_ );
 
-			monsters_shader_.UniformMat4( "mat", result_mat );
+			models_shader_.UniformMat4( "mat", result_mat );
 
 			mxMat4ToMat3( rotate_mat, normals_mat );
-			monsters_shader_.UniformMat3( "nmat", normals_mat );
+			models_shader_.UniformMat3( "nmat", normals_mat );
 
-			DrawModel( LastMonster + 1, LastMonster + LastBullet );
+			DrawModel( mx_Models::ModelIcosahedron, TextureIcosahedron );
 		}
 	}
 }
@@ -783,12 +776,12 @@ void mx_Renderer::DrawHealthPacks()
 		mxMat4Mul( rotate_mat, translate_mat, result_mat );
 		mxMat4Mul( result_mat, view_matrix_ );
 
-		monsters_shader_.UniformMat4( "mat", result_mat );
+		models_shader_.UniformMat4( "mat", result_mat );
 
 		mxMat4ToMat3( rotate_mat, normals_mat );
-		monsters_shader_.UniformMat3( "nmat", normals_mat );
+		models_shader_.UniformMat3( "nmat", normals_mat );
 
-		DrawModel( LastMonster, LastMonster + LastBullet + 1 );
+		DrawModel( mx_Models::ModelCube, TextureHealthPack );
 	}
 }
 
