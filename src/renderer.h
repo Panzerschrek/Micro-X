@@ -27,6 +27,9 @@ private:
 	void DrawMap();
 	void CalculateMatrices();
 	void DrawWorld();
+
+	void DrawModels();
+	void DrawModel( unsigned int model_index, unsigned int texture_index );
 	void DrawMonsters();
 	void DrawAmmo();
 	void DrawIcosahedrons();

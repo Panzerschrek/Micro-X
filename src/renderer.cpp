@@ -427,7 +427,10 @@ void mx_Renderer::OnFramebufferResize()
 void mx_Renderer::Draw()
 {
 	if( player_.IsInMapMode() )
+	{
 		DrawMap();
+		DrawModels();
+	}
 	else
 	{
 		MarkPotentialyVisibleSectors();
@@ -438,10 +441,7 @@ void mx_Renderer::Draw()
 		glClear( GL_DEPTH_BUFFER_BIT );
 
 		DrawWorld();
-		DrawMonsters();
-		DrawAmmo();
-		DrawIcosahedrons();
-		DrawHealthPacks();
+		DrawModels();
 
 		// Bind HDR screen buffer. Clear cboth buffers.
 		glBindFramebuffer( GL_FRAMEBUFFER, hdr_buffer_.fbo_id );
@@ -630,7 +630,7 @@ void mx_Renderer::DrawWorld()
 	glDisable (GL_CULL_FACE );
 }
 
-void mx_Renderer::DrawMonsters()
+void mx_Renderer::DrawModels()
 {
 	glActiveTexture( GL_TEXTURE0 );
 	glBindTexture( GL_TEXTURE_2D_ARRAY, monsters_textures_array_id_ );
@@ -643,6 +643,32 @@ void mx_Renderer::DrawMonsters()
 
 	monsters_vertex_buffer_.Bind();
 
+	if( player_.IsInMapMode() )
+		DrawIcosahedrons();
+	else
+	{
+		DrawMonsters();
+		DrawAmmo();
+		DrawIcosahedrons();
+		DrawHealthPacks();
+	}
+
+	glDisable (GL_CULL_FACE );
+}
+
+void mx_Renderer::DrawModel( unsigned int model_index, unsigned int texture_index )
+{
+	monsters_shader_.UniformFloat( "texn", float(texture_index) + g_texture_aray_coord_eps );
+
+	glDrawElements(
+		GL_TRIANGLES,
+		monsters_models_index_count_[model_index],
+		GL_UNSIGNED_SHORT,
+		(void*)( monsters_models_first_index_[model_index] * sizeof(unsigned short) ) );
+}
+
+void mx_Renderer::DrawMonsters()
+{
 	const mx_Monster* const* monsters= level_.GetMonsters();
 	for( unsigned int m= 0, m_end= level_.GetMonsterCount(); m < m_end; m++ )
 	{
@@ -665,31 +691,12 @@ void mx_Renderer::DrawMonsters()
 		mxMat4ToMat3( rotate_mat, normals_mat );
 		monsters_shader_.UniformMat3( "nmat", normals_mat );
 
-		monsters_shader_.UniformFloat( "texn", float(monster->GetType()) + g_texture_aray_coord_eps );
-
-		glDrawElements(
-			GL_TRIANGLES,
-			monsters_models_index_count_[monster->GetType()],
-			GL_UNSIGNED_SHORT,
-			(void*)( monsters_models_first_index_[monster->GetType()] * sizeof(unsigned short) ) );
+		DrawModel( monster->GetType(), monster->GetType() );
 	}
-
-	glDisable (GL_CULL_FACE );
 }
 
 void mx_Renderer::DrawAmmo()
 {
-	glActiveTexture( GL_TEXTURE0 );
-	glBindTexture( GL_TEXTURE_2D_ARRAY, monsters_textures_array_id_ );
-
-	monsters_shader_.Bind();
-	monsters_shader_.UniformInt( "tex", 0 );
-
-	monsters_vertex_buffer_.Bind();
-
-	glEnable( GL_CULL_FACE );
-	glCullFace( GL_BACK );
-
 	const mx_LevelData& level_data= level_.GetLevelData();
 	for( unsigned int s= 0; s < level_data.sector_count; s++ )
 	{
@@ -717,32 +724,13 @@ void mx_Renderer::DrawAmmo()
 			mxMat4ToMat3( rotate_mat, normals_mat );
 			monsters_shader_.UniformMat3( "nmat", normals_mat );
 
-			monsters_shader_.UniformFloat( "texn", float( LastMonster + box.type ) + g_texture_aray_coord_eps );
-
-			glDrawElements(
-				GL_TRIANGLES,
-				monsters_models_index_count_[LastMonster],
-				GL_UNSIGNED_SHORT,
-				(void*)( monsters_models_first_index_[LastMonster] * sizeof(unsigned short) ) );
+			DrawModel( LastMonster, LastMonster + box.type );
 		} // for ammo boxes
 	} // for sectors
-
-	glDisable (GL_CULL_FACE );
 }
 
 void mx_Renderer::DrawIcosahedrons()
 {
-	glActiveTexture( GL_TEXTURE0 );
-	glBindTexture( GL_TEXTURE_2D_ARRAY, monsters_textures_array_id_ );
-
-	monsters_shader_.Bind();
-	monsters_shader_.UniformInt( "tex", 0 );
-
-	monsters_vertex_buffer_.Bind();
-
-	glEnable( GL_CULL_FACE );
-	glCullFace( GL_BACK );
-
 	const mx_LevelData& level_data= level_.GetLevelData();
 	for( unsigned int s= 0; s < level_data.sector_count; s++ )
 	{
@@ -768,32 +756,13 @@ void mx_Renderer::DrawIcosahedrons()
 			mxMat4ToMat3( rotate_mat, normals_mat );
 			monsters_shader_.UniformMat3( "nmat", normals_mat );
 
-			monsters_shader_.UniformFloat( "texn", float( LastMonster + LastBullet ) + g_texture_aray_coord_eps );
-
-			glDrawElements(
-				GL_TRIANGLES,
-				monsters_models_index_count_[LastMonster + 1],
-				GL_UNSIGNED_SHORT,
-				(void*)( monsters_models_first_index_[LastMonster + 1] * sizeof(unsigned short) ) );
+			DrawModel( LastMonster + 1, LastMonster + LastBullet );
 		}
 	}
-
-	glDisable (GL_CULL_FACE );
 }
 
 void mx_Renderer::DrawHealthPacks()
 {
-	glActiveTexture( GL_TEXTURE0 );
-	glBindTexture( GL_TEXTURE_2D_ARRAY, monsters_textures_array_id_ );
-
-	monsters_shader_.Bind();
-	monsters_shader_.UniformInt( "tex", 0 );
-
-	monsters_vertex_buffer_.Bind();
-
-	glEnable( GL_CULL_FACE );
-	glCullFace( GL_BACK );
-
 	const mx_HealthPack* health_packs= level_.GetHealthPacks();
 	unsigned int health_pack_count= level_.GetHealthPackCount();
 
@@ -819,16 +788,8 @@ void mx_Renderer::DrawHealthPacks()
 		mxMat4ToMat3( rotate_mat, normals_mat );
 		monsters_shader_.UniformMat3( "nmat", normals_mat );
 
-		monsters_shader_.UniformFloat( "texn", float( LastMonster + LastBullet + 1 ) + g_texture_aray_coord_eps );
-
-		glDrawElements(
-			GL_TRIANGLES,
-			monsters_models_index_count_[LastMonster],
-			GL_UNSIGNED_SHORT,
-			(void*)( monsters_models_first_index_[LastMonster] * sizeof(unsigned short) ) );
+		DrawModel( LastMonster, LastMonster + LastBullet + 1 );
 	}
-
-	glDisable (GL_CULL_FACE );
 }
 
 void mx_Renderer::DrawParticles()
