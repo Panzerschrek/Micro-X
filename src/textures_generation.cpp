@@ -127,6 +127,10 @@ static void GenSteelPlateTexture( mx_Texture * texture )
 
 static void GenSteelPlateTextureHeightMap( mx_Texture* height_map )
 {
+	MX_ASSERT( height_map->SizeX() == height_map->SizeY() );
+	unsigned int size= height_map->SizeX();
+	unsigned int size_log2= height_map->SizeXLog2();
+
 	static const unsigned int c_border_width= 32;
 	static const float c_slope= 0.333f;
 	static const float c_up_color[4]= { 0.0f, 0.0f, 0.0f, c_slope * float(c_border_width) };
@@ -137,17 +141,14 @@ static void GenSteelPlateTextureHeightMap( mx_Texture* height_map )
 	for( unsigned int r= 0; r < c_border_width; r++ )
 	{
 		float h= c_slope * float(r);
-		for( unsigned int y= r; y < height_map->SizeY() - r; y++ )
+		for( unsigned int xy= r; xy < size - r; xy++ )
 		{
-			unsigned int y_shift= y << height_map->SizeXLog2();
+			unsigned int y_shift= xy << size_log2;
 			d[ ( r + y_shift ) * 4 + 3 ]= h;
-			d[ ( height_map->SizeX() - 1 - r + y_shift ) * 4 + 3 ]= h;
-		}
+			d[ ( size - 1 - r + y_shift ) * 4 + 3 ]= h;
 
-		for( unsigned int x= r; x < height_map->SizeX() - r; x++ )
-		{
-			d[ ( x + (r<<height_map->SizeXLog2()) ) * 4 + 3 ]= h;
-			d[ ( x + ( (height_map->SizeY()-1-r) << height_map->SizeXLog2() ) ) * 4 + 3 ]= h;
+			d[ ( xy + (r<<size_log2) ) * 4 + 3 ]= h;
+			d[ ( xy + ( (size-1-r) << size_log2 ) ) * 4 + 3 ]= h;
 		}
 	}
 
@@ -289,7 +290,7 @@ static void SetBulletColor( float* color, BulletType bullet )
 static void GenBulletAmmoBoxTexture( mx_Texture* texture )
 {
 	MX_ASSERT( texture->SizeX() == texture->SizeY() );
-	unsigned int size= texture->SizeX();
+	unsigned int size_log2_minus_5= texture->SizeXLog2() - 5;
 
 	float color[4];
 	SetBulletColor( color, MachinegunBullet );
@@ -299,17 +300,17 @@ static void GenBulletAmmoBoxTexture( mx_Texture* texture )
 	for( unsigned int x= 0; x < 3; x++ )
 	for( unsigned int y= 0; y < 2; y++ )
 		texture->FillRect(
-			( size * ( 9 +  6 * x ) ) >> 5,
-			( size * ( 6 + 12 * y ) ) >> 5,
-			( 2 * size ) >> 5,
-			( 8 * size ) >> 5,
+			( 9 +  6 * x ) << size_log2_minus_5,
+			( 6 + 12 * y ) << size_log2_minus_5,
+			2 << size_log2_minus_5,
+			8 << size_log2_minus_5,
 			color );
 }
 
 static void GenRocketAmmoBoxTexture( mx_Texture* texture )
 {
 	MX_ASSERT( texture->SizeX() == texture->SizeY() );
-	unsigned int size= texture->SizeX();
+	unsigned int size_log2_minus_5= texture->SizeXLog2() - 5;
 
 	float color[4];
 	SetBulletColor( color, Rocket );
@@ -317,17 +318,18 @@ static void GenRocketAmmoBoxTexture( mx_Texture* texture )
 	GetAmmoBoxTextureBase( texture, color );
 
 	texture->FillRect(
-		( size * 11 ) >> 5,
-		( size *  6 ) >> 5,
-		( size * 10 ) >> 5,
-		( size * 20 ) >> 5,
+		11 << size_log2_minus_5,
+		 6 << size_log2_minus_5,
+		10 << size_log2_minus_5,
+		20 << size_log2_minus_5,
 		color );
 }
 
 static void GenPlasmaAmmoBoxTexture( mx_Texture* texture )
 {
 	MX_ASSERT( texture->SizeX() == texture->SizeY() );
-	unsigned int size= texture->SizeX();
+	unsigned int size_log2_minus_3= texture->SizeXLog2() - 3;
+	unsigned int size_log2_minus_4= texture->SizeXLog2() - 4;
 
 	float color[4];
 	SetBulletColor( color, PlasmaBall );
@@ -337,9 +339,9 @@ static void GenPlasmaAmmoBoxTexture( mx_Texture* texture )
 	for( unsigned int x= 0; x < 2; x++ )
 	for( unsigned int y= 0; y < 2; y++ )
 		texture->FillEllipse(
-			( size * ( 5 + x * 6 ) ) >> 4,
-			( size * ( 5 + y * 6 ) ) >> 4,
-			size >> 3,
+			( 5 + x * 6 ) << size_log2_minus_4,
+			( 5 + y * 6 ) << size_log2_minus_4,
+			1 << size_log2_minus_3,
 			color );
 }
 
@@ -400,17 +402,15 @@ void mxGenHealthPackTextire( mx_Texture* texture )
 	}
 }
 
-void (* const gen_monsters_textures_func_table[LastMonster])( mx_Texture* texture )=
+void (* const gen_models_textures_func_table[LastModelTexture])( mx_Texture* texture )=
 {
 	GenOctoRobotTexture,
 	GenPyramidRobotTexture,
-};
-
-void (* const gen_ammo_textures_func_table[LastBullet])( mx_Texture* texture )=
-{
 	GenBulletAmmoBoxTexture,
 	GenRocketAmmoBoxTexture,
 	GenPlasmaAmmoBoxTexture,
+	mxGenIcosahedronTexture,
+	mxGenHealthPackTextire,
 };
 
 void (* const gen_level_textures_func_table[LastLevelTexture])( mx_Texture* texture )=

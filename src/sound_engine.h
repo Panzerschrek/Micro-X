@@ -11,8 +11,8 @@
 // TODO: remove unused sounds, add new.
 enum mx_SoundType
 {
-	SoundPulsejetEngine,
-	SoundPlasmajetEngine,
+	//SoundPulsejetEngine,
+	//SoundPlasmajetEngine,
 	SoundPowerupPickup,
 	SoundMachinegunShot,
 	SoundAutomaticCannonShot,

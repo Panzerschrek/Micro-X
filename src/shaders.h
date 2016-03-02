@@ -15,8 +15,8 @@ extern const char world_shader_f[];
 extern const char world_map_shader_v[];
 extern const char world_map_shader_f[];
 
-extern const char monster_shader_v[];
-extern const char monster_shader_f[];
+extern const char models_shader_v[];
+extern const char models_shader_f[];
 
 extern const char particles_shader_v[];
 extern const char particles_shader_f[];

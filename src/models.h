@@ -1,12 +1,22 @@
 #pragma once
 
+#include "game_constants.h"
+
 namespace mx_Models
 {
 
-extern const unsigned char cube[];
-extern const unsigned char icosahedron[];
+enum Model
+{
+	ModelOcotMonster,
+	ModelPyramidRobot,
+	ModelCube,
+	ModelIcosahedron,
+	LastModel,
+};
 
-extern const unsigned char* monsters_models[];
-extern const float monsters_models_scale[];
+extern const unsigned char* const models[LastModel];
+extern const float models_scale[LastModel];
+
+extern const Model monster_to_model_table[LastMonster];
 
 } // namespace mx_Models
