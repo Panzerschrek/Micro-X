@@ -250,8 +250,8 @@ static short* GenMelodySound( unsigned int sample_rate, unsigned int* out_sample
 
 short* (* const sound_gen_func[LastSound])(unsigned int sample_rate, unsigned int* out_samples_count)=
 {
-	GenPulsejetSound,
-	GenPlasmajetSound,
+	//GenPulsejetSound,
+	//GenPlasmajetSound,
 	GenPowerupPickupSound,
 	GenMachinegunShotSound,
 	GenAutomaticCannonShotSound, // TODO: automatic cannon sound
