@@ -3,6 +3,8 @@
 namespace mx_GameConstants
 {
 
+const float player_respawn_time= 5.0f;
+
 const int initial_player_health= 100;
 const int player_max_health= 100;
 const int health_pack_health= 25;

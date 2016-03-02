@@ -18,6 +18,8 @@ enum BulletType
 namespace mx_GameConstants
 {
 
+extern const float player_respawn_time;
+
 extern const int initial_player_health;
 extern const int player_max_health;
 

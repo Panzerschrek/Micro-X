@@ -984,6 +984,10 @@ void mx_Renderer::DrawGui()
 		const int c_health_bar_border_width= 2;
 		const int c_health_bar_height= 100;
 
+		const int c_live_bar_offset= 5;
+		const int c_live_bar_width= 14;
+		const int c_live_bar_height= 14;
+
 		v= AddGuiQuad(
 			v,
 			int(main_loop_.ViewportWidth()) - ( c_screen_border_indent + c_health_bar_border_width * 2 + c_health_bar_width ),
@@ -999,6 +1003,17 @@ void mx_Renderer::DrawGui()
 			c_health_bar_width,
 			player_.GetHealth() * c_health_bar_height / mx_GameConstants::player_max_health,
 			c_health_color );
+
+		for( unsigned int l= 0; l < player_.GetLives(); l++ )
+		{
+			v= AddGuiQuad(
+				v,
+				int(main_loop_.ViewportWidth()) - ( c_screen_border_indent + c_health_bar_border_width * 2 + c_health_bar_width + c_live_bar_width + c_live_bar_offset ),
+				(c_health_bar_border_width + c_screen_border_indent) + int(l) * (c_live_bar_height + c_live_bar_offset),
+				c_live_bar_width,
+				c_live_bar_height,
+				c_gui_main_color );
+		}
 	}
 	{ // ammo
 		const int c_border= 3;

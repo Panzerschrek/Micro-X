@@ -145,7 +145,7 @@ bool mx_Monster::NeedStopAttack()
 
 bool mx_Monster::CanAttack()
 {
-	if( player_.GetSector() == &home_sector_ )
+	if( player_.GetSector() == &home_sector_ && player_.GetHealth() > 0 )
 	{
 		if( warned_ )
 		{

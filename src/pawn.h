@@ -36,4 +36,5 @@ inline int mx_Pawn::GetHealth() const
 inline void mx_Pawn::Hit( int damage )
 {
 	health_-= damage;
+	if( health_ < 0 ) health_= 0;
 }

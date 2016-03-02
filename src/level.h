@@ -66,6 +66,7 @@ public:
 
 	void Tick();
 	void Shot( mx_Pawn* shooter, BulletType bullet_type, const float* pos, const float* normalized_dir );
+	void RespawnPlayer();
 
 	void WarnMonsters();
 
@@ -89,6 +90,8 @@ private:
 	const mx_LevelData level_data_;
 
 	mx_Rand randomizer_;
+
+	mx_LevelSector* player_sector_;
 
 	mx_DrawingModel monsters_models_[ LastMonster ];
 

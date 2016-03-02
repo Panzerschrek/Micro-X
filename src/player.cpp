@@ -23,6 +23,7 @@ mx_Player::mx_Player()
 	, last_shot_time_s_(0.0f)
 	, shot_side_(0)
 	, current_weapon_(MachinegunBullet)
+	, lives_(3), is_dead_(false)
 	, forward_pressed_(false), backward_pressed_(false), left_pressed_(false), right_pressed_(false)
 	, up_pressed_(false), down_pressed_(false)
 	, rotate_up_pressed_(false), rotate_down_pressed_(false), rotate_left_pressed_(false), rotate_right_pressed_(false)
@@ -32,27 +33,8 @@ mx_Player::mx_Player()
 #endif
 {
 	pos_[0]= pos_[1]= pos_[2]= 0.0f;
-	//angle_[0]= angle_[1]= angle_[2]= 0.0f;
-	controller_rotation_[0]= controller_rotation_[1]= controller_rotation_[2]= 0.0f;
-	controller_rotation_accumulated_[0]= controller_rotation_accumulated_[1]= controller_rotation_accumulated_[2]= 0.0f;
 
-	axis_[0][0]= 1.0f;
-	axis_[0][1]= 0.0f;
-	axis_[0][2]= 0.0f;
-
-	axis_[1][0]= 0.0f;
-	axis_[1][1]= 1.0f;
-	axis_[1][2]= 0.0f;
-
-	axis_[2][0]= 0.0f;
-	axis_[2][1]= 0.0f;
-	axis_[2][2]= 1.0f;
-
-	angular_speed_[0]= angular_speed_[1]= angular_speed_[2]= 0.0f;
-	speed_[0]= speed_[1]= speed_[2]= 0.0f;
-
-	for( unsigned int i= 0; i < LastBullet; i++ )
-		ammo_[i]= mx_GameConstants::player_initial_ammo[i];
+	SetupAfterRespawn();
 }
 
 mx_Player::~mx_Player()
@@ -75,6 +57,26 @@ void mx_Player::Tick()
 {
 	float dt= mx_MainLoop::Instance()->GetTickTime();
 	float total_time= mx_MainLoop::Instance()->GetTime();
+
+	if( is_dead_ )
+	{
+		if( lives_ != 0 && total_time - death_time_ >= mx_GameConstants::player_respawn_time )
+		{
+			is_dead_= false;
+			lives_--;
+
+			SetupAfterRespawn();
+
+			level_->RespawnPlayer();
+		}
+		return;
+	}
+	if( health_ <= 0 )
+	{
+		is_dead_= true;
+		death_time_= total_time;
+		return;
+	}
 
 	float move_vector[3]= { 0.0f, 0.0f, 0.0f };
 	float rotation_angles[3]= { 0.0f, 0.0f, 0.0f };
@@ -266,4 +268,30 @@ void mx_Player::ZoomOut()
 void mx_Player::CollideWithSector( const mx_LevelSector* sector )
 {
 	level_->CollideWithSectorTriangles( pos_, mx_GameConstants::player_radius, sector );
+}
+
+void mx_Player::SetupAfterRespawn()
+{
+	controller_rotation_[0]= controller_rotation_[1]= controller_rotation_[2]= 0.0f;
+	controller_rotation_accumulated_[0]= controller_rotation_accumulated_[1]= controller_rotation_accumulated_[2]= 0.0f;
+
+	axis_[0][0]= 1.0f;
+	axis_[0][1]= 0.0f;
+	axis_[0][2]= 0.0f;
+
+	axis_[1][0]= 0.0f;
+	axis_[1][1]= 1.0f;
+	axis_[1][2]= 0.0f;
+
+	axis_[2][0]= 0.0f;
+	axis_[2][1]= 0.0f;
+	axis_[2][2]= 1.0f;
+
+	angular_speed_[0]= angular_speed_[1]= angular_speed_[2]= 0.0f;
+	speed_[0]= speed_[1]= speed_[2]= 0.0f;
+
+	health_= mx_GameConstants::initial_player_health;
+
+	for( unsigned int i= 0; i < LastBullet; i++ )
+		ammo_[i]= mx_GameConstants::player_initial_ammo[i];
 }

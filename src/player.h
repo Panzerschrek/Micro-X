@@ -14,6 +14,8 @@ public:
 	void AddAmmo( BulletType type, unsigned int count );
 	void AddHealth( int health );
 
+	unsigned int GetLives() const;
+
 	const float Fov() const;
 	bool IsInMapMode() const;
 
@@ -69,6 +71,7 @@ public:
 
 private:
 	void CollideWithSector( const mx_LevelSector* sector );
+	void SetupAfterRespawn();
 
 private:
 	// 0 - pitch / tangaž
@@ -99,6 +102,10 @@ private:
 
 	BulletType current_weapon_;
 
+	unsigned int lives_;
+	bool is_dead_;
+	float death_time_;
+
 	bool forward_pressed_, backward_pressed_, left_pressed_, right_pressed_;
 	bool up_pressed_, down_pressed_;
 	bool rotate_up_pressed_, rotate_down_pressed_, rotate_left_pressed_, rotate_right_pressed_;
@@ -117,6 +124,11 @@ inline void mx_Player::SetLevel( mx_Level* level )
 inline void mx_Player::AddAmmo( BulletType type, unsigned int count )
 {
 	ammo_[type]+= count;
+}
+
+inline unsigned int mx_Player::GetLives() const
+{
+	return lives_;
 }
 
 /*

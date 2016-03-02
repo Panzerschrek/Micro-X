@@ -77,29 +77,22 @@ mx_Level::mx_Level( const mx_LevelData& level_data, mx_Player& player )
 	, blast_count_(0)
 	, particles_manager_(new mx_ParticlesManager)
 {
-	mx_LevelSector* player_sector;
 	do
 	{
-		player_sector= &level_data_.sectors[ randomizer_.Rand() % level_data_.sector_count ];
+		player_sector_= &level_data_.sectors[ randomizer_.Rand() % level_data_.sector_count ];
 	} while( !(
-		player_sector->type == mx_LevelSector::ROOM  &&
-		!player_sector->has_icosahedron &&
-		!player_sector->is_central_sector ) );
+		player_sector_->type == mx_LevelSector::ROOM  &&
+		!player_sector_->has_icosahedron &&
+		!player_sector_->is_central_sector ) );
 
-	{ // spawn player
-		float pos[3];
-		mxVec3Add( player_sector->bb_min, player_sector->bb_max, pos );
-		mxVec3Mul( pos, 0.5f );
-		player_.SetPos( pos );
-
-		// Remove all ammo from this sector
-		player_sector->ammo_box_count= 0;
-	}
+	// Remove all ammo from this sector
+	player_sector_->ammo_box_count= 0;
+	RespawnPlayer();
 
 	for( unsigned int i= 0; i < level_data_.sector_count && monster_count_ < MX_MAX_MONSTERS; i++ )
 	{
 		const mx_LevelSector& sector= level_data_.sectors[i];
-		if( &sector == player_sector || sector.type != mx_LevelSector::ROOM )
+		if( &sector == player_sector_ || sector.type != mx_LevelSector::ROOM )
 			continue;
 		
 		float pos[3];
@@ -532,6 +525,14 @@ void mx_Level::Shot( mx_Pawn* shooter, BulletType bullet_type, const float* pos,
 	mx_SoundEngine::Instance()->AddSingleSound( sound_type, 1.0f, 1.0f, bullet.pos );
 
 	bullet_count_++;
+}
+
+void mx_Level::RespawnPlayer()
+{
+	float pos[3];
+	mxVec3Add( player_sector_->bb_min, player_sector_->bb_max, pos );
+	mxVec3Mul( pos, 0.5f );
+	player_.SetPos( pos );
 }
 
 void mx_Level::WarnMonsters()
