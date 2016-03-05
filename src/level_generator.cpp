@@ -64,9 +64,10 @@ static const void SwapVertices( float* v0, float* v1 )
 	}
 }
 
-mx_LevelGenerator::mx_LevelGenerator()
+mx_LevelGenerator::mx_LevelGenerator( unsigned int seed )
 	: room_count_(0)
 	, connection_count_(0)
+	, rand_(seed)
 {
 	for( unsigned int i= 0; i < MX_MAX_LEVEL_SIZE_CELLS * MX_MAX_LEVEL_SIZE_CELLS * MX_MAX_LEVEL_SIZE_CELLS; i++ )
 		element_map_[i]= NULL;

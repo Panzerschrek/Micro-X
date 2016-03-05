@@ -120,7 +120,7 @@ unsigned int mxGenSectorGraphTraverseId();
 class mx_LevelGenerator
 {
 public:
-	mx_LevelGenerator();
+	mx_LevelGenerator( unsigned int seed );
 	~mx_LevelGenerator();
 
 	void Generate();

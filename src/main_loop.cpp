@@ -173,7 +173,7 @@ mx_MainLoop::mx_MainLoop(
 
 	player_= new mx_Player();
 
-	mx_LevelGenerator* generator= new mx_LevelGenerator();
+	mx_LevelGenerator* generator= new mx_LevelGenerator( GetTickCount() );
 	generator->Generate();
 	level_= new mx_Level( generator->GetLevelData(), *player_ );
 	delete generator;
