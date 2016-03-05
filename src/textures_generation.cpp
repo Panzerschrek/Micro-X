@@ -1,6 +1,8 @@
 #include <algorithm>
 
+#include "drawing_model.h"
 #include "game_constants.h"
+#include "models.h"
 #include "mx_assert.h"
 #include "mx_math.h"
 #include "texture.h"
@@ -155,24 +157,75 @@ static void GenSteelPlateTextureHeightMap( mx_Texture* height_map )
 	// AddHemisphereToHeightmap( height_map, 512, 512, 128, 128 - 8 );
 }
 
-static void GenMapScreenTexture( mx_Texture * texture )
+static void GenMapScreenTexture( mx_Texture* texture )
 {
 	MX_ASSERT( texture->SizeX() == texture->SizeY() );
-	unsigned int size= texture->SizeX();
 
-	texture->Fill( g_powerups_bg );
+	mx_Texture small_texture( texture->SizeXLog2() - 2, texture->SizeXLog2() - 2 );
 
-	mx_Rand rand;
+	unsigned int size= small_texture.SizeX();
+	unsigned int half_size= size >> 1;
 
-	for( unsigned int i= 0; i < 64; i++ )
+	static const float c_line_color[4]= { 1.0f, 1.0f, 1.0f, 0.1f };
+	small_texture.Fill( g_powerups_bg );
+
+	mx_DrawingModel model;
+	model.LoadFromMFMD( mx_Models::models[ mx_Models::ModelIcosahedron ] );
+
+	float scale_mat[16];
+	float translate_mat[16];
+	float rotate_mat[16];
+	float result_mat[16];
+
+	mxMat4Scale( scale_mat, float(size >> 1 ) );
+
+	float rotate_vec[3]= { 1.0f, 1.0f, 1.0f };
+	mxMat4RotateAroundVector( rotate_mat, rotate_vec, MX_PI2 );
+
+	float translate_vec[3]= { float(half_size), float(half_size), float(half_size) };
+	mxMat4Translate( translate_mat, translate_vec );
+
+	mxMat4Mul( scale_mat, rotate_mat, result_mat );
+	mxMat4Mul( result_mat, translate_mat );
+
+	const unsigned short* indeces= model.GetIndexData();
+	const mx_DrawingModelVertex* vertices= model.GetVertexData();
+	for( unsigned int i= 0; i < model.GetIndexCount(); i+= 3, indeces+= 3 )
 	{
-		static const float c_line_color[4]= { 1.0f, 1.0f, 1.0f, 0.1f };
-		texture->DrawLine(
-			rand.RandI( 1, size ),
-			rand.RandI( 1, size ),
-			rand.RandI( 1, size ),
-			rand.RandI( 1, size ),
-			c_line_color );
+		for( unsigned int v= 0; v < 3; v++ )
+		{
+			const float* v0= vertices[ indeces[v] ].pos;
+			const float* v1= vertices[ indeces[(v+1u)%3u] ].pos;
+
+			float v_projected[2][3];
+			mxVec3Mat4Mul( v0, result_mat, v_projected[0] );
+			mxVec3Mat4Mul( v1, result_mat, v_projected[1] );
+
+			small_texture.DrawLine(
+				(unsigned int) v_projected[0][0],
+				(unsigned int) v_projected[0][1],
+				(unsigned int) v_projected[1][0],
+				(unsigned int) v_projected[1][1],
+				c_line_color );
+		}
+	}
+
+	const float* in_data= small_texture.GetData();
+	float* out_data= texture->GetData();
+	unsigned int dst_size_log2= texture->SizeXLog2();
+
+	for( unsigned int y= 0; y < size; y++ )
+	for( unsigned int x= 0; x < size; x++, in_data+= 4 )
+	{
+		unsigned int dst_x= (x<<2);
+		unsigned int dst_y= (y<<2);
+		for( unsigned int yy= 0; yy < 4; yy++ )
+		{
+			float* c= out_data + (( dst_x + ( (yy + dst_y) << dst_size_log2 ) ) << 2);
+			for( unsigned int xx= 0; xx < 4; xx++, c+= 4 )
+				for( unsigned int j= 0; j < 4; j++ )
+					c[j]= in_data[j];
+		}
 	}
 }
 

@@ -87,6 +87,8 @@ struct mx_LevelSector
 	bool icosahedron_picked;
 
 	bool is_central_sector;
+
+	float map_screen_pos[3];
 };
 
 struct mx_LevelData

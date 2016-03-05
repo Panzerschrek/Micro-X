@@ -976,15 +976,55 @@ void mx_LevelGenerator::SetupTextures()
 {
 	for( unsigned int s= 0; s < out_level_data_.sector_count; s++ )
 	{
-		unsigned char tex_id= rand_.Rand() % TextureMapScreen;
+		unsigned char common_tex_id= rand_.Rand() % TextureMapScreen;
 
 		mx_LevelSector& sector= out_level_data_.sectors[s];
+
+		const float c_inf= 100500.0f;
+		bool any_traingle_with_map_screen_placed= false;
+
+		if ( sector.type == mx_LevelSector::ROOM && (rand_.Rand() % 3) < 2 )
+		{
+			unsigned int screen_side= rand_.Rand() % 3;
+			for( unsigned int s= 0; s < 3; s++ )
+				sector.map_screen_pos[s]= std::ceilf( ( sector.bb_min[s] + sector.bb_max[s] ) * 0.5f ) + 0.5f;
+			sector.map_screen_pos[screen_side]= (rand_.Rand()&1) ? sector.bb_min[screen_side] : sector.bb_max[screen_side];
+		}
+		else // make map too far
+			sector.map_screen_pos[0]= sector.map_screen_pos[1]= sector.map_screen_pos[2]= c_inf;
 		
 		for( unsigned int t= sector.first_triangle; t < sector.first_triangle + sector.triangles_count; t++ )
 		{
 			mx_LevelTriangle& triangle= out_level_data_.triangles[t];
+
+			float triangle_pos[3]= { 0.0f, 0.0f, 0.0f };
+			for( unsigned int v= 0; v < 3; v++ )
+				mxVec3Add( triangle_pos, out_level_data_.vertices[ triangle.vertex_index[v] ].xyz );
+			mxVec3Mul( triangle_pos, 1.0f / 3.0f );
+
+			unsigned char tex_id;
+			if( mxSquareDistance( triangle_pos, sector.map_screen_pos ) <= 0.5f * 0.5f )
+			{
+				for( unsigned int v= 0; v < 3; v++ )
+				{
+					float* tc= out_level_data_.vertices[ triangle.vertex_index[v] ].tex_coord;
+					if( out_level_data_.vertices[ triangle.vertex_index[v] ].tex_id != TextureMapScreen )
+					{
+						tc[0]*= 2.0f;
+						tc[1]*= 2.0f;
+					}
+				}
+				tex_id= TextureMapScreen;
+				any_traingle_with_map_screen_placed= true;
+			}
+			else
+				tex_id= common_tex_id;
+				
 			for( unsigned int v= 0; v < 3; v++ )
 				out_level_data_.vertices[ triangle.vertex_index[v] ].tex_id= tex_id;
 		}
+
+		if( !any_traingle_with_map_screen_placed ) // Failed to place map
+			sector.map_screen_pos[0]= sector.map_screen_pos[1]= sector.map_screen_pos[2]= c_inf;
 	}
 }

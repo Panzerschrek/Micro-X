@@ -167,11 +167,6 @@ inline const float* mx_Player::GetSpeed() const
 	return speed_;
 }
 
-inline void mx_Player::ToggleMapMode()
-{
-	map_mode_= !map_mode_;
-}
-
 inline void mx_Player::ShotButtonPressed()
 {
 	shot_button_pressed_= true;

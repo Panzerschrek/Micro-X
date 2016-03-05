@@ -253,6 +253,18 @@ void mx_Player::Rotate( float pixel_delta_x, float pixel_delta_y )
 	controller_rotation_[0]+= c_sensitivity * pixel_delta_y * std::sqrtf( std::tanf( fov_ * 0.5f ) );
 }
 
+
+void mx_Player::ToggleMapMode()
+{
+	if( !map_mode_ )
+	{
+		if( sector_ && mxDistance( sector_->map_screen_pos, pos_ ) <= 0.7f )
+			map_mode_= true;
+	}
+	else
+		map_mode_= false;
+}
+
 void mx_Player::ZoomIn()
 {
 	target_fov_-= MX_FOV_STEP;

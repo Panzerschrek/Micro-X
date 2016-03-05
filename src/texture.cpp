@@ -393,8 +393,11 @@ void mx_Texture::DrawLine( unsigned int x0, unsigned int y0, unsigned int x1, un
 			y0= tmp;
 		}
 
+		int dx= int(x1) - int(x0);
+		if( dx == 0 ) return;
+
 		int y_f= int(y0)<<16;
-		int dy_f= ( ( int(y1) - int(y0) )<<16 ) / ( int(x1) - int(x0) );
+		int dy_f= ( ( int(y1) - int(y0) )<<16 ) / dx;
 		while( x0 < x1 )
 		{
 			int y_i= y_f>>16;
@@ -428,8 +431,11 @@ void mx_Texture::DrawLine( unsigned int x0, unsigned int y0, unsigned int x1, un
 			y0= tmp;
 		}
 
+		int dy= int(y1) - int(y0);
+		if( dy == 0 ) return;
+
 		int x_f= int(x0)<<16;
-		int dx_f= ( ( int(x1) - int(x0) )<<16 ) / ( int(y1) - int(y0) );
+		int dx_f= ( ( int(x1) - int(x0) )<<16 ) / dy;
 		while( y0 < y1 )
 		{
 			int x_i= x_f>>16;
