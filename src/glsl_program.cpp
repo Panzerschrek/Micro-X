@@ -97,7 +97,7 @@ void mx_GLSLProgram::Create( const char* vertex_shader, const char* fragment_sha
 	}
 #endif
 }
-
+/*
 unsigned int mx_GLSLProgram::GetUniformBlockIndex( const char* name )
 {
 	return glGetUniformBlockIndex( program_id_, name );
@@ -107,7 +107,7 @@ void mx_GLSLProgram::UniformBlockBinding( unsigned int uniform_block_index, unsi
 {
 	glUniformBlockBinding( program_id_, uniform_block_index, binding );
 }
-
+*/
 void mx_GLSLProgram::FindUniform( const char* uniform )
 {
 	MX_ASSERT( uniform_count_ < MX_MAX_SHADER_UNIFORMS );

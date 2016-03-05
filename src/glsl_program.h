@@ -22,8 +22,8 @@ public:
 
 	void Bind();
 
-	unsigned int GetUniformBlockIndex( const char* name );
-	void UniformBlockBinding( unsigned int uniform_block_index, unsigned int binding );
+	//unsigned int GetUniformBlockIndex( const char* name );
+	//void UniformBlockBinding( unsigned int uniform_block_index, unsigned int binding );
 
 	void FindUniform( const char* name );
 	void FindUniforms( const char* const* names, unsigned int count );
