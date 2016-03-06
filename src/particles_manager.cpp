@@ -6,6 +6,8 @@
 #define MX_ROCKET_TRAIL_PARTICLE_LIFETIME 2.0f
 #define MX_BLAST_FIRE_LIFETIME 0.5f
 
+#define MX_SPAWN_PARTICLE_LIFETIME 2.0f
+
 mx_ParticlesManager::mx_ParticlesManager()
 	: particle_count_(0)
 	, prev_tick_time_(0.0f), current_tick_time_(0.0000001f), dt_(current_tick_time_ - prev_tick_time_)
@@ -95,6 +97,33 @@ void mx_ParticlesManager::AddBlast( const float* pos )
 	particle_count_+= c_particles_count;
 }
 
+void mx_ParticlesManager::AddSpawn( const float* pos )
+{
+	const unsigned int c_particles_count= 256;
+
+	Particle* particle= particles_ + particle_count_;
+	for( unsigned int i= 0; i< c_particles_count; )
+	{
+		for( unsigned int j= 0; j< 3; j++ )
+			particle->direction[j]= randomizer_.RandF( -1.0f, 1.0f );
+		float direction_length = mxVec3Len( particle->direction );
+		if( direction_length > 1.0f && direction_length < 0.5f ) continue;
+		mxVec3Mul( particle->direction, 1.0f / direction_length );
+
+		VEC3_CPY( particle->pos, pos );
+
+		particle->velocity= 0.6f;
+		particle->acceleration= 0.6f / 2.0f;
+		particle->type= Particle::Spawn;
+		particle->spawn_time= current_tick_time_;
+		particle->life_time= MX_SPAWN_PARTICLE_LIFETIME;
+		particle->id= i;
+
+		i++, particle++;
+	}
+	particle_count_+= c_particles_count;
+}
+
 void mx_ParticlesManager::PrepareParticlesVertices( mx_ParticleVertex* out_vertices ) const
 {
 	const Particle* particle= particles_;
@@ -129,6 +158,19 @@ void mx_ParticlesManager::PrepareParticlesVertices( mx_ParticleVertex* out_verti
 				mxVec3Mul( mx_GameConstants::bullets_colors[PlasmaBall], 0.5f, vertex->color );
 			}
 			break;
+		case Particle::Spawn:
+			{
+				vertex->pos_size[3]= 0.03f;
+
+				float lifetime_k= ( current_tick_time_ - particle->spawn_time ) * ( 1.0f / MX_SPAWN_PARTICLE_LIFETIME );
+				static const float c_colors[2][3]=
+				{
+					{ 1.0f, 0.1f, 1.0f },
+					{ 0.0f, 1.0f, 0.0f },
+				};
+
+				mxVec3Mul( c_colors[ particle->id & 1 ], 1.0f - lifetime_k, vertex->color );
+			};
 		default: MX_ASSERT(false); break;
 		} // switch type
 	}

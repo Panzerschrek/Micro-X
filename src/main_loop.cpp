@@ -171,6 +171,11 @@ mx_MainLoop::mx_MainLoop(
 	fps_calc_.frame_count_to_show= 0;
 	fps_calc_.current_calc_frame_count= 0;
 
+	mx_SoundEngine::CreateInstance( hwnd_ );
+
+	start_time_ms_= prev_time_ms_= GetTickCount();
+	toatal_time_s_= 0.0f;
+
 	player_= new mx_Player();
 
 	mx_LevelGenerator* generator= new mx_LevelGenerator( GetTickCount() );
@@ -181,13 +186,10 @@ mx_MainLoop::mx_MainLoop(
 	player_->SetLevel(level_);
 	
 	renderer_= new mx_Renderer( *level_, *player_ );
+
+	// Spawn player after all heavy operations (renderer, world construction )
+	level_->RespawnPlayer();
 	//text_= new mx_Text();
-
-	mx_SoundEngine::CreateInstance( hwnd_ );
-
-	// Start game time calculations after all heavy operations
-	start_time_ms_= prev_time_ms_= GetTickCount();
-	toatal_time_s_= 0.0f;
 
 	need_capture_mouse_= true;
 	CaptureMouse( need_capture_mouse_ );

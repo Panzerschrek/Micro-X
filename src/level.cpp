@@ -87,7 +87,6 @@ mx_Level::mx_Level( const mx_LevelData& level_data, mx_Player& player )
 
 	// Remove all ammo from this sector
 	player_sector_->ammo_box_count= 0;
-	RespawnPlayer();
 
 	for( unsigned int i= 0; i < level_data_.sector_count && monster_count_ < MX_MAX_MONSTERS; i++ )
 	{
@@ -533,6 +532,10 @@ void mx_Level::RespawnPlayer()
 	mxVec3Add( player_sector_->bb_min, player_sector_->bb_max, pos );
 	mxVec3Mul( pos, 0.5f );
 	player_.SetPos( pos );
+
+	particles_manager_->AddSpawn( pos );
+
+	mx_SoundEngine::Instance()->AddSingleSound( SoundSpawn, 1.0f, 1.0f, pos );
 }
 
 void mx_Level::WarnMonsters()

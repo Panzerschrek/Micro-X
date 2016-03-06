@@ -23,6 +23,7 @@ public:
 
 	void AddBullet( const mx_Bullet* bullet );
 	void AddBlast( const float* pos );
+	void AddSpawn( const float* pos );
 
 	unsigned int GetParticlesCount() const;
 	void PrepareParticlesVertices( mx_ParticleVertex* out_vertices ) const;
@@ -35,6 +36,7 @@ private:
 			RocketTrail,
 			RocketBlast,
 			PlasmaBall,
+			Spawn,
 
 		} type;
 
@@ -44,6 +46,7 @@ private:
 		float acceleration;
 		float spawn_time;
 		float life_time;
+		unsigned int id;
 	};
 
 private:

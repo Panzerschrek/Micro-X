@@ -205,6 +205,36 @@ static short* GenBlastSound( unsigned int sample_rate, unsigned int* out_samples
 	return GenBlastLikeSound( sample_rate, *out_samples_count, 0.8f, 0.99981f, 5.5f, 1500.0f );
 }
 
+
+static short* GenSpawnSound( unsigned int sample_rate, unsigned int* out_samples_count )
+{
+	const float c_length= 2.0f;
+	const float c_base_freq= 200.0f;
+	const float c_pulsations_freq_devider= 20.0f;
+
+	unsigned int sample_count= (unsigned int) ( float(sample_rate) * c_length );
+	short* data= new short[ sample_count ];
+
+	float sample_rate_f= float(sample_rate);
+	for( unsigned int i= 0; i< sample_count; i++ )
+	{
+		float t= float(i) / float(sample_count);
+		float freq= c_base_freq * std::expf( t * 1.5f );
+
+		float p= MX_2PI * float(i) / sample_rate_f;
+
+		float a= 1.0f - ( std::cos( freq / c_pulsations_freq_devider * p ) * 0.5f + 0.5f ) * std::powf(t, 1.0f / 3.0f );
+		float s= std::sin( p * freq );
+		data[i]= AmplitudeFloatToShort( a * s );
+	}
+
+	for( unsigned int i= sample_count - 64; i < sample_count; i++ )
+		data[i]= short( ( int(data[i]) * ( sample_count - i ) ) >> 6 );
+
+	*out_samples_count= sample_count;
+	return data;
+}
+
 static short* GenAutomaticCannonShotSound( unsigned int sample_rate, unsigned int* out_samples_count )
 {
 	unsigned int samples_count= (unsigned int) std::floorf( float(sample_rate) * 0.15f );
@@ -257,5 +287,6 @@ short* (* const sound_gen_func[LastSound])(unsigned int sample_rate, unsigned in
 	GenAutomaticCannonShotSound, // TODO: automatic cannon sound
 	GenPlasmagunSound,
 	GenBlastSound,
+	GenSpawnSound,
 	GenMelodySound,
 };
