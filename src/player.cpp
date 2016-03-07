@@ -150,8 +150,8 @@ void mx_Player::Tick()
 	float move_vec_len= mxVec3Len( move_vector );
 	if( move_vec_len > 0.00001f ) mxVec3Mul( move_vector, 1.0f / move_vec_len );
 
-	static const float c_acceleration= 20.0f;
-	static const float c_deceleration= 7.0f;
+	static const float c_acceleration= 15.0f;
+	static const float c_deceleration= 5.0f;
 	static const float c_max_speed= 3.5f;
 	// Accelerate
 	for( unsigned int i= 0; i < 3; i++ )

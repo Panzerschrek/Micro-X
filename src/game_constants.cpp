@@ -52,16 +52,16 @@ const float icosahedron_color[3]= { 0.9f, 0.9f, 0.1f };
 
 const unsigned int player_initial_ammo[LastBullet]=
 {
-	100,
+	 40,
 	 10,
 	 30,
 };
 
 const unsigned int ammo_boxes_bullets_count[LastBullet]=
 {
-	50,
-	10,
 	20,
+	 8,
+	16,
 };
 
 const float ammo_pockup_radius= 0.4f;
