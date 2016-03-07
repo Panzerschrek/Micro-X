@@ -269,10 +269,10 @@ static void GenPyramidRobotTexture( mx_Texture * texture )
 
 	// Eyes
 	texture->FillRect( 116, 32, 52, 52, g_monsters_dark_color );
-	texture->FillEllipse( 140, 58, 8, g_monsters_eyes_color );
+	texture->FillEllipse( 140, 58, 9, g_monsters_eyes_color );
 
 	// Engine
-	static const float c_engine_color[4]= {0.1f, 0.05f, 0.4f, 0.0f };
+	static const float c_engine_color[4]= {0.2f, 0.1f, 1.0f, 0.0f };
 	texture->FillRect( 15, 16, 98, 92, c_engine_color );
 
 	// Machinegun
@@ -429,11 +429,11 @@ void mxGenHealthPackTextire( mx_Texture* texture )
 	unsigned int size_log2_minus_5= size_log2 - 5;
 
 	static const float c_color[4]= { 0.9f, 0.9f, 0.9f, g_powerups_bg[3] };
-	texture->Fill( c_color);
+	texture->Fill( c_color );
 
 	texture->FillRect( size / 16, size / 16, size * 14 / 16, size * 14 / 16, g_powerups_bg );
 
-	static const float c_cross_color[4]= { 1.0f, 0.1f, 0.1f, g_powerups_bg[3] };
+	static const float c_cross_color[4]= { 1.0f, 0.1f, 0.1f, 0.0f };
 
 	for( unsigned int i= 0; i < 2; i++ )
 	{
