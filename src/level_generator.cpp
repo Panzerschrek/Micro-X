@@ -791,12 +791,13 @@ void mx_LevelGenerator::SetupRoomSector( const Room* room, mx_LevelSector* secto
 		sector->bb_max[i]= float(room->coord_max[i]);
 	}
 
+	float relative_light_intancity= mxDistance( sector->bb_min, sector->bb_max );
 	sector->light_count= rand_.RandI( 1, 4 );
 	for( unsigned int l= 0; l < sector->light_count; l++ )
 		for( unsigned int i= 0; i < 3; i++ )
 		{
 			sector->lights[l].pos[i]= rand_.RandF( sector->bb_min[i] + 1.0f, sector->bb_max[i] - 1.0f );
-			sector->lights[l].light_rgb[i]= rand_.RandF( 0.5f, 2.0f );
+			sector->lights[l].light_rgb[i]= relative_light_intancity * rand_.RandF( 0.1f, 0.4f );
 		}
 
 	sector->ammo_box_count= 1;
