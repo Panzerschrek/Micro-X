@@ -171,6 +171,7 @@ void mx_ParticlesManager::PrepareParticlesVertices( mx_ParticleVertex* out_verti
 
 				mxVec3Mul( c_colors[ particle->id & 1 ], 1.0f - lifetime_k, vertex->color );
 			};
+			break;
 		default: MX_ASSERT(false); break;
 		} // switch type
 	}
