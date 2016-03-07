@@ -706,7 +706,7 @@ void mx_Renderer::DrawAmmo()
 			float result_mat[16];
 			float normals_mat[9];
 
-			MakePowerupsRotationMatrix( rotate_mat );
+			MakePowerupsRotationMatrix( rotate_mat, box.pos );
 
 			mxMat4Translate( translate_mat, box.pos );
 			mxMat4Mul( rotate_mat, translate_mat, result_mat );
@@ -738,7 +738,7 @@ void mx_Renderer::DrawIcosahedrons()
 			float result_mat[16];
 			float normals_mat[9];
 
-			MakePowerupsRotationMatrix( rotate_mat );
+			MakePowerupsRotationMatrix( rotate_mat, sector.icosahedron_pos );
 
 			mxMat4Translate( translate_mat, sector.icosahedron_pos );
 			mxMat4Mul( rotate_mat, translate_mat, result_mat );
@@ -770,7 +770,7 @@ void mx_Renderer::DrawHealthPacks()
 		float result_mat[16];
 		float normals_mat[9];
 
-		MakePowerupsRotationMatrix( rotate_mat );
+		MakePowerupsRotationMatrix( rotate_mat, pack.pos );
 
 		mxMat4Translate( translate_mat, pack.pos );
 		mxMat4Mul( rotate_mat, translate_mat, result_mat );
@@ -1202,9 +1202,11 @@ void mx_Renderer::DrawGui()
 	glEnable( GL_DEPTH_TEST );
 }
 
-void mx_Renderer::MakePowerupsRotationMatrix( float* out_mat )
+void mx_Renderer::MakePowerupsRotationMatrix( float* out_mat, const float* pos )
 {
-	float rotation_vector_rotation= mx_MainLoop::Instance()->GetTime();
+	float phase= pos[0] + pos[1] + pos[2];
+
+	float rotation_vector_rotation= phase + mx_MainLoop::Instance()->GetTime();
 	float self_rotation= rotation_vector_rotation * ( 9.0f / 16.0f);
 	float rotation_vec[3];
 	rotation_vec[0]= std::cosf(rotation_vector_rotation);

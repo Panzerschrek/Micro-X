@@ -44,7 +44,7 @@ private:
 
 	void DrawGui();
 
-	void MakePowerupsRotationMatrix( float* out_mat );
+	void MakePowerupsRotationMatrix( float* out_mat, const float* pos );
 
 private:
 	const mx_MainLoop& main_loop_;
