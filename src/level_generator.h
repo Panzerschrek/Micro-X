@@ -1,7 +1,7 @@
 #pragma once
 #include "mx_math.h"
 
-#define MX_MAX_LEVEL_SIZE_CELLS 48
+#define MX_MAX_LEVEL_SIZE_CELLS 40
 #define MX_MAX_ROOMS 64 * 2
 #define MX_MAX_CONNECTIONS 256 * 4
 

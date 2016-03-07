@@ -1130,7 +1130,7 @@ void mx_Renderer::DrawGui()
 
 		const int c_radius= 12;
 		const int c_border_size= 2;
-		const unsigned int c_items_in_row= 12;
+		const unsigned int c_items_in_row= 8;
 
 		const int x0= c_screen_border_indent + c_radius + c_border_size;
 		int y0= main_loop_.ViewportHeight() - (c_screen_border_indent + c_radius + c_border_size);
