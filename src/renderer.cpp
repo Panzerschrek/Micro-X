@@ -1156,6 +1156,18 @@ void mx_Renderer::DrawGui()
 			i++;
 		}
 	}
+	// dead sreen
+	if (player_.GetHealth() <= 0 )
+	{
+		static const unsigned char c_blut_farbe[4]= { 0xE0, 0x10, 0x10, 0x70 };
+		static const unsigned char c_total_tot_farbe[4]= { 0x00, 0x00, 0x00, 0x50 };
+
+		v= AddGuiQuad(
+			v,
+			0, 0,
+			main_loop_.ViewportWidth(), main_loop_.ViewportHeight(),
+			player_.GetLives() > 0 ? c_blut_farbe : c_total_tot_farbe );
+	}
 	{ // fps
 		const int c_fps_bar_height= c_screen_border_indent;
 
