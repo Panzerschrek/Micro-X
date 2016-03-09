@@ -140,7 +140,7 @@ rotate_to_target:
 
 bool mx_Monster::NeedStopAttack()
 {
-	return player_.GetSector() != &home_sector_;
+	return player_.GetSector() != &home_sector_ || player_.GetHealth() <= 0;
 }
 
 bool mx_Monster::CanAttack()
