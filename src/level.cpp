@@ -133,6 +133,10 @@ mx_Level::mx_Level( const mx_LevelData& level_data, mx_Player& player )
 		monsters_models_[i].LoadFromMFMD( mx_Models::models[model] );
 		monsters_models_[i].Scale( mx_Models::models_scale[model] );
 	}
+
+	icosahedrons_left_= 0;
+	for( unsigned int s= 0; s < level_data_.sector_count; s++ )
+		if( level_data_.sectors[s].has_icosahedron ) icosahedrons_left_++;
 }
 
 mx_Level::~mx_Level()
@@ -469,7 +473,11 @@ kill:
 			if( mxSquareDistance( player_.Pos(), sector->icosahedron_pos ) <= 
 				mx_GameConstants::icosahedron_pickup_radius * mx_GameConstants::icosahedron_pickup_radius )
 			{
-				mx_SoundEngine::Instance()->AddSingleSound( SoundPowerupPickup, 1.0f, 1.0f, sector->icosahedron_pos );
+				icosahedrons_left_--;
+				if( icosahedrons_left_ == 0 )
+					mx_SoundEngine::Instance()->AddSingleSound( SoundMelody, 1.0f, 1.0f );
+				else
+					mx_SoundEngine::Instance()->AddSingleSound( SoundPowerupPickup, 1.0f, 1.0f, sector->icosahedron_pos );
 				sector->icosahedron_picked= true;
 			}
 		}

@@ -248,7 +248,7 @@ static short* GenAutomaticCannonShotSound( unsigned int sample_rate, unsigned in
 
 static short* GenMelodySound( unsigned int sample_rate, unsigned int* out_samples_count )
 {
-	unsigned int samples_count= 32 * sample_rate;
+	unsigned int samples_count= 16 * sample_rate;
 	short* data= new short[ samples_count ];
 
 	for( unsigned int i= 0; i < samples_count; i++ )
@@ -269,14 +269,12 @@ static short* GenMelodySound( unsigned int sample_rate, unsigned int* out_sample
 				main_wave= ( ( ((i<<8) * 3) & 65535 ) - 32768 ) >> 2;
 		}
 
-		// Make square wave
-		data[i]= main_wave > 0 ? 32767 : -32768;
+		data[i]= main_wave;
 	}
 
 	*out_samples_count= samples_count;
 	return data;
 }
-
 
 short* (* const sound_gen_func[LastSound])(unsigned int sample_rate, unsigned int* out_samples_count)=
 {

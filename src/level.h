@@ -92,6 +92,7 @@ private:
 	mx_Rand randomizer_;
 
 	mx_LevelSector* player_sector_;
+	unsigned int icosahedrons_left_;
 
 	mx_DrawingModel monsters_models_[ LastMonster ];
 
