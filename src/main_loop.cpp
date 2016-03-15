@@ -285,6 +285,9 @@ void mx_MainLoop::Loop()
 
 		SwapBuffers( hdc_ );
 		CalculateFPS();
+
+		// HACK. Bandicam disables depth test after SwapBuffers call
+		glEnable( GL_DEPTH_TEST );
 	} // while !quit
 }
 
