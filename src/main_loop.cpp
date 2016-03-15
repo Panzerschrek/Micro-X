@@ -73,6 +73,9 @@ mx_MainLoop::mx_MainLoop(
 	, fullscreen_(fullscreen)
 	, quit_(false)
 	, prev_cursor_pos_(), mouse_captured_(false)
+	, player_(NULL)
+	, level_(NULL)
+	, renderer_(NULL)
 {
 	instance_= this;
 
@@ -475,7 +478,8 @@ void mx_MainLoop::Resize()
 			viewport_height_= new_height;
 		}
 		glViewport( 0, 0, viewport_width_, viewport_height_ );
-		renderer_->OnFramebufferResize();
+		if( renderer_ )
+			renderer_->OnFramebufferResize();
 	}
 }
 
