@@ -96,8 +96,21 @@ mx_SoundSource* mx_SoundEngine::CreateSoundSource( mx_SoundType sound_type )
 	mx_SoundSource* src= new mx_SoundSource;
 	sound_sources_[ sound_source_count_++ ]= src;
 
+	src->source_buffer_= NULL;
 	direct_sound_p_->DuplicateSoundBuffer( sound_buffers_[ sound_type ].buffer, &src->source_buffer_ );
+	if( src->source_buffer_ == NULL )
+	{
+		delete src;
+		return NULL;
+	}
+
+	src->source_buffer_3d_= NULL;
 	src->source_buffer_->QueryInterface( IID_IDirectSound3DBuffer8, (LPVOID*) &src->source_buffer_3d_ );
+	if( src->source_buffer_3d_ == NULL )
+	{
+		delete src;
+		return NULL;
+	}
 
 	src->source_buffer_3d_->SetMaxDistance( MX_SOUND_MAX_DISTANCE, DS3D_IMMEDIATE );
 
@@ -126,6 +139,8 @@ void mx_SoundEngine::AddSingleSound( mx_SoundType sound_type, float volume, floa
 	static const float c_zero_vel[3]= { 0.0f, 0.0f, 0.0f };
 
 	mx_SoundSource* sound= CreateSoundSource( sound_type );
+	if( sound == NULL ) return;
+
 	if( opt_pos != NULL )
 		sound->SetOrientation( opt_pos, opt_speed ? opt_speed : c_zero_vel );
 	else
